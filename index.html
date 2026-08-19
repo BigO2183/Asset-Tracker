@@ -1,184 +1,127 @@
-/* GLOBAL */
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f5f7fb;
-  color: #333;
-}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Big O Asset Tracker</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
 
-h2, h3 {
-  margin: 0;
-}
+  <body>
+    <div class="dashboard">
 
-/* DASHBOARD LAYOUT */
-.dashboard {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  height: 100vh;
-}
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <h2 class="sidebar-title">Big O</h2>
+        <nav>
+          <button class="nav-item is-active">Dashboard</button>
+          <button class="nav-item">Assets</button>
+          <button class="nav-item">Checkouts</button>
+          <button class="nav-item">History</button>
+        </nav>
+      </aside>
 
-/* SIDEBAR */
-.sidebar {
-  background: #0b5ed7;
-  color: #fff;
-  padding: 20px;
-}
+      <!-- MAIN CONTENT -->
+      <main class="main">
 
-.sidebar-title {
-  font-size: 24px;
-  margin-bottom: 20px;
-}
+        <!-- TOP CARDS -->
+        <section class="top-cards">
+          <div class="card">
+            <p>Total Assets</p>
+            <h3>1</h3>
+          </div>
 
-.nav-item {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 10px;
-  background: #ffffff20;
-  border: none;
-  color: #fff;
-  text-align: left;
-  border-radius: 8px;
-  cursor: pointer;
-}
+          <div class="card">
+            <p>Available</p>
+            <h3>1</h3>
+          </div>
 
-.nav-item.is-active {
-  background: #ffffff40;
-}
+          <div class="card">
+            <p>Checked Out</p>
+            <h3>0</h3>
+          </div>
 
-/* MAIN */
-.main {
-  padding: 20px;
-  overflow-y: auto;
-}
+          <div class="card">
+            <p>Repairs Needed</p>
+            <h3>0</h3>
+          </div>
+        </section>
 
-/* TOP CARDS */
-.top-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
+        <!-- MAIN GRID -->
+        <section class="grid">
 
-.card {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
+          <!-- LEFT LIST -->
+          <div class="panel">
+            <h2>Equipment List</h2>
 
-.card p {
-  opacity: 0.7;
-}
+            <button class="asset-row is-selected" data-asset-id="EQ-001">
+              <div>
+                <strong>Milwaukee Drill</strong>
+                <small>EQ-001 · Power Tool</small>
+              </div>
+              <span class="status available">Available</span>
+            </button>
+          </div>
 
-.card h3 {
-  font-size: 28px;
-}
+          <!-- RIGHT DETAILS -->
+          <div class="panel">
+            <h2 id="asset-name">Milwaukee Drill</h2>
+            <span class="status-badge" id="asset-status">Available</span>
 
-/* GRID */
-.grid {
-  margin-top: 20px;
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 20px;
-}
+            <div class="detail-grid">
+              <div><label>Category</label><p id="asset-category">Power Tool</p></div>
+              <div><label>Barcode</label><p id="asset-barcode">EQ-001</p></div>
+              <div><label>Location</label><p id="asset-location">Warehouse</p></div>
+              <div><label>Holder</label><p id="asset-holder">None</p></div>
+              <div><label>Project</label><p id="asset-project">None</p></div>
+              <div><label>Condition</label><p id="asset-condition">Good</p></div>
+              <div><label>Checkout Date</label><p id="asset-checkout-date">None</p></div>
+              <div><label>Return Date</label><p id="asset-return-date">None</p></div>
+            </div>
 
-/* PANELS */
-.panel {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
-}
+            <form id="checkout-form" class="form-card">
+              <h3>Checkout</h3>
+              <label>
+                Holder
+                <input id="holder-input" type="text" placeholder="Employee name" />
+              </label>
+              <label>
+                Project
+                <input id="project-input" type="text" placeholder="Job name or number" />
+              </label>
 
-/* ASSET LIST */
-.asset-row {
-  width: 100%;
-  background: #f0f4ff;
-  border: none;
-  padding: 15px;
-  margin-top: 10px;
-  border-radius: 10px;
-  display: flex;
-  justify-content: space-between;
-  cursor: pointer;
-}
+              <div class="actions">
+                <button class="primary-button" type="submit">Checkout</button>
+                <button class="secondary-button" id="return-button" type="button">Return</button>
+              </div>
+            </form>
 
-.asset-row.is-selected {
-  background: #dce6ff;
-}
+            <div class="panel">
+              <h3>Notes</h3>
+              <p id="asset-notes">Test asset</p>
+            </div>
 
-.status {
-  font-weight: bold;
-}
+            <div class="panel">
+              <h3>QR Code</h3>
+              <div id="qr-code"></div>
+              <strong id="qr-label">EQ-001</strong>
+              <button class="secondary-button" id="print-qr-button">Print QR</button>
+            </div>
 
-.status.available {
-  color: #0b5ed7;
-}
+            <div class="panel">
+              <h3>History</h3>
+              <ul id="history-list">
+                <li class="empty-history">No history yet</li>
+              </ul>
+            </div>
 
-/* DETAILS */
-.status-badge {
-  background: #0b5ed7;
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-weight: bold;
-}
+          </div>
+        </section>
+      </main>
+    </div>
 
-.detail-grid {
-  margin-top: 20px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-}
-
-label {
-  font-size: 14px;
-  opacity: 0.7;
-}
-
-p {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-/* FORM */
-.form-card {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  margin-top: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  margin-top: 5px;
-}
-
-/* BUTTONS */
-.primary-button {
-  background: #0b5ed7;
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-}
-
-.secondary-button {
-  background: #e0e6f7;
-  color: #0b5ed7;
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-}
-
-.actions {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-}
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
