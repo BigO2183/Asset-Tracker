@@ -30,7 +30,7 @@
               <strong>Milwaukee Drill</strong>
               <small>EQ-001 · Power Tool</small>
             </span>
-            <span class="availability">Available</span>
+            <span class="availability" id="list-status">Available</span>
           </button>
         </aside>
 
@@ -68,7 +68,47 @@
               <dt>Condition</dt>
               <dd id="asset-condition">Good</dd>
             </div>
+            <div>
+              <dt>Checkout Date</dt>
+              <dd id="asset-checkout-date">None</dd>
+            </div>
+            <div>
+              <dt>Return Date</dt>
+              <dd id="asset-return-date">None</dd>
+            </div>
           </dl>
+
+          <form class="checkout-panel" id="checkout-form">
+            <h3>Checkout</h3>
+            <div class="form-grid">
+              <label>
+                Current Holder
+                <input
+                  id="holder-input"
+                  name="holder"
+                  type="text"
+                  placeholder="Employee name"
+                  autocomplete="off"
+                />
+              </label>
+              <label>
+                Project / Job
+                <input
+                  id="project-input"
+                  name="project"
+                  type="text"
+                  placeholder="Job name or number"
+                  autocomplete="off"
+                />
+              </label>
+            </div>
+            <div class="actions">
+              <button class="primary-button" type="submit">Checkout</button>
+              <button class="secondary-button" id="return-button" type="button">
+                Return
+              </button>
+            </div>
+          </form>
 
           <div class="notes">
             <h3>Notes</h3>

@@ -10,6 +10,8 @@
   --accent-strong: #115e59;
   --good-bg: #dff7ed;
   --good-text: #116044;
+  --busy-bg: #fff3cf;
+  --busy-text: #835300;
   --shadow: 0 18px 45px rgba(25, 42, 48, 0.11);
 }
 
@@ -160,6 +162,12 @@ h3 {
   color: var(--good-text);
 }
 
+.availability.is-checked-out,
+.status-badge.is-checked-out {
+  background: var(--busy-bg);
+  color: var(--busy-text);
+}
+
 .asset-detail {
   padding: 28px;
 }
@@ -186,6 +194,7 @@ h3 {
 }
 
 .detail-grid div,
+.checkout-panel,
 .notes {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -210,6 +219,79 @@ dd {
 .notes p {
   margin-bottom: 0;
   color: var(--muted);
+}
+
+.checkout-panel {
+  margin-bottom: 14px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 9px 11px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+input:focus {
+  border-color: var(--accent);
+  outline: 3px solid rgba(15, 118, 110, 0.16);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 42px;
+  border-radius: 6px;
+  padding: 9px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.primary-button:hover,
+.primary-button:focus-visible {
+  background: var(--accent-strong);
+  outline: none;
+}
+
+.secondary-button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.secondary-button:hover,
+.secondary-button:focus-visible {
+  border-color: var(--accent);
+  outline: none;
 }
 
 @media (max-width: 760px) {
@@ -238,6 +320,10 @@ dd {
   }
 
   .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
     grid-template-columns: 1fr;
   }
 }
