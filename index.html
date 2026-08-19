@@ -1,56 +1,184 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Big O Asset Tracker</title>
-    <meta name="description" content="Big O Equipment Asset Tracking System" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
+/* GLOBAL */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  color: #333;
+}
 
-  <body>
-    <header class="topbar">
-      <h1>Big O Asset Tracker</h1>
-      <span class="status-pill">1 Asset</span>
-    </header>
+h2, h3 {
+  margin: 0;
+}
 
-    <main class="layout">
-      <!-- LEFT SIDE LIST -->
-      <aside class="asset-list">
-        <h2>Equipment</h2>
+/* DASHBOARD LAYOUT */
+.dashboard {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 100vh;
+}
 
-        <button class="asset-item is-selected" data-asset-id="EQ-001">
-          <div>
-            <strong>Milwaukee Drill</strong>
-            <small>EQ-001 · Power Tool</small>
-          </div>
-          <span class="availability">Available</span>
-        </button>
-      </aside>
+/* SIDEBAR */
+.sidebar {
+  background: #0b5ed7;
+  color: #fff;
+  padding: 20px;
+}
 
-      <!-- RIGHT SIDE DETAILS -->
-      <section class="asset-detail">
-        <div class="detail-header">
-          <h2 id="asset-name">Milwaukee Drill</h2>
-          <span class="status-badge" id="asset-status">Available</span>
-        </div>
+.sidebar-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
 
-        <div class="detail-grid">
-          <div><label>Category</label><p id="asset-category">Power Tool</p></div>
-          <div><label>Barcode</label><p id="asset-barcode">EQ-001</p></div>
-          <div><label>Location</label><p id="asset-location">Warehouse</p></div>
-          <div><label>Holder</label><p id="asset-holder">None</p></div>
-          <div><label>Project</label><p id="asset-project">None</p></div>
-          <div><label>Condition</label><p id="asset-condition">Good</p></div>
-          <div><label>Checkout Date</label><p id="asset-checkout-date">None</p></div>
-          <div><label>Return Date</label><p id="asset-return-date">None</p></div>
-        </div>
+.nav-item {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #ffffff20;
+  border: none;
+  color: #fff;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+}
 
-        <form id="checkout-form" class="checkout-card">
-          <h3>Checkout</h3>
-          <label>
-            Holder
-            <input id="holder-input" name="holder" type="text" placeholder="Employee name" />
-          </label>
-          <label>
-            Project
+.nav-item.is-active {
+  background: #ffffff40;
+}
+
+/* MAIN */
+.main {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* TOP CARDS */
+.top-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.card p {
+  opacity: 0.7;
+}
+
+.card h3 {
+  font-size: 28px;
+}
+
+/* GRID */
+.grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+}
+
+/* PANELS */
+.panel {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+/* ASSET LIST */
+.asset-row {
+  width: 100%;
+  background: #f0f4ff;
+  border: none;
+  padding: 15px;
+  margin-top: 10px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.asset-row.is-selected {
+  background: #dce6ff;
+}
+
+.status {
+  font-weight: bold;
+}
+
+.status.available {
+  color: #0b5ed7;
+}
+
+/* DETAILS */
+.status-badge {
+  background: #0b5ed7;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.detail-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+label {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+p {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* FORM */
+.form-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+}
+
+/* BUTTONS */
+.primary-button {
+  background: #0b5ed7;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.secondary-button {
+  background: #e0e6f7;
+  color: #0b5ed7;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
