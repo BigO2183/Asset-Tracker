@@ -1,6 +1,8 @@
-const supabaseUrl = "https://kmcaipokpqpqzniuaejh.supabase.co/rest/v1/
-";
-const supabaseAnonKey = "sb_publishable_eIZxtqtun8DVODuQkc4xkw_OZEz35Zt";
+const supabaseUrl = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
+const supabaseAnonKey = "PASTE_YOUR_SUPABASE_ANON_PUBLIC_KEY_HERE";
+
+const storageKey = "equipment-asset-tracker-assets";
+const historyStorageKey = "equipment-asset-tracker-history";
 
 const starterEquipment = [
   {
@@ -18,9 +20,6 @@ const starterEquipment = [
     notes: "Test asset",
   },
 ];
-
-let equipment = loadEquipment();
-let history = loadHistory();
 
 const fields = {
   assetId: document.querySelector("#asset-id"),
@@ -43,9 +42,63 @@ const fields = {
   historyList: document.querySelector("#history-list"),
 };
 
-let selectedAsset = equipment[0];
+const hasSupabaseConfig =
+  supabaseUrl.startsWith("https://") &&
+  !supabaseAnonKey.includes("PASTE_YOUR");
 
-function loadEquipment() {
+const db = hasSupabaseConfig
+  ? window.supabase.createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+let equipment = [];
+let history = [];
+let selectedAsset = null;
+
+function toAppAsset(row) {
+  return {
+    assetId: row.asset_id,
+    equipmentName: row.equipment_name,
+    category: row.category || "",
+    barcode: row.barcode || "",
+    status: row.status || "Available",
+    location: row.location || "",
+    currentHolder: row.current_holder || "",
+    projectJob: row.project_job || "",
+    checkoutDate: row.checkout_date || "",
+    returnDate: row.return_date || "",
+    condition: row.condition || "",
+    notes: row.notes || "",
+  };
+}
+
+function toDatabaseAsset(asset) {
+  return {
+    asset_id: asset.assetId,
+    equipment_name: asset.equipmentName,
+    category: asset.category,
+    barcode: asset.barcode,
+    status: asset.status,
+    location: asset.location,
+    current_holder: asset.currentHolder,
+    project_job: asset.projectJob,
+    checkout_date: asset.checkoutDate || null,
+    return_date: asset.returnDate || null,
+    condition: asset.condition,
+    notes: asset.notes,
+  };
+}
+
+function toAppHistory(row) {
+  return {
+    assetId: row.asset_id,
+    action: row.action,
+    holder: row.holder || "",
+    projectJob: row.project_job || "",
+    date: formatDate(row.action_date),
+  };
+}
+
+function loadLocalEquipment() {
   const savedEquipment = localStorage.getItem(storageKey);
 
   if (!savedEquipment) {
@@ -59,11 +112,11 @@ function loadEquipment() {
   }
 }
 
-function saveEquipment() {
+function saveLocalEquipment() {
   localStorage.setItem(storageKey, JSON.stringify(equipment));
 }
 
-function loadHistory() {
+function loadLocalHistory() {
   const savedHistory = localStorage.getItem(historyStorageKey);
 
   if (!savedHistory) {
@@ -77,7 +130,7 @@ function loadHistory() {
   }
 }
 
-function saveHistory() {
+function saveLocalHistory() {
   localStorage.setItem(historyStorageKey, JSON.stringify(history));
 }
 
@@ -85,12 +138,24 @@ function displayValue(value) {
   return value || "None";
 }
 
-function today() {
-  return new Date().toLocaleDateString(undefined, {
+function formatDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  return new Date(value).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
+}
+
+function todayForDatabase() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function todayForDisplay() {
+  return formatDate(new Date().toISOString());
 }
 
 function updateStatusStyle(status) {
@@ -100,16 +165,82 @@ function updateStatusStyle(status) {
   fields.listStatus.classList.toggle("is-checked-out", isCheckedOut);
 }
 
-function addHistoryEvent(asset, action) {
-  history.unshift({
+async function loadEquipment() {
+  if (!db) {
+    equipment = loadLocalEquipment();
+    history = loadLocalHistory();
+    return;
+  }
+
+  const { data: equipmentRows, error: equipmentError } = await db
+    .from("equipment")
+    .select("*")
+    .order("asset_id");
+
+  if (equipmentError) {
+    console.error(equipmentError);
+    equipment = loadLocalEquipment();
+  } else {
+    equipment = equipmentRows.map(toAppAsset);
+  }
+
+  const { data: historyRows, error: historyError } = await db
+    .from("checkout_history")
+    .select("*")
+    .order("action_date", { ascending: false });
+
+  if (historyError) {
+    console.error(historyError);
+    history = [];
+  } else {
+    history = historyRows.map(toAppHistory);
+  }
+}
+
+async function saveAsset(asset) {
+  if (!db) {
+    saveLocalEquipment();
+    return;
+  }
+
+  const { error } = await db
+    .from("equipment")
+    .update(toDatabaseAsset(asset))
+    .eq("asset_id", asset.assetId);
+
+  if (error) {
+    console.error(error);
+    alert("Supabase could not save this asset. Check your table permissions.");
+  }
+}
+
+async function addHistoryEvent(asset, action) {
+  const event = {
     assetId: asset.assetId,
     action,
     holder: asset.currentHolder,
     projectJob: asset.projectJob,
-    date: today(),
+    date: todayForDisplay(),
+  };
+
+  history.unshift(event);
+
+  if (!db) {
+    saveLocalHistory();
+    return;
+  }
+
+  const { error } = await db.from("checkout_history").insert({
+    asset_id: asset.assetId,
+    action,
+    holder: asset.currentHolder,
+    project_job: asset.projectJob,
   });
 
-  saveHistory();
+  if (error) {
+    console.error(error);
+    alert("Supabase could not save the history record.");
+  }
 }
 
 function renderHistory(assetId) {
@@ -152,8 +283,8 @@ function showAsset(asset) {
   fields.location.textContent = asset.location;
   fields.currentHolder.textContent = displayValue(asset.currentHolder);
   fields.projectJob.textContent = displayValue(asset.projectJob);
-  fields.checkoutDate.textContent = displayValue(asset.checkoutDate);
-  fields.returnDate.textContent = displayValue(asset.returnDate);
+  fields.checkoutDate.textContent = displayValue(formatDate(asset.checkoutDate));
+  fields.returnDate.textContent = displayValue(formatDate(asset.returnDate));
   fields.condition.textContent = asset.condition;
   fields.notes.textContent = asset.notes;
   fields.holderInput.value = asset.currentHolder;
@@ -167,7 +298,7 @@ function showAsset(asset) {
 document.querySelectorAll("[data-asset-id]").forEach((button) => {
   button.addEventListener("click", () => {
     const asset = equipment.find(
-      (asset) => asset.assetId === button.dataset.assetId
+      (item) => item.assetId === button.dataset.assetId
     );
 
     if (asset) {
@@ -176,30 +307,38 @@ document.querySelectorAll("[data-asset-id]").forEach((button) => {
   });
 });
 
-fields.checkoutForm.addEventListener("submit", (event) => {
+fields.checkoutForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   selectedAsset.status = "Checked Out";
   selectedAsset.currentHolder = fields.holderInput.value.trim();
   selectedAsset.projectJob = fields.projectInput.value.trim();
-  selectedAsset.checkoutDate = today();
+  selectedAsset.checkoutDate = todayForDatabase();
   selectedAsset.returnDate = "";
 
-  addHistoryEvent(selectedAsset, "Checked out");
-  saveEquipment();
+  await addHistoryEvent(selectedAsset, "Checked out");
+  await saveAsset(selectedAsset);
   showAsset(selectedAsset);
 });
 
-fields.returnButton.addEventListener("click", () => {
-  addHistoryEvent(selectedAsset, "Returned");
+fields.returnButton.addEventListener("click", async () => {
+  await addHistoryEvent(selectedAsset, "Returned");
 
   selectedAsset.status = "Available";
   selectedAsset.currentHolder = "";
   selectedAsset.projectJob = "";
-  selectedAsset.returnDate = today();
+  selectedAsset.returnDate = todayForDatabase();
 
-  saveEquipment();
+  await saveAsset(selectedAsset);
   showAsset(selectedAsset);
 });
 
-showAsset(equipment[0]);
+async function startApp() {
+  await loadEquipment();
+
+  if (equipment.length > 0) {
+    showAsset(equipment[0]);
+  }
+}
+
+startApp();
