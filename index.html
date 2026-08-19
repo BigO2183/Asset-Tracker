@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Equipment Asset Tracker</title>
+    <meta
+      name="description"
+      content="A lightweight equipment asset tracker MVP for GitHub and Netlify."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Asset Tracker MVP</p>
+          <h1>Equipment</h1>
+        </div>
+        <span class="status-pill">1 asset</span>
+      </header>
+
+      <section class="workspace" aria-label="Equipment tracker">
+        <aside class="asset-list" aria-label="Equipment list">
+          <div class="section-header">
+            <h2>Equipment List</h2>
+          </div>
+          <button class="asset-row is-selected" type="button" data-asset-id="EQ-001">
+            <span>
+              <strong>Milwaukee Drill</strong>
+              <small>EQ-001 · Power Tool</small>
+            </span>
+            <span class="availability">Available</span>
+          </button>
+        </aside>
+
+        <section class="asset-detail" aria-live="polite">
+          <div class="detail-header">
+            <div>
+              <p class="eyebrow" id="asset-id">EQ-001</p>
+              <h2 id="asset-name">Milwaukee Drill</h2>
+            </div>
+            <span class="status-badge" id="asset-status">Available</span>
+          </div>
+
+          <dl class="detail-grid">
+            <div>
+              <dt>Category</dt>
+              <dd id="asset-category">Power Tool</dd>
+            </div>
+            <div>
+              <dt>QR / Barcode</dt>
+              <dd id="asset-barcode">EQ-001</dd>
+            </div>
+            <div>
+              <dt>Location</dt>
+              <dd id="asset-location">Warehouse</dd>
+            </div>
+            <div>
+              <dt>Current Holder</dt>
+              <dd id="asset-holder">None</dd>
+            </div>
+            <div>
+              <dt>Project / Job</dt>
+              <dd id="asset-project">None</dd>
+            </div>
+            <div>
+              <dt>Condition</dt>
+              <dd id="asset-condition">Good</dd>
+            </div>
+          </dl>
+
+          <div class="notes">
+            <h3>Notes</h3>
+            <p id="asset-notes">Test asset</p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
