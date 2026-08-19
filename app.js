@@ -1,4 +1,5 @@
 const storageKey = "equipment-asset-tracker-assets";
+const historyStorageKey = "equipment-asset-tracker-history";
 
 const starterEquipment = [
   {
@@ -18,6 +19,7 @@ const starterEquipment = [
 ];
 
 let equipment = loadEquipment();
+let history = loadHistory();
 
 const fields = {
   assetId: document.querySelector("#asset-id"),
@@ -37,6 +39,7 @@ const fields = {
   projectInput: document.querySelector("#project-input"),
   checkoutForm: document.querySelector("#checkout-form"),
   returnButton: document.querySelector("#return-button"),
+  historyList: document.querySelector("#history-list"),
 };
 
 let selectedAsset = equipment[0];
@@ -59,6 +62,24 @@ function saveEquipment() {
   localStorage.setItem(storageKey, JSON.stringify(equipment));
 }
 
+function loadHistory() {
+  const savedHistory = localStorage.getItem(historyStorageKey);
+
+  if (!savedHistory) {
+    return [];
+  }
+
+  try {
+    return JSON.parse(savedHistory);
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveHistory() {
+  localStorage.setItem(historyStorageKey, JSON.stringify(history));
+}
+
 function displayValue(value) {
   return value || "None";
 }
@@ -76,6 +97,46 @@ function updateStatusStyle(status) {
 
   fields.status.classList.toggle("is-checked-out", isCheckedOut);
   fields.listStatus.classList.toggle("is-checked-out", isCheckedOut);
+}
+
+function addHistoryEvent(asset, action) {
+  history.unshift({
+    assetId: asset.assetId,
+    action,
+    holder: asset.currentHolder,
+    projectJob: asset.projectJob,
+    date: today(),
+  });
+
+  saveHistory();
+}
+
+function renderHistory(assetId) {
+  const assetHistory = history.filter((event) => event.assetId === assetId);
+
+  fields.historyList.innerHTML = "";
+
+  if (assetHistory.length === 0) {
+    const emptyItem = document.createElement("li");
+    emptyItem.className = "empty-history";
+    emptyItem.textContent = "No history yet";
+    fields.historyList.append(emptyItem);
+    return;
+  }
+
+  assetHistory.forEach((event) => {
+    const item = document.createElement("li");
+    const title = document.createElement("strong");
+    const detail = document.createElement("span");
+
+    title.textContent = `${event.action} on ${event.date}`;
+    detail.textContent = `${displayValue(event.holder)} · ${displayValue(
+      event.projectJob
+    )}`;
+
+    item.append(title, detail);
+    fields.historyList.append(item);
+  });
 }
 
 function showAsset(asset) {
@@ -99,6 +160,7 @@ function showAsset(asset) {
   fields.returnButton.disabled = asset.status !== "Checked Out";
 
   updateStatusStyle(asset.status);
+  renderHistory(asset.assetId);
 }
 
 document.querySelectorAll("[data-asset-id]").forEach((button) => {
@@ -122,11 +184,14 @@ fields.checkoutForm.addEventListener("submit", (event) => {
   selectedAsset.checkoutDate = today();
   selectedAsset.returnDate = "";
 
+  addHistoryEvent(selectedAsset, "Checked out");
   saveEquipment();
   showAsset(selectedAsset);
 });
 
 fields.returnButton.addEventListener("click", () => {
+  addHistoryEvent(selectedAsset, "Returned");
+
   selectedAsset.status = "Available";
   selectedAsset.currentHolder = "";
   selectedAsset.projectJob = "";

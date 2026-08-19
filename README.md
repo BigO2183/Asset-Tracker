@@ -6,10 +6,11 @@ A lightweight static starter for tracking equipment assets. It is designed for G
 
 - `index.html` - app structure
 - `styles.css` - responsive layout and styling
-- `app.js` - starter equipment data, saved browser state, and simple checkout/return logic
+- `app.js` - starter equipment data, saved browser state, history, and simple checkout/return logic
 - One test asset: `EQ-001`, Milwaukee Drill, status `Available`
 - Browser-only checkout and return buttons for the first workflow test
 - Saved browser state, so checkout changes stay after refreshing the page
+- Local checkout/return history for the test asset
 
 ## Run Locally
 
@@ -36,7 +37,7 @@ No install step is required.
 ## Easy Next Steps
 
 - Replace the hardcoded array in `app.js` with Supabase equipment records.
-- Create a checkout history table.
+- Replace the browser history list with a Supabase checkout history table.
 - Add QR codes that open an asset detail page by Asset ID.
 
 Keep the first version simple: list equipment, open one asset, confirm the status.

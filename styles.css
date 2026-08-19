@@ -195,7 +195,8 @@ h3 {
 
 .detail-grid div,
 .checkout-panel,
-.notes {
+.notes,
+.history-panel {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 16px;
@@ -221,7 +222,8 @@ dd {
   color: var(--muted);
 }
 
-.checkout-panel {
+.checkout-panel,
+.notes {
   margin-bottom: 14px;
 }
 
@@ -292,6 +294,39 @@ input:focus {
 .secondary-button:focus-visible {
   border-color: var(--accent);
   outline: none;
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-list li {
+  display: grid;
+  gap: 4px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.history-list li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.history-list strong {
+  font-size: 0.95rem;
+}
+
+.history-list span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.empty-history {
+  color: var(--muted);
 }
 
 @media (max-width: 760px) {
