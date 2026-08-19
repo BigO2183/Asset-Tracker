@@ -1,127 +1,418 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Big O Asset Tracker</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-
-  <body>
-    <div class="dashboard">
-
-      <!-- SIDEBAR -->
-      <aside class="sidebar">
-        <h2 class="sidebar-title">Big O</h2>
-        <nav>
-          <button class="nav-item is-active">Dashboard</button>
-          <button class="nav-item">Assets</button>
-          <button class="nav-item">Checkouts</button>
-          <button class="nav-item">History</button>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Equipment Asset Tracker - Pro</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- HEADER / NAVIGATION -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo">
+          <span class="logo-icon">📦</span>
+          <span class="logo-text">Asset Tracker Pro</span>
+        </div>
+        <nav class="main-nav">
+          <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+          <button class="nav-btn" data-page="equipment">Equipment</button>
+          <button class="nav-btn" data-page="checkout">Checkout</button>
+          <button class="nav-btn" data-page="return">Return</button>
+          <button class="nav-btn" data-page="history">History</button>
         </nav>
-      </aside>
+        <button class="add-asset-btn" id="add-equipment-btn">+ Add Equipment</button>
+      </div>
+    </header>
 
-      <!-- MAIN CONTENT -->
-      <main class="main">
-
-        <!-- TOP CARDS -->
-        <section class="top-cards">
-          <div class="card">
-            <p>Total Assets</p>
-            <h3>1</h3>
+    <!-- MAIN CONTENT -->
+    <main class="app-main">
+      <!-- DASHBOARD PAGE -->
+      <section id="page-dashboard" class="page active">
+        <div class="dashboard-container">
+          <!-- SEARCH BAR -->
+          <div class="search-section">
+            <input
+              type="text"
+              id="dashboard-search"
+              class="search-input"
+              placeholder="Search asset, employee, project, ID..."
+            />
+            <span class="search-icon">🔍</span>
           </div>
 
-          <div class="card">
-            <p>Available</p>
-            <h3>1</h3>
-          </div>
-
-          <div class="card">
-            <p>Checked Out</p>
-            <h3>0</h3>
-          </div>
-
-          <div class="card">
-            <p>Repairs Needed</p>
-            <h3>0</h3>
-          </div>
-        </section>
-
-        <!-- MAIN GRID -->
-        <section class="grid">
-
-          <!-- LEFT LIST -->
-          <div class="panel">
-            <h2>Equipment List</h2>
-
-            <button class="asset-row is-selected" data-asset-id="EQ-001">
-              <div>
-                <strong>Milwaukee Drill</strong>
-                <small>EQ-001 · Power Tool</small>
+          <!-- SUMMARY CARDS -->
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="card-icon">📊</div>
+              <div class="card-content">
+                <div class="card-label">Total Assets</div>
+                <div class="card-value" id="total-assets">0</div>
               </div>
-              <span class="status available">Available</span>
-            </button>
-          </div>
-
-          <!-- RIGHT DETAILS -->
-          <div class="panel">
-            <h2 id="asset-name">Milwaukee Drill</h2>
-            <span class="status-badge" id="asset-status">Available</span>
-
-            <div class="detail-grid">
-              <div><label>Category</label><p id="asset-category">Power Tool</p></div>
-              <div><label>Barcode</label><p id="asset-barcode">EQ-001</p></div>
-              <div><label>Location</label><p id="asset-location">Warehouse</p></div>
-              <div><label>Holder</label><p id="asset-holder">None</p></div>
-              <div><label>Project</label><p id="asset-project">None</p></div>
-              <div><label>Condition</label><p id="asset-condition">Good</p></div>
-              <div><label>Checkout Date</label><p id="asset-checkout-date">None</p></div>
-              <div><label>Return Date</label><p id="asset-return-date">None</p></div>
             </div>
-
-            <form id="checkout-form" class="form-card">
-              <h3>Checkout</h3>
-              <label>
-                Holder
-                <input id="holder-input" type="text" placeholder="Employee name" />
-              </label>
-              <label>
-                Project
-                <input id="project-input" type="text" placeholder="Job name or number" />
-              </label>
-
-              <div class="actions">
-                <button class="primary-button" type="submit">Checkout</button>
-                <button class="secondary-button" id="return-button" type="button">Return</button>
+            <div class="summary-card">
+              <div class="card-icon">✅</div>
+              <div class="card-content">
+                <div class="card-label">Available</div>
+                <div class="card-value" id="available-count">0</div>
               </div>
-            </form>
-
-            <div class="panel">
-              <h3>Notes</h3>
-              <p id="asset-notes">Test asset</p>
             </div>
-
-            <div class="panel">
-              <h3>QR Code</h3>
-              <div id="qr-code"></div>
-              <strong id="qr-label">EQ-001</strong>
-              <button class="secondary-button" id="print-qr-button">Print QR</button>
+            <div class="summary-card">
+              <div class="card-icon">🚀</div>
+              <div class="card-content">
+                <div class="card-label">Checked Out</div>
+                <div class="card-value" id="checkedout-count">0</div>
+              </div>
             </div>
-
-            <div class="panel">
-              <h3>History</h3>
-              <ul id="history-list">
-                <li class="empty-history">No history yet</li>
-              </ul>
+            <div class="summary-card">
+              <div class="card-icon">⚠️</div>
+              <div class="card-content">
+                <div class="card-label">Damaged</div>
+                <div class="card-value" id="damaged-count">0</div>
+              </div>
             </div>
-
+            <div class="summary-card">
+              <div class="card-icon">❌</div>
+              <div class="card-content">
+                <div class="card-label">Missing</div>
+                <div class="card-value" id="missing-count">0</div>
+              </div>
+            </div>
           </div>
-        </section>
-      </main>
+
+          <!-- RECENT ACTIVITY -->
+          <div class="recent-activity">
+            <h2>Recent Activity</h2>
+            <div class="activity-list" id="activity-list">
+              <p class="empty-state">No recent activity</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- EQUIPMENT PAGE -->
+      <section id="page-equipment" class="page">
+        <div class="equipment-container">
+          <div class="page-header">
+            <h1>Equipment List</h1>
+            <button class="btn btn-primary" id="add-equipment-btn-2">+ Add Equipment</button>
+          </div>
+
+          <!-- FILTERS -->
+          <div class="filters">
+            <input
+              type="text"
+              id="equipment-search"
+              class="filter-input"
+              placeholder="Search equipment..."
+            />
+            <select id="status-filter" class="filter-select">
+              <option value="">All Status</option>
+              <option value="Available">Available</option>
+              <option value="Checked Out">Checked Out</option>
+              <option value="Damaged">Damaged</option>
+              <option value="Missing">Missing</option>
+              <option value="Repair">Repair</option>
+            </select>
+            <select id="category-filter" class="filter-select">
+              <option value="">All Categories</option>
+              <option value="Power Tool">Power Tool</option>
+              <option value="Hand Tool">Hand Tool</option>
+              <option value="Test Equipment">Test Equipment</option>
+              <option value="Ladder">Ladder</option>
+              <option value="Safety Equipment">Safety Equipment</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- EQUIPMENT LIST -->
+          <div class="equipment-list" id="equipment-list">
+            <p class="empty-state">No equipment found</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHECKOUT PAGE -->
+      <section id="page-checkout" class="page">
+        <div class="checkout-container">
+          <h1>Check Out Equipment</h1>
+          <div class="checkout-form">
+            <div class="form-group">
+              <label>Asset ID or Equipment Name</label>
+              <div class="asset-search-wrapper">
+                <input
+                  type="text"
+                  id="checkout-asset-search"
+                  class="form-input"
+                  placeholder="Search or scan asset ID..."
+                />
+                <div class="asset-suggestions" id="checkout-suggestions"></div>
+              </div>
+            </div>
+
+            <div id="checkout-details" class="checkout-details" style="display: none;">
+              <div class="selected-asset">
+                <strong id="selected-asset-name"></strong>
+                <span class="asset-id" id="selected-asset-id"></span>
+                <span class="asset-status" id="selected-asset-status"></span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Employee Name *</label>
+                  <input
+                    type="text"
+                    id="checkout-employee"
+                    class="form-input"
+                    placeholder="Employee name"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Project / Job</label>
+                  <input
+                    type="text"
+                    id="checkout-project"
+                    class="form-input"
+                    placeholder="Project name or number"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Location</label>
+                  <input
+                    type="text"
+                    id="checkout-location"
+                    class="form-input"
+                    placeholder="Warehouse, Site A, etc."
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Expected Return Date</label>
+                  <input type="date" id="checkout-return-date" class="form-input" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Notes</label>
+                <textarea
+                  id="checkout-notes"
+                  class="form-textarea"
+                  placeholder="Additional notes..."
+                ></textarea>
+              </div>
+
+              <button class="btn btn-primary btn-large" id="checkout-btn">
+                ✓ CHECK OUT EQUIPMENT
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RETURN PAGE -->
+      <section id="page-return" class="page">
+        <div class="return-container">
+          <h1>Return Equipment</h1>
+          <div class="return-form">
+            <div class="form-group">
+              <label>Asset ID or Equipment Name</label>
+              <div class="asset-search-wrapper">
+                <input
+                  type="text"
+                  id="return-asset-search"
+                  class="form-input"
+                  placeholder="Search or scan asset ID..."
+                />
+                <div class="asset-suggestions" id="return-suggestions"></div>
+              </div>
+            </div>
+
+            <div id="return-details" class="return-details" style="display: none;">
+              <div class="selected-asset">
+                <strong id="return-asset-name"></strong>
+                <span class="asset-id" id="return-asset-id"></span>
+              </div>
+
+              <div class="return-info">
+                <div class="info-row">
+                  <span class="info-label">Current Holder:</span>
+                  <span id="return-current-holder">—</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Checked Out:</span>
+                  <span id="return-checkout-date">—</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Project:</span>
+                  <span id="return-current-project">—</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Return Condition *</label>
+                <div class="condition-buttons">
+                  <button class="condition-btn" data-condition="Good">Good ✓</button>
+                  <button class="condition-btn" data-condition="Fair">Fair ⚠️</button>
+                  <button class="condition-btn" data-condition="Damaged">Damaged ❌</button>
+                </div>
+                <input type="hidden" id="return-condition" />
+              </div>
+
+              <div class="form-group">
+                <label>Notes</label>
+                <textarea
+                  id="return-notes"
+                  class="form-textarea"
+                  placeholder="Any damage or issues noticed..."
+                ></textarea>
+              </div>
+
+              <button class="btn btn-primary btn-large" id="return-btn">
+                ✓ RETURN EQUIPMENT
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HISTORY PAGE -->
+      <section id="page-history" class="page">
+        <div class="history-container">
+          <div class="page-header">
+            <h1>Transaction History</h1>
+          </div>
+
+          <!-- HISTORY FILTERS -->
+          <div class="filters">
+            <input
+              type="text"
+              id="history-search"
+              class="filter-input"
+              placeholder="Search by asset, employee, project..."
+            />
+            <select id="history-action-filter" class="filter-select">
+              <option value="">All Actions</option>
+              <option value="Checked Out">Checked Out</option>
+              <option value="Returned">Returned</option>
+              <option value="Added">Added</option>
+              <option value="Edited">Edited</option>
+              <option value="Marked Damaged">Marked Damaged</option>
+              <option value="Marked Missing">Marked Missing</option>
+            </select>
+          </div>
+
+          <!-- HISTORY LIST -->
+          <div class="history-list" id="history-list">
+            <p class="empty-state">No history records</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: Asset Details -->
+  <div class="modal" id="asset-details-modal">
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <div id="asset-details-body"></div>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="app.js"></script>
-  </body>
+  <!-- MODAL: Add/Edit Asset -->
+  <div class="modal" id="add-asset-modal">
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <h2>Add Equipment</h2>
+      <form id="add-asset-form" class="asset-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Equipment Name *</label>
+            <input
+              type="text"
+              name="equipmentName"
+              class="form-input"
+              placeholder="e.g., DeWalt 20V Drill"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Asset ID *</label>
+            <input
+              type="text"
+              name="assetId"
+              class="form-input"
+              placeholder="e.g., TOOL-001"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category *</label>
+            <select name="category" class="form-input" required>
+              <option value="">Select category</option>
+              <option value="Power Tool">Power Tool</option>
+              <option value="Hand Tool">Hand Tool</option>
+              <option value="Test Equipment">Test Equipment</option>
+              <option value="Ladder">Ladder</option>
+              <option value="Safety Equipment">Safety Equipment</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Brand</label>
+            <input type="text" name="brand" class="form-input" placeholder="e.g., DeWalt" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Model</label>
+            <input type="text" name="model" class="form-input" placeholder="e.g., DCD791D2" />
+          </div>
+          <div class="form-group">
+            <label>Serial Number</label>
+            <input type="text" name="serialNumber" class="form-input" placeholder="Serial #" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" name="location" class="form-input" placeholder="e.g., Warehouse" />
+          </div>
+          <div class="form-group">
+            <label>Condition</label>
+            <select name="condition" class="form-input">
+              <option value="Good">Good</option>
+              <option value="Fair">Fair</option>
+              <option value="Damaged">Damaged</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea name="notes" class="form-textarea" placeholder="Any additional notes..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('add-asset-modal')">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">Add Equipment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
 </html>
