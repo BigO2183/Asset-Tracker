@@ -217,6 +217,10 @@ dd {
   font-weight: 700;
 }
 
+a {
+  color: var(--accent-strong);
+}
+
 .notes p {
   margin-bottom: 0;
   color: var(--muted);

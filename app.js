@@ -33,6 +33,7 @@ const fields = {
   projectJob: document.querySelector("#asset-project"),
   checkoutDate: document.querySelector("#asset-checkout-date"),
   returnDate: document.querySelector("#asset-return-date"),
+  assetLink: document.querySelector("#asset-link"),
   condition: document.querySelector("#asset-condition"),
   notes: document.querySelector("#asset-notes"),
   holderInput: document.querySelector("#holder-input"),
@@ -273,6 +274,9 @@ function renderHistory(assetId) {
 
 function showAsset(asset) {
   selectedAsset = asset;
+  const assetUrl = new URL(window.location.href);
+
+  assetUrl.searchParams.set("asset", asset.assetId);
 
   fields.assetId.textContent = asset.assetId;
   fields.equipmentName.textContent = asset.equipmentName;
@@ -285,6 +289,8 @@ function showAsset(asset) {
   fields.projectJob.textContent = displayValue(asset.projectJob);
   fields.checkoutDate.textContent = displayValue(formatDate(asset.checkoutDate));
   fields.returnDate.textContent = displayValue(formatDate(asset.returnDate));
+  fields.assetLink.href = assetUrl.toString();
+  fields.assetLink.textContent = `Open ${asset.assetId}`;
   fields.condition.textContent = asset.condition;
   fields.notes.textContent = asset.notes;
   fields.holderInput.value = asset.currentHolder;
@@ -303,6 +309,7 @@ document.querySelectorAll("[data-asset-id]").forEach((button) => {
 
     if (asset) {
       showAsset(asset);
+      window.history.replaceState(null, "", `?asset=${asset.assetId}`);
     }
   });
 });
@@ -335,8 +342,16 @@ fields.returnButton.addEventListener("click", async () => {
 
 async function startApp() {
   await loadEquipment();
+  const requestedAssetId = new URLSearchParams(window.location.search).get(
+    "asset"
+  );
+  const requestedAsset = equipment.find(
+    (asset) => asset.assetId === requestedAssetId
+  );
 
-  if (equipment.length > 0) {
+  if (requestedAsset) {
+    showAsset(requestedAsset);
+  } else if (equipment.length > 0) {
     showAsset(equipment[0]);
   }
 }

@@ -49,8 +49,17 @@ After saving, upload the changed `app.js` and `index.html` to GitHub. Netlify sh
 
 ## Easy Next Steps
 
-- Add QR codes that open an asset detail page by Asset ID.
 - Add more equipment records in Supabase.
 - Add basic sign-in before letting a full team use the tracker.
+
+## Asset Links For QR Codes
+
+Each asset can open directly with an `asset` value in the URL:
+
+```text
+https://your-site-name.netlify.app/?asset=EQ-001
+```
+
+Use that URL when creating a QR code for the asset.
 
 Keep the first version simple: list equipment, open one asset, confirm the status.
