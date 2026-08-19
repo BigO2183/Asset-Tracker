@@ -11,6 +11,7 @@ A lightweight static starter for tracking equipment assets. It is designed for G
 - Browser-only checkout and return buttons for the first workflow test
 - Supabase-ready equipment and checkout history logic
 - Browser storage fallback until your Supabase values are pasted into `app.js`
+- Direct asset QR code display and print button
 
 ## Run Locally
 
@@ -61,5 +62,7 @@ https://your-site-name.netlify.app/?asset=EQ-001
 ```
 
 Use that URL when creating a QR code for the asset.
+
+The app also shows a QR code in the asset detail view. Use **Print QR** to print the current asset label.
 
 Keep the first version simple: list equipment, open one asset, confirm the status.

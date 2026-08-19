@@ -36,6 +36,10 @@ const fields = {
   assetLink: document.querySelector("#asset-link"),
   condition: document.querySelector("#asset-condition"),
   notes: document.querySelector("#asset-notes"),
+  qrCode: document.querySelector("#qr-code"),
+  qrLabel: document.querySelector("#qr-label"),
+  qrLinkText: document.querySelector("#qr-link-text"),
+  printQrButton: document.querySelector("#print-qr-button"),
   holderInput: document.querySelector("#holder-input"),
   projectInput: document.querySelector("#project-input"),
   checkoutForm: document.querySelector("#checkout-form"),
@@ -164,6 +168,23 @@ function updateStatusStyle(status) {
 
   fields.status.classList.toggle("is-checked-out", isCheckedOut);
   fields.listStatus.classList.toggle("is-checked-out", isCheckedOut);
+}
+
+function renderQrCode(asset, assetUrl) {
+  fields.qrCode.innerHTML = "";
+  fields.qrLabel.textContent = asset.assetId;
+  fields.qrLinkText.textContent = `Open ${asset.assetId} from a scan`;
+
+  if (!window.QRCode) {
+    fields.qrCode.textContent = "QR unavailable";
+    return;
+  }
+
+  new window.QRCode(fields.qrCode, {
+    text: assetUrl.toString(),
+    width: 104,
+    height: 104,
+  });
 }
 
 async function loadEquipment() {
@@ -298,6 +319,7 @@ function showAsset(asset) {
   fields.returnButton.disabled = asset.status !== "Checked Out";
 
   updateStatusStyle(asset.status);
+  renderQrCode(asset, assetUrl);
   renderHistory(asset.assetId);
 }
 
@@ -338,6 +360,10 @@ fields.returnButton.addEventListener("click", async () => {
 
   await saveAsset(selectedAsset);
   showAsset(selectedAsset);
+});
+
+fields.printQrButton.addEventListener("click", () => {
+  window.print();
 });
 
 async function startApp() {

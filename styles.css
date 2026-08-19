@@ -196,6 +196,7 @@ h3 {
 .detail-grid div,
 .checkout-panel,
 .notes,
+.qr-panel,
 .history-panel {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -227,7 +228,8 @@ a {
 }
 
 .checkout-panel,
-.notes {
+.notes,
+.qr-panel {
   margin-bottom: 14px;
 }
 
@@ -333,6 +335,62 @@ input:focus {
   color: var(--muted);
 }
 
+.qr-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.qr-panel p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.qr-card {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 142px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+#qr-code {
+  width: 104px;
+  height: 104px;
+}
+
+#qr-code img,
+#qr-code canvas {
+  width: 104px;
+  height: 104px;
+}
+
+#qr-label {
+  font-size: 0.88rem;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .qr-card,
+  .qr-card * {
+    visibility: visible;
+  }
+
+  .qr-card {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    box-shadow: none;
+  }
+}
+
 @media (max-width: 760px) {
   .app-shell {
     width: min(100% - 20px, 640px);
@@ -363,6 +421,10 @@ input:focus {
   }
 
   .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-panel {
     grid-template-columns: 1fr;
   }
 }
