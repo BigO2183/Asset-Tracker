@@ -1,5 +1,6 @@
-const storageKey = "equipment-asset-tracker-assets";
-const historyStorageKey = "equipment-asset-tracker-history";
+const supabaseUrl = "https://kmcaipokpqpqzniuaejh.supabase.co/rest/v1/
+";
+const supabaseAnonKey = "sb_publishable_eIZxtqtun8DVODuQkc4xkw_OZEz35Zt";
 
 const starterEquipment = [
   {
