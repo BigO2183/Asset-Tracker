@@ -6,9 +6,10 @@ A lightweight static starter for tracking equipment assets. It is designed for G
 
 - `index.html` - app structure
 - `styles.css` - responsive layout and styling
-- `app.js` - hardcoded equipment data and simple checkout/return logic
+- `app.js` - starter equipment data, saved browser state, and simple checkout/return logic
 - One test asset: `EQ-001`, Milwaukee Drill, status `Available`
 - Browser-only checkout and return buttons for the first workflow test
+- Saved browser state, so checkout changes stay after refreshing the page
 
 ## Run Locally
 

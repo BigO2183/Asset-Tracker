@@ -1,4 +1,6 @@
-const equipment = [
+const storageKey = "equipment-asset-tracker-assets";
+
+const starterEquipment = [
   {
     assetId: "EQ-001",
     equipmentName: "Milwaukee Drill",
@@ -14,6 +16,8 @@ const equipment = [
     notes: "Test asset",
   },
 ];
+
+let equipment = loadEquipment();
 
 const fields = {
   assetId: document.querySelector("#asset-id"),
@@ -36,6 +40,24 @@ const fields = {
 };
 
 let selectedAsset = equipment[0];
+
+function loadEquipment() {
+  const savedEquipment = localStorage.getItem(storageKey);
+
+  if (!savedEquipment) {
+    return starterEquipment;
+  }
+
+  try {
+    return JSON.parse(savedEquipment);
+  } catch (error) {
+    return starterEquipment;
+  }
+}
+
+function saveEquipment() {
+  localStorage.setItem(storageKey, JSON.stringify(equipment));
+}
 
 function displayValue(value) {
   return value || "None";
@@ -100,6 +122,7 @@ fields.checkoutForm.addEventListener("submit", (event) => {
   selectedAsset.checkoutDate = today();
   selectedAsset.returnDate = "";
 
+  saveEquipment();
   showAsset(selectedAsset);
 });
 
@@ -109,6 +132,7 @@ fields.returnButton.addEventListener("click", () => {
   selectedAsset.projectJob = "";
   selectedAsset.returnDate = today();
 
+  saveEquipment();
   showAsset(selectedAsset);
 });
 
