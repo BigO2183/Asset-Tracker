@@ -1,19 +1,25 @@
-# SimpleStock v14 — Polished
+# SimpleStock v15 — Inline Item Corrections
 
-UI polish only. No workflow changes.
+The Item Details popup is now editable directly.
 
-## Improvements
-- More compact Reseller / Estate Sale switch
-- Less vertical space in search/filter area
-- Smaller, quieter Inventory heading
-- Smaller status controls
-- Softer card accent line
-- More compact inventory cards
-- Tighter spacing between item name, price, platform, and location
-- Lighter secondary text
-- Better use of mobile screen space
-- More items visible at once
+## New workflow
+Tap item → Item Details → **Edit**
 
-All reseller, estate-sale, sales, fast intake, and cloud sync functionality remains unchanged.
+You can correct:
+- Item name
+- Status
+- Location / room
+- Platform
+- Category
+- Item ID
+- Quantity
+- Asking / tag price
+- Paid price
+- Estate sale discount stage / final price
+- Notes
+
+Tap **Save Changes** and the item updates immediately and syncs to the cloud.
+
+The full Fast Intake / Edit Item screen still exists for the normal workflow, but quick corrections no longer require leaving the details screen.
 
 Demo Admin PIN: `1234`

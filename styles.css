@@ -1516,3 +1516,56 @@ button{
     font-size:.72rem;
   }
 }
+
+
+/* v15 — edit corrections directly inside Item Details */
+.inline-edit-panel{
+  margin-top:2px;
+}
+.inline-edit-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+}
+.inline-edit-grid .full{
+  grid-column:1/-1;
+}
+.inline-edit-grid label{
+  font-size:.78rem;
+  color:var(--muted);
+  font-weight:700;
+  gap:5px;
+}
+.inline-edit-grid input,
+.inline-edit-grid select,
+.inline-edit-grid textarea{
+  font-size:.88rem;
+  color:var(--text);
+  background:#fff;
+  padding:10px 11px;
+}
+.details-actions{
+  border-top:1px solid var(--line);
+  padding-top:14px;
+  margin-top:16px;
+}
+.details-actions .secondary-btn,
+.details-actions .primary-btn{
+  min-height:42px;
+}
+@media(max-width:760px){
+  .inline-edit-grid{
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+  }
+  .inline-edit-grid label:first-child,
+  .inline-edit-grid .full{
+    grid-column:1/-1;
+  }
+  .details-actions{
+    position:sticky;
+    bottom:-17px;
+    background:#fff;
+    padding-bottom:6px;
+  }
+}

@@ -547,21 +547,33 @@ function renderHistory(){
   ?history.slice(0,20).map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(h.detail||'')}</div><small>${esc(h.time)}</small></div>`).join('')
   :'<div class="empty-state compact-empty">No activity yet.</div>';
 }
+let activeDetailKey=null;
+
 function openDetails(key){
  const i=items.find(x=>x.key===key);
  if(!i)return;
+
+ activeDetailKey=i.key;
  $('detailsName').textContent=i.name;
+ $('inlineEditPanel').classList.add('hidden');
+ $('detailsBody').classList.remove('hidden');
+ $('detailsSaveBtn').classList.add('hidden');
+ $('detailsCancelBtn').classList.add('hidden');
+ $('detailsEditBtn').classList.toggle('hidden',!isAdmin);
+
  const age=daysOld(i);
+ const estate=(i.recordType||'reseller')==='estate';
+
  $('detailsBody').innerHTML=`
    <div class="detail-hero">
-     <strong>${i.status==='Sold'?`Sold ${money(i.soldPrice)}`:`Ask ${money(i.askingPrice)}`}</strong>
-     <span>Paid ${money(i.cost)}</span>
+     <strong>${i.status==='Sold'?`Sold ${money(i.soldPrice)}`:(estate?`Price ${money(currentEstatePrice(i))}`:`Ask ${money(i.askingPrice)}`)}</strong>
+     ${estate?'':`<span>Paid ${money(i.cost)}</span>`}
      ${i.status==='Sold'?`<span class="${profit(i)>=0?'positive':'negative'}">${money(profit(i))} profit</span>`:''}
    </div>
    <div class="detail-list">
      <div><span>Status</span><strong>${esc(i.status)}</strong></div>
-     <div><span>${(i.recordType||'reseller')==='estate'?'Room':'Location'}</span><strong>${esc(i.location||((i.recordType||'reseller')==='estate'?'No room':'No location'))}</strong></div>
-     ${(i.recordType||'reseller')==='estate'
+     <div><span>${estate?'Room':'Location'}</span><strong>${esc(i.location||(estate?'No room':'No location'))}</strong></div>
+     ${estate
        ?`<div><span>Sale Stage</span><strong>${i.discountStage==='25'?'25% Off':i.discountStage==='50'?'50% Off':i.discountStage==='final'?'Final Price':'Full Price'}</strong></div>
           <div><span>Current Price</span><strong>${money(currentEstatePrice(i))}</strong></div>`
        :`<div><span>Platform</span><strong>${esc(i.platform||'Not listed')}</strong></div>`}
@@ -572,9 +584,97 @@ function openDetails(key){
    </div>
    ${i.notes?`<div class="detail-note"><span>Notes</span><p>${esc(i.notes)}</p></div>`:''}
  `;
- $('detailsEditBtn').classList.toggle('hidden',!isAdmin);
- $('detailsEditBtn').dataset.key=i.key;
+
  $('detailsDialog').showModal();
+}
+
+function beginInlineEdit(){
+ const i=items.find(x=>x.key===activeDetailKey);
+ if(!i||!isAdmin)return;
+
+ const estate=(i.recordType||'reseller')==='estate';
+ const statuses=estate?ESTATE_STATUSES:RESELLER_STATUSES;
+
+ $('detailEditStatus').innerHTML=statuses.map(s=>`<option>${s}</option>`).join('');
+ $('detailEditName').value=i.name||'';
+ $('detailEditStatus').value=i.status||statuses[0];
+ $('detailEditLocation').value=i.location||'';
+ $('detailEditPlatform').value=i.platform||'';
+ $('detailEditCategory').value=i.category||'';
+ $('detailEditItemId').value=i.itemId||'';
+ $('detailEditQuantity').value=Number(i.quantity)||1;
+ $('detailEditAsking').value=Number(i.askingPrice)||0;
+ $('detailEditCost').value=Number(i.cost)||0;
+ $('detailEditDiscountStage').value=i.discountStage||'full';
+ $('detailEditFinalPrice').value=Number(i.finalPrice)||0;
+ $('detailEditNotes').value=i.notes||'';
+
+ document.querySelectorAll('.detail-estate-only').forEach(el=>el.classList.toggle('hidden',!estate));
+ document.querySelectorAll('.detail-reseller-only').forEach(el=>el.classList.toggle('hidden',estate));
+
+ $('detailsBody').classList.add('hidden');
+ $('inlineEditPanel').classList.remove('hidden');
+ $('detailsEditBtn').classList.add('hidden');
+ $('detailsSaveBtn').classList.remove('hidden');
+ $('detailsCancelBtn').classList.remove('hidden');
+
+ setTimeout(()=>$('detailEditName').focus(),60);
+}
+
+function cancelInlineEdit(){
+ const i=items.find(x=>x.key===activeDetailKey);
+ if(!i)return;
+ openDetails(activeDetailKey);
+}
+
+async function saveInlineEdit(){
+ const i=items.find(x=>x.key===activeDetailKey);
+ if(!i||!isAdmin)return;
+
+ const newName=$('detailEditName').value.trim();
+ if(!newName){
+   $('detailEditName').focus();
+   showToast('Item name is required');
+   return;
+ }
+
+ const oldStatus=i.status;
+ const oldLocation=i.location;
+
+ i.name=newName;
+ i.status=$('detailEditStatus').value;
+ i.location=$('detailEditLocation').value.trim();
+ i.platform=(i.recordType||'reseller')==='estate'?'':$('detailEditPlatform').value;
+ i.category=$('detailEditCategory').value.trim();
+ i.itemId=$('detailEditItemId').value.trim();
+ i.quantity=Math.max(1,Number($('detailEditQuantity').value)||1);
+ i.askingPrice=Math.max(0,Number($('detailEditAsking').value)||0);
+ i.cost=Math.max(0,Number($('detailEditCost').value)||0);
+ i.notes=$('detailEditNotes').value.trim();
+
+ if((i.recordType||'reseller')==='estate'){
+   i.discountStage=$('detailEditDiscountStage').value;
+   i.finalPrice=Math.max(0,Number($('detailEditFinalPrice').value)||0);
+ }
+
+ history.unshift({
+   id:uid(),
+   time:now(),
+   action:'Corrected',
+   itemName:i.name,
+   detail:`${oldStatus} → ${i.status}; ${oldLocation||'No location'} → ${i.location||'No location'}`
+ });
+ history=history.slice(0,500);
+
+ if(!save()){
+   showToast('Could not save changes');
+   return;
+ }
+
+ queueCloudSync();
+ render();
+ showToast(`${i.name} updated ✓`);
+ openDetails(i.key);
 }
 
 function setPhotoPreview(src=''){
@@ -719,11 +819,9 @@ $('moreDetailsBtn').addEventListener('click',()=>{
  $('moreDetailsBtn').textContent=opening?'− Less Details':'＋ More Details';
 });
 $('closeDetailsDialog').addEventListener('click',()=>$('detailsDialog').close());
-$('detailsEditBtn').addEventListener('click',()=>{
- const key=$('detailsEditBtn').dataset.key;
- $('detailsDialog').close();
- openEdit(key);
-});
+$('detailsEditBtn').addEventListener('click',beginInlineEdit);
+$('detailsCancelBtn').addEventListener('click',cancelInlineEdit);
+$('detailsSaveBtn').addEventListener('click',saveInlineEdit);
 $('resellerModeBtn').addEventListener('click',()=>setMode('reseller'));
 $('estateModeBtn').addEventListener('click',()=>setMode('estate'));
 $('showHistoryBtn').addEventListener('click',()=>setView('history'));

@@ -262,10 +262,49 @@
         </div>
         <button type="button" id="closeDetailsDialog" class="icon-btn" aria-label="Close">✕</button>
       </div>
+
       <div id="detailsBody" class="details-body"></div>
-      <div class="form-actions">
+
+      <div id="inlineEditPanel" class="inline-edit-panel hidden">
+        <div class="inline-edit-grid">
+          <label>Item Name<input id="detailEditName" /></label>
+          <label>Status<select id="detailEditStatus"></select></label>
+          <label>Location<input id="detailEditLocation" /></label>
+          <label class="detail-reseller-only">Platform
+            <select id="detailEditPlatform">
+              <option value="">Not listed</option>
+              <option>eBay</option>
+              <option>Facebook Marketplace</option>
+              <option>Local</option>
+              <option>Estate Sale</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <label>Category<input id="detailEditCategory" /></label>
+          <label>Item ID<input id="detailEditItemId" /></label>
+          <label>Quantity<input id="detailEditQuantity" type="number" min="1" step="1" /></label>
+          <label>Price ($)<input id="detailEditAsking" type="number" min="0" step="0.01" /></label>
+          <label>Paid ($)<input id="detailEditCost" type="number" min="0" step="0.01" /></label>
+          <label class="detail-estate-only hidden">Sale Stage
+            <select id="detailEditDiscountStage">
+              <option value="full">Full Price</option>
+              <option value="25">25% Off</option>
+              <option value="50">50% Off</option>
+              <option value="final">Final Price</option>
+            </select>
+          </label>
+          <label class="detail-estate-only hidden">Final Price ($)
+            <input id="detailEditFinalPrice" type="number" min="0" step="0.01" />
+          </label>
+          <label class="full">Notes<textarea id="detailEditNotes" rows="3"></textarea></label>
+        </div>
+      </div>
+
+      <div class="form-actions details-actions">
+        <button id="detailsCancelBtn" type="button" class="secondary-btn hidden">Cancel</button>
         <div class="spacer"></div>
-        <button id="detailsEditBtn" type="button" class="primary-btn hidden">Edit Item</button>
+        <button id="detailsEditBtn" type="button" class="secondary-btn hidden">Edit</button>
+        <button id="detailsSaveBtn" type="button" class="primary-btn hidden">Save Changes</button>
       </div>
     </div>
   </dialog>
