@@ -1,31 +1,28 @@
-# Reseller / Estate Inventory Tracker v1
+# Reseller / Estate Inventory Tracker v2
 
-A lightweight mobile-friendly reseller inventory tracker built from the reusable Inventory Tracker Base.
+A cleaner, more polished version of the Reseller / Estate Inventory Tracker with a friendlier UI.
 
-## Included
-- Fast intake workflow with phone photo upload
-- Item name, SKU, category, quantity and physical location
-- Cost / asking price / sold price
-- Platform tracking: eBay, Facebook Marketplace, local, estate sale, other
-- Status workflow: Unlisted, Listed, Reserved, Sold, Donated, Bulk Sale, Needs Attention
-- Date acquired + automatic inventory age
-- 60+ day aging dashboard
-- Needs Attention detection for missing price/location/platform and 90+ day inventory
-- Fees, shipping and automatic net profit calculation
-- Potential revenue, sold revenue and profit dashboard
-- Search and filters
-- Audit history
-- CSV export
-- Mobile-first responsive UI
-- Demo data
+## What's improved
+- Smoother visual design
+- More appealing dashboard cards and layout
+- Friendlier helper copy and onboarding cues
+- Better mobile presentation
+- Cleaner inventory cards
+- Clear active view and active filter states
 
 ## Demo Admin PIN
-`1234`
+1234
 
-Change `ADMIN_PIN` near the top of `app.js` before customer use.
+## Files
+- `index.html`
+- `styles.css`
+- `app.js`
 
 ## Storage
-This version uses browser localStorage. It is ideal for demos and single-device use. For a real customer/multi-user deployment, connect it to a shared database/auth system so inventory synchronizes across devices.
+This version still uses browser localStorage for demo/testing.
 
-## Deploy
-The folder is static and can be deployed directly to Netlify, GitHub Pages, or any static host.
+## Next likely upgrades
+- Cloud database
+- Real logins / user accounts
+- Photo storage
+- AI item suggestion flow
