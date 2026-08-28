@@ -13,6 +13,10 @@ let history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
 let prefs=JSON.parse(localStorage.getItem(PREF_KEY)||'{"recentLocations":[],"lastCategory":"","lastPlatform":"","mode":"reseller"}');
 let currentMode=prefs.mode==='estate'?'estate':'reseller';
 let isAdmin=false,quickFilter='all';
+let bulkMode=false;
+let selectedKeys=new Set();
+let scannerStream=null;
+let scannerTimer=null;
 items=items.map(i=>({...i,status:i.status==='Reserved'?'Hold':(['Donated','Bulk Sale'].includes(i.status)?'Donate / Bulk':i.status)}));
 
 const $=id=>document.getElementById(id);
@@ -22,6 +26,7 @@ const now=()=>new Date().toLocaleString();
 const todayISO=()=>new Date().toISOString().slice(0,10);
 const esc=(s='')=>String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const save=()=>{
+ if(authState?.demo)return true;
  try{
    localStorage.setItem(STORAGE_KEY,JSON.stringify(items));
    localStorage.setItem(HISTORY_KEY,JSON.stringify(history));
@@ -49,7 +54,7 @@ function authHeaders(extra={}){
 }
 function setAuthState(state){
  authState=state||null;
- if(authState)localStorage.setItem(AUTH_KEY,JSON.stringify(authState));
+ if(authState && !authState.demo)localStorage.setItem(AUTH_KEY,JSON.stringify(authState));
  else localStorage.removeItem(AUTH_KEY);
 }
 function showAuthError(message=''){
@@ -66,8 +71,10 @@ function updateWorkspaceUI(){
  const user=authState?.user;
  if(!user)return;
  $('workspaceNameLabel').textContent=user.workspaceName||'Workspace';
- isAdmin=user.role==='owner';
+ isAdmin=user.role==='owner' || Boolean(user.canEdit);
  updateAdminButton();
+ $('addItemBtn')?.classList.toggle('disabled-nav',!isAdmin);
+ $('bulkSelectBtn')?.classList.toggle('hidden',!isAdmin);
 }
 
 function updateAdminButton(){
@@ -84,10 +91,10 @@ function switchAuthTab(tab){
  $('signupForm').classList.toggle('hidden',login);
  showAuthError('');
 }
-async function authRequest(action,body){
+async function authRequest(action,body,{authorized=false}={}){
  const res=await fetch(`${AUTH_ENDPOINT}?action=${encodeURIComponent(action)}`,{
    method:'POST',
-   headers:{'Content-Type':'application/json'},
+   headers:authorized?authHeaders({'Content-Type':'application/json'}):{'Content-Type':'application/json'},
    body:JSON.stringify(body||{})
  });
  const payload=await res.json().catch(()=>({}));
@@ -104,6 +111,7 @@ async function verifySession(){
    if(!res.ok)throw new Error('Session expired');
    const payload=await res.json();
    authState.user=payload.user;
+   authState.workspace=payload.workspace||authState.workspace;
    setAuthState(authState);
    return true;
  }catch(err){
@@ -113,8 +121,8 @@ async function verifySession(){
 }
 
 function toggleAdminControls(){
- if(authState?.user?.role!=='owner'){
-   showToast('Owner access required');
+ if(!(authState?.user?.role==='owner' || authState?.user?.canEdit)){
+   showToast('This account is view-only');
    return;
  }
  isAdmin=!isAdmin;
@@ -125,7 +133,7 @@ function toggleAdminControls(){
 
 async function signOut(){
  try{
-   if(authState?.token){
+   if(authState?.token && !authState?.demo){
      await fetch(`${AUTH_ENDPOINT}?action=logout`,{
        method:'POST',
        headers:authHeaders({'Content-Type':'application/json'}),
@@ -137,6 +145,8 @@ async function signOut(){
  }
  setAuthState(null);
  isAdmin=false;
+ bulkMode=false;
+ selectedKeys.clear();
  updateAdminButton();
  cloudEnabled=false;
  items=[];
@@ -191,7 +201,7 @@ function mergeHistory(localHistory=[],cloudHistory=[]){
  return [...map.values()].sort((a,b)=>String(b.time||'').localeCompare(String(a.time||''))).slice(0,500);
 }
 async function pushCloud({quiet=false}={}){
- if(!cloudEnabled)return false;
+ if(!cloudEnabled || authState?.demo)return false;
  try{
    const res=await fetch(CLOUD_ENDPOINT,{
      method:'POST',
@@ -213,11 +223,17 @@ function queueCloudSync(){
  cloudSyncTimer=setTimeout(()=>pushCloud({quiet:true}),250);
 }
 async function loadCloud(){
+ if(authState?.demo)return false;
  try{
    const res=await fetch(CLOUD_ENDPOINT,{headers:authHeaders(),cache:'no-store'});
    if(!res.ok)throw new Error(`Cloud load failed (${res.status})`);
    const payload=await res.json();
    cloudEnabled=true;
+   if(typeof payload.canEdit==='boolean'){
+     authState.user.canEdit=payload.canEdit;
+     isAdmin=authState.user.role==='owner'||payload.canEdit;
+     updateAdminButton();
+   }
 
    const cloudItems=payload?.data?.items || [];
    const cloudHistory=payload?.data?.history || [];
@@ -246,7 +262,7 @@ async function loadCloud(){
  }
 }
 
-const log=(action,item,detail='')=>{history.unshift({id:uid(),time:now(),action,itemName:item?.name||'Unknown item',detail});history=history.slice(0,500);save();queueCloudSync();};
+const log=(action,item,detail='')=>{history.unshift({id:uid(),time:now(),actor:authState?.user?.email||'Unknown',action,itemName:item?.name||'Unknown item',detail});history=history.slice(0,500);save();queueCloudSync();};
 const daysOld=i=>{const d=new Date((i.acquiredDate||todayISO())+'T12:00:00');return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));};
 const profit=i=>(Number(i.soldPrice)||0)-(Number(i.cost)||0)-(Number(i.fees)||0)-(Number(i.shipping)||0);
 const attention=i=>i.status==='Needs Attention'||!i.name||!i.location||(!i.askingPrice&&i.status!=='Sold'&&i.status!=='Donated')||((i.status==='Listed')&&!i.platform)||daysOld(i)>=90;
@@ -432,6 +448,7 @@ function saveCurrentItem({addAnother=false}={}){
    history.unshift({
      id:uid(),
      time:now(),
+     actor:authState?.user?.email||'Unknown',
      action:'Updated',
      itemName:record.name,
      detail:`${old?.status||'Unknown'} → ${record.status}; ${old?.location||'No location'} → ${record.location||'No location'}`
@@ -441,6 +458,7 @@ function saveCurrentItem({addAnother=false}={}){
    history.unshift({
      id:uid(),
      time:now(),
+     actor:authState?.user?.email||'Unknown',
      action:'Added',
      itemName:record.name,
      detail:`${money(record.cost)} paid • ${record.location||'No location'} • ${record.status}`
@@ -526,6 +544,50 @@ function statusClass(status=''){
  return 'status-' + status.toLowerCase().replace(/\s+/g,'-');
 }
 function updateStatCardState(){}
+
+function updateBulkBar(){
+ const count=selectedKeys.size;
+ $('bulkBar').classList.toggle('hidden',!bulkMode);
+ $('bulkCount').textContent=`${count} selected`;
+ ['bulkStatusBtn','bulkLocationBtn','bulkDeleteBtn'].forEach(id=>$(id).disabled=count===0 || !isAdmin);
+}
+
+function setBulkMode(on){
+ bulkMode=Boolean(on);
+ if(!bulkMode)selectedKeys.clear();
+ $('bulkSelectBtn').textContent=bulkMode?'Selecting…':'Select';
+ updateBulkBar();
+ render();
+}
+
+function bulkChangeStatus(){
+ if(!isAdmin || !selectedKeys.size)return;
+ const statuses=currentMode==='estate'?ESTATE_STATUSES:RESELLER_STATUSES;
+ const next=prompt(`Enter status:\n${statuses.join(' / ')}`,statuses[0]);
+ if(!next || !statuses.includes(next))return;
+ items.forEach(i=>{if(selectedKeys.has(i.key))i.status=next;});
+ log('Bulk status',{name:`${selectedKeys.size} items`},`Changed to ${next}`);
+ save();queueCloudSync();setBulkMode(false);render();
+}
+
+function bulkMoveLocation(){
+ if(!isAdmin || !selectedKeys.size)return;
+ const next=prompt(currentMode==='estate'?'Move selected items to room/location:':'Move selected items to location:');
+ if(!next?.trim())return;
+ items.forEach(i=>{if(selectedKeys.has(i.key))i.location=next.trim();});
+ log('Bulk move',{name:`${selectedKeys.size} items`},`Moved to ${next.trim()}`);
+ save();queueCloudSync();setBulkMode(false);render();
+}
+
+function bulkDelete(){
+ if(!isAdmin || !selectedKeys.size)return;
+ const count=selectedKeys.size;
+ if(!confirm(`Delete ${count} selected item${count===1?'':'s'}?`))return;
+ items=items.filter(i=>!selectedKeys.has(i.key));
+ log('Bulk deleted',{name:`${count} items`},'Removed selected inventory');
+ save();queueCloudSync();setBulkMode(false);render();
+}
+
 function render(){
  updateFilters();
  updateStatCardState();
@@ -537,8 +599,26 @@ function render(){
  $('inventorySummary').textContent=`${filtered.length} item${filtered.length===1?'':'s'}`;
  $('inventoryList').innerHTML='';
  $('emptyState').classList.toggle('hidden',!!filtered.length);
+ if(!filtered.length){
+   const noItems=modeItems().length===0;
+   $('emptyTitle').textContent=noItems?'Your workspace is ready':'No matching inventory records';
+   $('emptyCopy').textContent=noItems
+     ?'Add your first item to start tracking inventory, sales, and locations.'
+     :'Try a different search or filter.';
+   $('emptyAddBtn').classList.toggle('hidden',!noItems || !isAdmin);
+ }
  filtered.forEach(i=>{
   const node=$('itemTemplate').content.cloneNode(true),card=node.querySelector('.item-card');
+  const bulkWrap=node.querySelector('.bulk-check-wrap');
+  const bulkCheck=node.querySelector('.bulk-check');
+  bulkWrap.classList.toggle('hidden',!bulkMode);
+  bulkCheck.checked=selectedKeys.has(i.key);
+  bulkCheck.addEventListener('click',e=>e.stopPropagation());
+  bulkCheck.addEventListener('change',()=>{
+    if(bulkCheck.checked)selectedKeys.add(i.key); else selectedKeys.delete(i.key);
+    updateBulkBar();
+  });
+  card.classList.toggle('bulk-mode',bulkMode);
   node.querySelector('.item-name').textContent=i.name;
   node.querySelector('.asking').textContent=i.status==='Sold'
     ?`Sold ${money(i.soldPrice)}`
@@ -565,6 +645,7 @@ function render(){
   const statusOptions=currentMode==='estate'?ESTATE_STATUSES:RESELLER_STATUSES;
   statusSelect.innerHTML=statusOptions.map(s=>`<option>${s}</option>`).join('');
   statusSelect.value=i.status;
+  statusSelect.disabled=!isAdmin || bulkMode;
   statusSelect.classList.add(statusClass(i.status));
   statusSelect.addEventListener('click',e=>e.stopPropagation());
   statusSelect.addEventListener('change',e=>{
@@ -590,7 +671,15 @@ function render(){
     render();
   });
 
-  const openCard=()=>openDetails(i.key);
+  const openCard=()=>{
+    if(bulkMode){
+      if(selectedKeys.has(i.key))selectedKeys.delete(i.key); else selectedKeys.add(i.key);
+      bulkCheck.checked=selectedKeys.has(i.key);
+      updateBulkBar();
+      return;
+    }
+    openDetails(i.key);
+  };
   card.addEventListener('click',openCard);
   card.addEventListener('keydown',e=>{
     if(e.key==='Enter'||e.key===' '){e.preventDefault();openCard();}
@@ -628,6 +717,7 @@ function render(){
  $('netProfit').textContent=money(sold.reduce((s,i)=>s+profit(i),0));
  renderHistory();
  if($('reportsSection')&&!$('reportsSection').classList.contains('hidden')) renderReports();
+ updateBulkBar();
  setTimeout(updateNavScrollHint,30);
 }
 function renderHistory(){
@@ -655,8 +745,159 @@ function renderHistory(){
  }
 
  $('historyList').innerHTML=history.length
-  ?history.slice(0,20).map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(h.detail||'')}</div><small>${esc(h.time)}</small></div>`).join('')
+  ?history.slice(0,30).map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(h.detail||'')}</div><small>${esc(h.actor||'Unknown user')} · ${esc(h.time)}</small></div>`).join('')
   :'<div class="empty-state compact-empty">No activity yet.</div>';
+}
+
+
+
+function findCode(code){
+ const q=String(code||'').trim().toLowerCase();
+ if(!q)return null;
+ return items.find(i=>
+   String(i.itemId||'').toLowerCase()===q ||
+   String(i.barcode||'').toLowerCase()===q
+ );
+}
+
+function searchScannedCode(code){
+ const item=findCode(code);
+ stopScanner();
+ $('scannerDialog').close();
+ if(item){
+   if((item.recordType||'reseller')!==currentMode)setMode(item.recordType||'reseller');
+   openDetails(item.key);
+ }else{
+   $('searchInput').value=code;
+   setView('inventory');
+   render();
+   showToast('No exact match — showing search');
+ }
+}
+
+async function openScanner(){
+ $('scannerDialog').showModal();
+ $('scannerStatus').textContent='Point the camera at a barcode or QR code.';
+ if(!('BarcodeDetector' in window)){
+   $('scannerStatus').textContent='Camera scanning is not supported here. Enter the code below.';
+   return;
+ }
+ try{
+   const formats=await BarcodeDetector.getSupportedFormats();
+   const detector=new BarcodeDetector({formats:formats.filter(f=>['qr_code','code_128','code_39','ean_13','ean_8','upc_a','upc_e'].includes(f))});
+   scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
+   $('scannerVideo').srcObject=scannerStream;
+   await $('scannerVideo').play();
+
+   const tick=async()=>{
+     if(!scannerStream)return;
+     try{
+       const codes=await detector.detect($('scannerVideo'));
+       if(codes.length){
+         searchScannedCode(codes[0].rawValue);
+         return;
+       }
+     }catch{}
+     scannerTimer=setTimeout(tick,250);
+   };
+   tick();
+ }catch(err){
+   $('scannerStatus').textContent='Camera unavailable. Enter the code below.';
+ }
+}
+
+function stopScanner(){
+ clearTimeout(scannerTimer);
+ scannerTimer=null;
+ if(scannerStream){
+   scannerStream.getTracks().forEach(t=>t.stop());
+   scannerStream=null;
+ }
+ if($('scannerVideo'))$('scannerVideo').srcObject=null;
+}
+
+async function renderSettings(){
+ const user=authState?.user;
+ if(!user)return;
+ $('settingsWorkspaceName').value=user.workspaceName||'';
+ $('settingsDefaultMode').value=user.defaultMode==='estate'?'estate':'reseller';
+ $('settingsEmail').textContent=user.email||'';
+ $('settingsRole').textContent=user.role==='owner'?'Owner':(user.canEdit?'Staff · Can edit':'Staff · View only');
+ $('staffSettingsCard').classList.toggle('hidden',user.role!=='owner');
+ if(user.role==='owner')await loadStaff();
+}
+
+async function loadStaff(){
+ try{
+   const res=await fetch(`${AUTH_ENDPOINT}?action=staff`,{headers:authHeaders(),cache:'no-store'});
+   const payload=await res.json();
+   if(!res.ok)throw new Error(payload.error||'Could not load staff');
+   const staff=payload.staff||[];
+   $('staffList').innerHTML=staff.length?staff.map(s=>`
+     <div class="staff-row">
+       <div><strong>${esc(s.email)}</strong><span>${s.canEdit?'Can edit':'View only'}</span></div>
+       <div>
+         <button type="button" class="staff-reset" data-email="${esc(s.email)}">Reset Password</button>
+         <button type="button" class="staff-remove" data-email="${esc(s.email)}">Remove</button>
+       </div>
+     </div>`).join(''):'<div class="settings-empty">No staff accounts yet.</div>';
+
+   $('staffList').querySelectorAll('.staff-reset').forEach(btn=>btn.addEventListener('click',async()=>{
+     const password=prompt(`New temporary password for ${btn.dataset.email}:`);
+     if(!password)return;
+     try{
+       await authRequest('reset_staff_password',{email:btn.dataset.email,password},{authorized:true});
+       showToast('Staff password reset ✓');
+     }catch(err){showToast(err.message);}
+   }));
+
+   $('staffList').querySelectorAll('.staff-remove').forEach(btn=>btn.addEventListener('click',async()=>{
+     if(!confirm(`Remove ${btn.dataset.email} from this workspace?`))return;
+     try{
+       await authRequest('remove_staff',{email:btn.dataset.email},{authorized:true});
+       showToast('Staff removed ✓');
+       await loadStaff();
+     }catch(err){showToast(err.message);}
+   }));
+ }catch(err){
+   $('staffList').innerHTML=`<div class="settings-empty">${esc(err.message)}</div>`;
+ }
+}
+
+function downloadBackup(){
+ const backup={
+   version:21,
+   workspace:{
+     name:authState?.user?.workspaceName||'SimpleStock',
+     defaultMode:authState?.user?.defaultMode||'reseller'
+   },
+   exportedAt:new Date().toISOString(),
+   items,
+   history
+ };
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}));
+ a.download=`simplestock-backup-${todayISO()}.json`;
+ a.click();
+ URL.revokeObjectURL(a.href);
+}
+
+async function restoreBackupFile(file){
+ if(!isAdmin){showToast('Edit access required');return;}
+ try{
+   const text=await file.text();
+   const data=JSON.parse(text);
+   if(!Array.isArray(data.items)||!Array.isArray(data.history))throw new Error('Invalid SimpleStock backup');
+   if(!confirm(`Restore ${data.items.length} items? This replaces the current workspace data.`))return;
+   items=data.items.map(normalizeItemStatus);
+   history=data.history;
+   if(!save())throw new Error('Could not save backup on this device');
+   await pushCloud({quiet:true});
+   render();
+   showToast('Backup restored ✓');
+ }catch(err){
+   alert(`Restore failed: ${err.message}`);
+ }
 }
 
 function reportScopedItems(){
@@ -777,8 +1018,9 @@ function openDetails(key){
  $('detailsBody').classList.remove('hidden');
  $('detailsSaveBtn').classList.add('hidden');
  $('detailsCancelBtn').classList.add('hidden');
- $('detailsEditBtn').classList.remove('hidden');
- $('quickSellBtn').classList.toggle('hidden',i.status==='Sold');
+ $('detailsEditBtn').classList.toggle('hidden',!isAdmin);
+ $('duplicateItemBtn').classList.toggle('hidden',!isAdmin);
+ $('quickSellBtn').classList.toggle('hidden',i.status==='Sold'||!isAdmin);
 
  const age=daysOld(i);
  const estate=(i.recordType||'reseller')==='estate';
@@ -880,6 +1122,7 @@ async function saveInlineEdit(){
  history.unshift({
    id:uid(),
    time:now(),
+   actor:authState?.user?.email||'Unknown',
    action:'Corrected',
    itemName:i.name,
    detail:`${oldStatus} → ${i.status}; ${oldLocation||'No location'} → ${i.location||'No location'}`
@@ -897,6 +1140,32 @@ async function saveInlineEdit(){
  openDetails(i.key);
 }
 
+
+
+function duplicateActiveItem(){
+ const source=items.find(x=>x.key===activeDetailKey);
+ if(!source || !isAdmin)return;
+
+ const copy={
+   ...source,
+   key:uid(),
+   itemId:nextItemId(),
+   name:`${source.name} Copy`,
+   acquiredDate:todayISO(),
+   status:(source.recordType||'reseller')==='estate'?'For Sale':'Unlisted',
+   soldPrice:0,
+   fees:0,
+   shipping:0,
+   soldDate:''
+ };
+
+ items.unshift(copy);
+ log('Duplicated',copy,`Copied from ${source.itemId||source.name}`);
+ save();queueCloudSync();
+ $('detailsDialog').close();
+ render();
+ showToast(`${copy.name} added ✓`);
+}
 
 function openQuickSell(){
  const i=items.find(x=>x.key===activeDetailKey);
@@ -953,6 +1222,7 @@ async function completeQuickSell(){
  history.unshift({
    id:uid(),
    time:now(),
+   actor:authState?.user?.email||'Unknown',
    action:'Sold',
    itemName:i.name,
    detail:`${oldStatus} → Sold • ${money(soldPrice)} sale • ${money(profit(i))} profit`
@@ -983,22 +1253,26 @@ function setView(view){
  const inventory=view==='inventory';
  const sales=view==='history';
  const reports=view==='reports';
+ const settings=view==='settings';
 
  $('inventorySection').classList.toggle('hidden',!inventory);
  $('historySection').classList.toggle('hidden',!sales);
  $('reportsSection').classList.toggle('hidden',!reports);
+ $('settingsSection').classList.toggle('hidden',!settings);
 
  $('showInventoryBtn')?.classList.toggle('active-tab',inventory);
  $('showHistoryBtn')?.classList.toggle('active-tab',sales);
  $('showReportsBtn')?.classList.toggle('active-tab',reports);
+ $('showSettingsBtn')?.classList.toggle('active-tab',settings);
 
- if($('viewLabel')) $('viewLabel').textContent=inventory?'Inventory':sales?'Sales':'Reports';
+ if($('viewLabel')) $('viewLabel').textContent=inventory?'Inventory':sales?'Sales':reports?'Reports':'Settings';
 
  if(sales) renderHistory();
  if(reports) renderReports();
+ if(settings) renderSettings();
 }
 function openAdd(){
- if(!isAdmin){openAdmin();return;}
+ if(!isAdmin){showToast('This account is view-only');return;}
  prepareFreshIntake({keepContext:false});
  $('itemDialog').showModal();
  setTimeout(()=>$('photoFile').click(),120);
@@ -1029,11 +1303,12 @@ function openEdit(key){
  $('itemDialog').showModal();
 }
 function openAdmin(){
- if(authState?.user?.role==='owner'){
+ if(authState?.user?.role==='owner'||authState?.user?.canEdit){
    isAdmin=true;
+   updateAdminButton();
    return;
  }
- showToast('Owner access required');
+ showToast('This account is view-only');
 }
 function toggleSaleFields(){
  const sold=$('status').value==='Sold';
@@ -1127,6 +1402,19 @@ $('detailsCancelBtn').addEventListener('click',cancelInlineEdit);
 $('detailsSaveBtn').addEventListener('click',saveInlineEdit);
 $('resellerModeBtn').addEventListener('click',()=>setMode('reseller'));
 $('estateModeBtn').addEventListener('click',()=>setMode('estate'));
+$('showSettingsBtn')?.addEventListener('click',()=>setView('settings'));
+$('bulkSelectBtn')?.addEventListener('click',()=>setBulkMode(!bulkMode));
+$('bulkCancelBtn')?.addEventListener('click',()=>setBulkMode(false));
+$('bulkStatusBtn')?.addEventListener('click',bulkChangeStatus);
+$('bulkLocationBtn')?.addEventListener('click',bulkMoveLocation);
+$('bulkDeleteBtn')?.addEventListener('click',bulkDelete);
+$('emptyAddBtn')?.addEventListener('click',openAdd);
+$('duplicateItemBtn')?.addEventListener('click',duplicateActiveItem);
+$('scanBtn')?.addEventListener('click',openScanner);
+$('closeScannerBtn')?.addEventListener('click',()=>{stopScanner();$('scannerDialog').close();});
+$('stopScannerBtn')?.addEventListener('click',()=>{stopScanner();$('scannerDialog').close();});
+$('manualScanSearchBtn')?.addEventListener('click',()=>searchScannedCode($('manualScanCode').value));
+$('scannerDialog')?.addEventListener('close',stopScanner);
 $('showReportsBtn')?.addEventListener('click',()=>setView('reports'));
 $('exportInventoryReportBtn')?.addEventListener('click',exportInventoryReport);
 $('exportSalesReportBtn')?.addEventListener('click',exportSalesReport);
@@ -1143,6 +1431,74 @@ $('exportBtn').addEventListener('click',()=>{
  URL.revokeObjectURL(a.href);
 });
 
+
+
+$('saveWorkspaceSettingsBtn')?.addEventListener('click',async()=>{
+ try{
+   const payload=await authRequest('update_workspace',{
+     workspaceName:$('settingsWorkspaceName').value,
+     defaultMode:$('settingsDefaultMode').value
+   },{authorized:true});
+   authState.user=payload.user;
+   authState.workspace=payload.workspace;
+   setAuthState(authState);
+   updateWorkspaceUI();
+   showToast('Workspace updated ✓');
+ }catch(err){showToast(err.message);}
+});
+
+$('changePasswordBtn')?.addEventListener('click',async()=>{
+ try{
+   await authRequest('change_password',{
+     currentPassword:$('currentPassword').value,
+     newPassword:$('newPassword').value
+   },{authorized:true});
+   $('currentPassword').value='';
+   $('newPassword').value='';
+   showToast('Password changed ✓');
+ }catch(err){showToast(err.message);}
+});
+
+$('addStaffBtn')?.addEventListener('click',async()=>{
+ try{
+   const payload=await authRequest('add_staff',{
+     email:$('staffEmail').value,
+     password:$('staffPassword').value,
+     canEdit:$('staffAccess').value==='editor'
+   },{authorized:true});
+   alert(`Staff account created.\n\nRecovery code (save this):\n${payload.recoveryCode}`);
+   $('staffEmail').value='';
+   $('staffPassword').value='';
+   await loadStaff();
+ }catch(err){showToast(err.message);}
+});
+
+$('downloadBackupBtn')?.addEventListener('click',downloadBackup);
+$('restoreBackupFile')?.addEventListener('change',e=>{
+ const file=e.target.files?.[0];
+ if(file)restoreBackupFile(file);
+ e.target.value='';
+});
+
+$('forgotPasswordBtn')?.addEventListener('click',()=>{
+ $('recoveryEmail').value=$('loginEmail').value||'';
+ $('recoveryDialog').showModal();
+});
+$('closeRecoveryDialog')?.addEventListener('click',()=>$('recoveryDialog').close());
+$('recoveryForm')?.addEventListener('submit',async e=>{
+ e.preventDefault();
+ try{
+   const payload=await authRequest('recover',{
+     email:$('recoveryEmail').value,
+     recoveryCode:$('recoveryCode').value,
+     newPassword:$('recoveryNewPassword').value
+   });
+   $('recoveryDialog').close();
+   showAuthError(payload.message||'Password reset. Sign in.');
+ }catch(err){showToast(err.message);}
+});
+
+$('tryDemoBtn')?.addEventListener('click',startDemo);
 
 $('loginTabBtn').addEventListener('click',()=>switchAuthTab('login'));
 $('signupTabBtn').addEventListener('click',()=>switchAuthTab('signup'));
@@ -1191,6 +1547,7 @@ $('signupForm').addEventListener('submit',async e=>{
    localStorage.removeItem(STORAGE_KEY);
    localStorage.removeItem(HISTORY_KEY);
    await startWorkspace();
+   alert(`Workspace created.\n\nSAVE THIS RECOVERY CODE:\n${payload.recoveryCode}\n\nYou will need it if you forget your password.`);
    showToast('Workspace created ✓');
  }catch(err){
    showAuthError(err.message);
@@ -1257,6 +1614,32 @@ if('serviceWorker' in navigator){
  });
 }
 
+
+async function startDemo(){
+ setAuthState({
+   demo:true,
+   user:{
+     email:'demo@simplestock.app',
+     role:'owner',
+     canEdit:true,
+     workspaceId:'demo',
+     workspaceName:'SimpleStock Demo',
+     defaultMode:'reseller'
+   }
+ });
+ items=[];
+ history=[];
+ currentMode='reseller';
+ prefs.mode='reseller';
+ showAuthGate(false);
+ updateWorkspaceUI();
+ sampleData();
+ setView('inventory');
+ applyModeUI();
+ render();
+ showToast('Demo mode — changes are not saved');
+}
+
 async function startWorkspace(){
  showAuthGate(false);
  updateWorkspaceUI();
@@ -1270,7 +1653,7 @@ async function startWorkspace(){
  applyModeUI();
  renderRecentLocations();
 
- const connected=await loadCloud();
+ const connected=authState?.demo?false:await loadCloud();
  renderRecentLocations();
  render();
 

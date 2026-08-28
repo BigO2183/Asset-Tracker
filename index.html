@@ -28,6 +28,17 @@
         </div>
       </div>
 
+      
+      <div class="landing-intro">
+        <span class="landing-kicker">FOR RESELLERS & ESTATE SALES</span>
+        <h2>Know what you have. Know where it is. Know what sold.</h2>
+        <p>Simple inventory, sales, and organization without a complicated system.</p>
+        <div class="landing-points">
+          <span>✓ Fast intake</span><span>✓ Phone + desktop</span><span>✓ Sales & profit</span>
+        </div>
+        <button id="tryDemoBtn" type="button" class="secondary-btn demo-btn">Try Demo</button>
+      </div>
+
       <div class="auth-tabs">
         <button id="loginTabBtn" type="button" class="auth-tab active">Sign In</button>
         <button id="signupTabBtn" type="button" class="auth-tab">Create Workspace</button>
@@ -41,6 +52,7 @@
           <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••" />
         </label>
         <button type="submit" class="primary-btn auth-submit">Sign In</button>
+        <button id="forgotPasswordBtn" type="button" class="auth-link-btn">Forgot password?</button>
       </form>
 
       <form id="signupForm" class="auth-form hidden">
@@ -88,6 +100,7 @@
       <button id="addItemBtn" class="nav-btn nav-primary">＋ Add Item</button>
       <button id="showHistoryBtn" class="nav-btn">Sales & History</button>
       <button id="showReportsBtn" class="nav-btn">Reports</button>
+      <button id="showSettingsBtn" class="nav-btn">Settings</button>
       <button id="exportBtn" class="nav-btn">Export</button>
       <div class="nav-spacer"></div>
       <button id="installAppBtn" class="nav-btn install-btn hidden">Install App</button>
@@ -121,6 +134,8 @@
           <option>Donate / Bulk</option>
           <option>Needs Attention</option>
         </select>
+        <button id="scanBtn" type="button" class="filter-toggle scan-btn">Scan</button>
+        <button id="bulkSelectBtn" type="button" class="filter-toggle">Select</button>
         <button id="moreFiltersBtn" type="button" class="filter-toggle" aria-expanded="false">Filters</button>
       </div>
 
@@ -135,6 +150,15 @@
           <option>Other</option>
         </select>
         <button id="clearFiltersBtn" type="button" class="clear-filter-btn">Clear</button>
+      </div>
+
+      
+      <div id="bulkBar" class="bulk-bar hidden">
+        <strong id="bulkCount">0 selected</strong>
+        <button id="bulkStatusBtn" type="button">Status</button>
+        <button id="bulkLocationBtn" type="button">Move</button>
+        <button id="bulkDeleteBtn" type="button" class="bulk-danger">Delete</button>
+        <button id="bulkCancelBtn" type="button">Done</button>
       </div>
 
       <div class="simple-summary" aria-live="polite">
@@ -163,8 +187,9 @@
       <div id="inventoryList" class="inventory-list"></div>
       <div id="emptyState" class="empty-state hidden">
         <div class="empty-illustration">📦</div>
-        <h3>No matching inventory records</h3>
-        <p>Try a different search or filter — or add your next item.</p>
+        <h3 id="emptyTitle">No matching inventory records</h3>
+        <p id="emptyCopy">Try a different search or filter — or add your next item.</p>
+        <button id="emptyAddBtn" type="button" class="primary-btn empty-add-btn">＋ Add First Item</button>
       </div>
     </section>
 
@@ -254,6 +279,64 @@
           <div><span>Bulk Buyer</span><strong id="dispBulk">0</strong></div>
           <div><span>Dispose</span><strong id="dispDispose">0</strong></div>
         </div>
+      </div>
+    </section>
+
+
+    <section id="settingsSection" class="panel workspace-panel hidden">
+      <div class="panel-head workspace-head">
+        <div>
+          <h2>Settings</h2>
+          <p class="muted panel-subcopy">Workspace, account, staff, and data tools.</p>
+        </div>
+      </div>
+
+      <div class="settings-grid">
+        <section class="settings-card">
+          <h3>Workspace</h3>
+          <label>Workspace Name<input id="settingsWorkspaceName" /></label>
+          <label>Default Mode
+            <select id="settingsDefaultMode">
+              <option value="reseller">Reseller</option>
+              <option value="estate">Estate Sale</option>
+            </select>
+          </label>
+          <button id="saveWorkspaceSettingsBtn" type="button" class="primary-btn">Save Workspace</button>
+        </section>
+
+        <section class="settings-card">
+          <h3>My Account</h3>
+          <div class="account-summary">
+            <span id="settingsEmail"></span>
+            <span id="settingsRole"></span>
+          </div>
+          <label>Current Password<input id="currentPassword" type="password" autocomplete="current-password" /></label>
+          <label>New Password<input id="newPassword" type="password" minlength="8" autocomplete="new-password" /></label>
+          <button id="changePasswordBtn" type="button" class="secondary-btn">Change Password</button>
+        </section>
+
+        <section id="staffSettingsCard" class="settings-card owner-only">
+          <h3>Staff</h3>
+          <div class="staff-add-grid">
+            <input id="staffEmail" type="email" placeholder="staff@email.com" />
+            <input id="staffPassword" type="text" placeholder="Temporary password" />
+            <select id="staffAccess">
+              <option value="editor">Can edit</option>
+              <option value="viewer">View only</option>
+            </select>
+            <button id="addStaffBtn" type="button" class="secondary-btn">Add Staff</button>
+          </div>
+          <div id="staffList" class="staff-list"></div>
+        </section>
+
+        <section class="settings-card">
+          <h3>Backup & Restore</h3>
+          <p class="muted compact">Download a full JSON backup of this workspace or restore one later.</p>
+          <div class="settings-actions">
+            <button id="downloadBackupBtn" type="button" class="secondary-btn">Download Backup</button>
+            <label class="secondary-btn file-btn">Restore Backup<input id="restoreBackupFile" type="file" accept="application/json,.json" /></label>
+          </div>
+        </section>
       </div>
     </section>
 
@@ -359,6 +442,7 @@
 
   <template id="itemTemplate">
     <article class="item-card" tabindex="0" role="button" aria-label="Open item details">
+      <label class="bulk-check-wrap hidden"><input class="bulk-check" type="checkbox" aria-label="Select item" /></label>
       <div class="item-card-accent"></div>
       <div class="thumb-wrap"><img class="item-thumb" alt="" /><div class="placeholder-thumb">📦</div></div>
 
@@ -440,6 +524,7 @@
       <div class="form-actions details-actions">
         <button id="detailsCancelBtn" type="button" class="secondary-btn hidden">Cancel</button>
         <div class="spacer"></div>
+        <button id="duplicateItemBtn" type="button" class="secondary-btn">Duplicate</button>
         <button id="quickSellBtn" type="button" class="secondary-btn">Mark Sold</button>
         <button id="detailsEditBtn" type="button" class="secondary-btn">Edit</button>
         <button id="detailsSaveBtn" type="button" class="primary-btn hidden">Save Changes</button>
@@ -473,6 +558,38 @@
         <button type="submit" class="primary-btn">Complete Sale</button>
       </div>
     </form>
+  </dialog>
+
+
+  <dialog id="recoveryDialog" class="dialog small">
+    <form id="recoveryForm" class="form-card">
+      <div class="dialog-head">
+        <div><p class="eyebrow">PASSWORD RECOVERY</p><h2>Reset Password</h2></div>
+        <button id="closeRecoveryDialog" type="button" class="icon-btn">✕</button>
+      </div>
+      <p class="muted compact">Use the recovery code shown when the account was created.</p>
+      <label>Email<input id="recoveryEmail" type="email" required /></label>
+      <label>Recovery Code<input id="recoveryCode" required /></label>
+      <label>New Password<input id="recoveryNewPassword" type="password" minlength="8" required /></label>
+      <div class="form-actions"><div class="spacer"></div><button class="primary-btn" type="submit">Reset Password</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="scannerDialog" class="dialog small">
+    <div class="form-card">
+      <div class="dialog-head">
+        <div><p class="eyebrow">SCAN ITEM</p><h2>Barcode / QR Lookup</h2></div>
+        <button id="closeScannerBtn" type="button" class="icon-btn">✕</button>
+      </div>
+      <video id="scannerVideo" class="scanner-video" playsinline muted></video>
+      <p id="scannerStatus" class="muted compact">Point the camera at a barcode or QR code.</p>
+      <label>Or enter code<input id="manualScanCode" placeholder="SKU / barcode / QR value" /></label>
+      <div class="form-actions">
+        <button id="manualScanSearchBtn" type="button" class="secondary-btn">Search Code</button>
+        <div class="spacer"></div>
+        <button id="stopScannerBtn" type="button" class="secondary-btn">Close</button>
+      </div>
+    </div>
   </dialog>
 
 <footer class="brand-footer">SimpleStock · Inventory made simple.</footer>
