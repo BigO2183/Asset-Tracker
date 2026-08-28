@@ -181,25 +181,45 @@
     <article class="item-card">
       <div class="item-card-accent"></div>
       <div class="thumb-wrap"><img class="item-thumb" alt="" /><div class="placeholder-thumb">📦</div></div>
+
       <div class="item-main">
         <div class="item-title-row">
-          <div>
-            <h3 class="item-name"></h3>
-            <p class="item-meta"></p>
-          </div>
+          <h3 class="item-name"></h3>
           <span class="status-pill"></span>
         </div>
+
         <div class="price-row">
           <strong class="asking"></strong>
           <span class="cost"></span>
           <span class="profit"></span>
         </div>
-        <p class="item-notes"></p>
-        <div class="item-bottom">
-          <span class="age-chip"></span>
-          <span class="platform-chip"></span>
-          <span class="location-chip"></span>
-          <button class="edit-btn hidden">Edit</button>
+
+        <div class="core-info-row">
+          <span class="platform-text"></span>
+          <span class="core-dot">·</span>
+          <span class="location-text"></span>
+        </div>
+
+        <div class="card-actions">
+          <button type="button" class="details-btn">Details</button>
+          <button class="edit-btn hidden" type="button">Edit</button>
+        </div>
+
+        <div class="item-details hidden">
+          <div class="details-grid">
+            <div>
+              <span class="detail-label">Item info</span>
+              <p class="item-meta"></p>
+            </div>
+            <div>
+              <span class="detail-label">Age</span>
+              <p class="age-text"></p>
+            </div>
+          </div>
+          <div class="detail-notes-wrap">
+            <span class="detail-label">Notes</span>
+            <p class="item-notes"></p>
+          </div>
         </div>
       </div>
     </article>

@@ -394,3 +394,148 @@ body{background:#f6f8fb}
   .simple-summary .summary-dot:nth-of-type(4),
   .simple-summary .summary-dot:nth-of-type(6){display:none}
 }
+
+
+/* v7 — quieter inventory cards: core info first, secondary info on demand */
+.item-card{
+  grid-template-columns:78px minmax(0,1fr);
+  gap:14px;
+  padding:13px 14px;
+  align-items:start;
+}
+.thumb-wrap{
+  width:78px;
+  height:78px;
+}
+.item-main{
+  min-width:0;
+}
+.item-title-row{
+  align-items:flex-start;
+  gap:10px;
+  margin-bottom:5px;
+}
+.item-name{
+  margin:0;
+  line-height:1.2;
+  font-size:1.02rem;
+  min-width:0;
+}
+.status-pill{
+  flex:0 0 auto;
+  padding:6px 9px;
+}
+.price-row{
+  margin:0 0 5px;
+  gap:10px;
+}
+.price-row .asking{
+  font-size:.98rem;
+}
+.core-info-row{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+  color:var(--muted);
+  font-size:.86rem;
+  line-height:1.35;
+}
+.core-dot{
+  color:#a3adba;
+}
+.platform-text,.location-text{
+  min-width:0;
+}
+.card-actions{
+  display:flex;
+  gap:8px;
+  margin-top:9px;
+}
+.details-btn{
+  border:0;
+  background:transparent;
+  color:#536477;
+  font-weight:700;
+  padding:6px 2px;
+  cursor:pointer;
+}
+.details-btn:hover{
+  color:var(--text);
+}
+.edit-btn{
+  margin-left:auto;
+  padding:8px 12px;
+  border-radius:10px;
+}
+.item-details{
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid var(--line);
+}
+.details-grid{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:16px;
+}
+.detail-label{
+  display:block;
+  color:#8a96a5;
+  font-size:.72rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:3px;
+}
+.item-details p{
+  margin:0;
+  color:var(--muted);
+  font-size:.86rem;
+  line-height:1.4;
+}
+.detail-notes-wrap{
+  margin-top:9px;
+}
+.item-card-accent{
+  width:3px;
+}
+@media(max-width:760px){
+  .item-card{
+    grid-template-columns:64px minmax(0,1fr);
+    gap:11px;
+    padding:11px 12px;
+  }
+  .thumb-wrap{
+    width:64px;
+    height:64px;
+    border-radius:11px;
+  }
+  .item-name{
+    font-size:.98rem;
+  }
+  .status-pill{
+    font-size:.68rem;
+    padding:5px 8px;
+  }
+  .price-row{
+    gap:8px;
+  }
+  .price-row .asking{
+    font-size:.94rem;
+  }
+  .price-row span,
+  .core-info-row{
+    font-size:.81rem;
+  }
+  .card-actions{
+    margin-top:7px;
+  }
+  .details-btn,
+  .edit-btn{
+    font-size:.82rem;
+  }
+  .details-grid{
+    grid-template-columns:1fr;
+    gap:7px;
+  }
+}

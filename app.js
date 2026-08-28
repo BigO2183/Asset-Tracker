@@ -61,31 +61,42 @@ function render(){
  filtered.forEach(i=>{
   const node=$('itemTemplate').content.cloneNode(true),card=node.querySelector('.item-card');
   node.querySelector('.item-name').textContent=i.name;
-  node.querySelector('.item-meta').textContent=[i.itemId&&`ID: ${i.itemId}`,i.category, i.quantity>1?`Qty ${i.quantity}`:''].filter(Boolean).join(' • ');
+  node.querySelector('.item-meta').textContent=[i.itemId&&`ID: ${i.itemId}`,i.category, i.quantity>1?`Qty ${i.quantity}`:''].filter(Boolean).join(' • ') || 'No extra item details';
   const statusEl=node.querySelector('.status-pill');
   statusEl.textContent=i.status;
   statusEl.classList.add(statusClass(i.status));
+
   node.querySelector('.asking').textContent=i.status==='Sold'?`Sold ${money(i.soldPrice)}`:`Ask ${money(i.askingPrice)}`;
   node.querySelector('.cost').textContent=`Paid ${money(i.cost)}`;
+
   const p=node.querySelector('.profit');
   if(i.status==='Sold'){
     p.textContent=`Profit ${money(profit(i))}`;
     p.classList.add(profit(i)>=0?'positive':'negative');
   }else p.textContent='';
-  node.querySelector('.item-notes').textContent=i.notes||'No notes yet.';
+
+  node.querySelector('.platform-text').textContent=i.platform||'Not listed';
+  node.querySelector('.location-text').textContent=i.location||'No location';
+
   const age=daysOld(i);
-  const ageChip=node.querySelector('.age-chip');
-  ageChip.textContent=`${age} day${age===1?'':'s'} old`;
-  if(age>=90) ageChip.classList.add('stale');
-  else if(age>=60) ageChip.classList.add('aged');
-  node.querySelector('.platform-chip').textContent=i.platform||'Not listed';
-  node.querySelector('.location-chip').textContent=i.location||'No location';
+  node.querySelector('.age-text').textContent=`${age} day${age===1?'':'s'} old`;
+  node.querySelector('.item-notes').textContent=i.notes||'No notes yet.';
+
   const img=node.querySelector('.item-thumb'),ph=node.querySelector('.placeholder-thumb');
   if(i.photo){img.src=i.photo;img.style.display='block';ph.style.display='none';}
+
+  const details=node.querySelector('.item-details');
+  const detailsBtn=node.querySelector('.details-btn');
+  detailsBtn.addEventListener('click',()=>{
+    const opening=details.classList.contains('hidden');
+    details.classList.toggle('hidden',!opening);
+    detailsBtn.textContent=opening?'Hide':'Details';
+  });
+
   const edit=node.querySelector('.edit-btn');
   edit.classList.toggle('hidden',!isAdmin);
   edit.addEventListener('click',()=>openEdit(i.key));
-  card.addEventListener('dblclick',()=>{if(isAdmin)openEdit(i.key)});
+
   $('inventoryList').appendChild(node);
  });
  const active=items.filter(i=>!['Sold','Donate / Bulk','Donated','Bulk Sale'].includes(i.status));

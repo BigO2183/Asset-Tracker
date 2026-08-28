@@ -1,17 +1,23 @@
-# SimpleStock v6
+# SimpleStock v7
 
-This version simplifies the main inventory workspace around the core functions only.
+This version simplifies the inventory cards around the core at-a-glance information.
 
-## Main change
-The cluttered search/filter/stat area was replaced with:
+## Visible on each card
+- Photo
+- Item name
+- Status
+- Asking / sold price
+- What you paid
+- Platform
+- Location
 
-1. Full-width search
-2. One visible Status filter
-3. A Filters button for Category + Platform
-4. One plain-text summary line
-5. Inventory immediately below
+## Tucked under Details
+- Item ID / SKU
+- Category
+- Quantity
+- Age
+- Notes
 
-No dashboard boxes or duplicate inventory summary blocks.
+The goal is to fit more inventory on screen while keeping the interface calm and easy to scan.
 
-## Demo Admin PIN
-1234
+Demo Admin PIN: `1234`
