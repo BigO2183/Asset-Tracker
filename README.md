@@ -1,32 +1,31 @@
-# SimpleStock v12 — Branded Theme
+# SimpleStock v13 — Calm Theme
 
-A visual branding pass over the working v11 app.
+Finalized visual direction for SimpleStock.
 
 ## Brand
 **SimpleStock**
 **Inventory made simple.**
 
-## Theme direction
-- Calm
-- Modern
-- Trustworthy
-- Minimal
-- Non-intimidating
+## Final palette
+- Deep Navy: `#25476A`
+- Soft Blue: `#EAF0F6`
+- Muted Green: `#3F7D61`
+- Soft Amber: `#FFF7E8`
+- Off White: `#F7F8FA`
+- White: `#FFFFFF`
+- Dark Text: `#17202A`
+- Muted Text: `#667384`
 
-## Palette
-- Deep navy: main brand / primary action
-- Soft blue: subtle accent
-- Muted green: success / sold
-- Soft amber: warnings / attention
-- Light neutral background
-- White cards
-- Reduced gradients and visual noise
+## Design direction
+- Calm
+- Minimal
+- Easy to scan
+- Not intimidating
+- Low visual stimulation
+- Functional first
 
 ## UX
-No major workflow changes from v11.
-Reseller Mode, Estate Sale Mode, Fast Intake, Sales, and cloud sync remain the same.
-
-## Cloud Sync
-Phone and desktop still share data through the same Netlify Blobs function.
+No workflow changes from v12.
+Reseller Mode, Estate Sale Mode, Fast Intake, Sales, and cloud sync remain intact.
 
 Demo Admin PIN: `1234`

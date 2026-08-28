@@ -1,38 +1,39 @@
 
 :root{
-  --bg:#f7f8fa;
-  --bg-2:#f0f3f7;
-  --panel:#ffffff;
-  --panel-soft:#fbfcfd;
-  --text:#17202a;
+  --bg:#F7F8FA;
+  --bg-2:#F1F4F7;
+  --panel:#FFFFFF;
+  --panel-soft:#FBFCFD;
+
+  --text:#17202A;
   --muted:#667384;
-  --line:#dfe5ec;
-  --line-strong:#cdd6e0;
+  --line:#DFE5EC;
+  --line-strong:#CBD5E1;
 
-  --brand:#25476a;
-  --brand-strong:#18324c;
-  --brand-soft:#eaf0f6;
+  --brand:#25476A;
+  --brand-strong:#1C3550;
+  --brand-soft:#EAF0F6;
 
-  --accent:#4f7cac;
-  --accent-soft:#edf4fb;
+  --accent:#6D8FB3;
+  --accent-soft:#EEF4FA;
 
-  --good:#3f7d61;
-  --good-soft:#edf7f1;
+  --good:#3F7D61;
+  --good-soft:#EDF7F1;
 
-  --warn:#9a6a27;
-  --warn-soft:#fff7e8;
+  --warn:#9A6A27;
+  --warn-soft:#FFF7E8;
 
-  --danger:#a84b3f;
-  --danger-soft:#fff1ef;
+  --danger:#A84B3F;
+  --danger-soft:#FFF1EF;
 
-  --dark:#17202a;
+  --dark:#17202A;
 
-  --shadow:0 10px 28px rgba(23,32,42,.07);
-  --shadow-soft:0 4px 14px rgba(23,32,42,.05);
+  --shadow:0 8px 24px rgba(23,32,42,.06);
+  --shadow-soft:0 3px 12px rgba(23,32,42,.045);
 
-  --radius-xl:22px;
-  --radius-lg:17px;
-  --radius-md:13px;
+  --radius-xl:20px;
+  --radius-lg:16px;
+  --radius-md:12px;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -1114,5 +1115,161 @@ textarea:focus{
   }
   .brand-footer{
     padding:0 14px;
+  }
+}
+
+
+/* v13 — finalized calm SimpleStock theme */
+body{
+  background:var(--bg);
+}
+
+.topbar{
+  background:rgba(247,248,250,.96);
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(12px);
+}
+
+.brand-mark{
+  background:var(--brand);
+  box-shadow:none;
+}
+
+.primary-btn,
+.photo-picker{
+  background:var(--brand);
+  box-shadow:none;
+}
+
+.primary-btn:hover,
+.photo-picker:hover{
+  background:var(--brand-strong);
+}
+
+.secondary-btn,
+.ghost-btn,
+.more-details-btn,
+.quick-pick{
+  box-shadow:none;
+}
+
+.secondary-btn{
+  background:#F4F6F8;
+}
+
+.secondary-btn.active-tab{
+  background:var(--brand);
+  border-color:var(--brand);
+}
+
+.mode-switch{
+  background:#F2F4F7;
+}
+
+.mode-btn.active{
+  box-shadow:none;
+  border:1px solid var(--line);
+}
+
+.workspace-toolbar,
+.panel,
+.money-strip,
+.info-strip,
+.hero-card{
+  box-shadow:none;
+}
+
+.item-card{
+  box-shadow:none;
+  background:#FFFFFF;
+}
+
+.item-card:hover{
+  box-shadow:0 4px 14px rgba(23,32,42,.05);
+}
+
+.item-card-accent{
+  background:var(--brand);
+}
+
+.search-wrap input{
+  background:#FFFFFF;
+}
+
+.search-wrap input:focus,
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:#9FB4C8;
+  box-shadow:0 0 0 3px rgba(37,71,106,.08);
+}
+
+.quick-status.status-unlisted,
+.status-pill.status-unlisted{
+  background:var(--brand-soft);
+  color:var(--brand);
+}
+
+.quick-status.status-listed,
+.quick-status.status-sold,
+.status-pill.status-listed,
+.status-pill.status-sold{
+  background:var(--good-soft);
+  color:var(--good);
+}
+
+.quick-status.status-hold,
+.quick-status.status-donate-/-bulk,
+.quick-status.status-needs-attention,
+.status-pill.status-hold,
+.status-pill.status-donate-/-bulk,
+.status-pill.status-needs-attention{
+  background:var(--warn-soft);
+  color:var(--warn);
+}
+
+.sync-note{
+  background:var(--good-soft);
+  color:var(--good);
+}
+
+.toast{
+  background:var(--brand-strong);
+}
+
+.sales-summary>div,
+.photo-intake,
+.detail-note,
+.detail-hero{
+  background:#FAFBFC;
+}
+
+.friendly-chip{
+  background:#F4F6F8;
+}
+
+.brand-footer{
+  color:#8A96A4;
+}
+
+/* quieter buttons and controls */
+button{
+  letter-spacing:0;
+}
+
+.stat-card,
+.side-card{
+  box-shadow:none;
+}
+
+/* keep destructive red reserved for actual destructive actions only */
+.danger-btn{
+  background:var(--danger-soft);
+  color:var(--danger);
+}
+
+@media(max-width:760px){
+  .topbar{
+    background:rgba(247,248,250,.98);
   }
 }
