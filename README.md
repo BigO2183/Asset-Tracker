@@ -1,44 +1,32 @@
-# SimpleStock v11 — Optional Estate Sale Mode
+# SimpleStock v12 — Branded Theme
 
-Keeps the working reseller flow intact and adds a separate Estate Sale workflow.
+A visual branding pass over the working v11 app.
 
-## Mode switch
-Use the compact switch above Search:
-- **Reseller**
-- **Estate Sale**
+## Brand
+**SimpleStock**
+**Inventory made simple.**
 
-Existing inventory defaults to Reseller.
+## Theme direction
+- Calm
+- Modern
+- Trustworthy
+- Minimal
+- Non-intimidating
 
-## Estate Sale Mode
-Fast intake stays simple:
-- Photo
-- Item name
-- Tag price
-- Room / location
-- Save / Save + Add Another
+## Palette
+- Deep navy: main brand / primary action
+- Soft blue: subtle accent
+- Muted green: success / sold
+- Soft amber: warnings / attention
+- Light neutral background
+- White cards
+- Reduced gradients and visual noise
 
-Optional details include:
-- Category
-- Sale stage: Full Price / 25% Off / 50% Off / Final Price
-- Final price
-- Status / disposition
-
-Estate statuses:
-- For Sale
-- Hold
-- Sold
-- Family Keep
-- Donate
-- Bulk Buyer
-- Dispose
-
-The inventory card shows the current discounted price automatically.
+## UX
+No major workflow changes from v11.
+Reseller Mode, Estate Sale Mode, Fast Intake, Sales, and cloud sync remain the same.
 
 ## Cloud Sync
-The same Netlify Blobs cloud sync remains in place, so estate-sale items also sync between phone and desktop.
-
-## Deploy
-Replace the entire project in your GitHub repo, preserving:
-`netlify/functions/inventory.mjs`
+Phone and desktop still share data through the same Netlify Blobs function.
 
 Demo Admin PIN: `1234`
