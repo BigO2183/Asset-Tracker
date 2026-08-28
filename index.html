@@ -120,6 +120,75 @@
       <div class="sales-section-title activity-title">Recent Activity</div>
       <div id="historyList" class="history-list"></div>
     </section>
+
+    <section id="reportsSection" class="panel workspace-panel hidden">
+      <div class="panel-head workspace-head">
+        <div>
+          <h2>Reports</h2>
+          <p class="muted panel-subcopy">A simple snapshot of inventory, sales, profit, and aging.</p>
+        </div>
+        <div class="report-actions">
+          <button id="exportInventoryReportBtn" class="secondary-btn" type="button">Export Inventory</button>
+          <button id="exportSalesReportBtn" class="secondary-btn" type="button">Export Sales</button>
+        </div>
+      </div>
+
+      <div class="report-grid">
+        <div class="report-card">
+          <span>Active Inventory</span>
+          <strong id="reportActiveCount">0</strong>
+          <small id="reportActiveCost">$0 invested</small>
+        </div>
+
+        <div class="report-card">
+          <span>Potential Sales Value</span>
+          <strong id="reportPotential">$0.00</strong>
+          <small>Current asking / tag value</small>
+        </div>
+
+        <div class="report-card">
+          <span>Sold Revenue</span>
+          <strong id="reportSoldRevenue">$0.00</strong>
+          <small id="reportSoldCount">0 sold</small>
+        </div>
+
+        <div class="report-card">
+          <span>Net Profit</span>
+          <strong id="reportNetProfit">$0.00</strong>
+          <small id="reportAverageProfit">$0 avg per sale</small>
+        </div>
+      </div>
+
+      <div class="report-split">
+        <div class="report-panel">
+          <div class="report-title">Inventory Aging</div>
+          <div class="aging-list">
+            <div><span>0–29 days</span><strong id="age0to29">0</strong></div>
+            <div><span>30–59 days</span><strong id="age30to59">0</strong></div>
+            <div><span>60–89 days</span><strong id="age60to89">0</strong></div>
+            <div><span>90+ days</span><strong id="age90plus">0</strong></div>
+          </div>
+        </div>
+
+        <div class="report-panel">
+          <div class="report-title">Top Categories</div>
+          <div id="categoryReport" class="category-report"></div>
+        </div>
+      </div>
+
+      <div id="estateDispositionPanel" class="report-panel estate-report hidden">
+        <div class="report-title">Estate Disposition</div>
+        <div class="disposition-grid">
+          <div><span>For Sale</span><strong id="dispForSale">0</strong></div>
+          <div><span>Sold</span><strong id="dispSold">0</strong></div>
+          <div><span>Family Keep</span><strong id="dispFamily">0</strong></div>
+          <div><span>Donate</span><strong id="dispDonate">0</strong></div>
+          <div><span>Bulk Buyer</span><strong id="dispBulk">0</strong></div>
+          <div><span>Dispose</span><strong id="dispDispose">0</strong></div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
 <dialog id="itemDialog" class="dialog">

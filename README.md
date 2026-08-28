@@ -1,26 +1,39 @@
-# SimpleStock v16 — Quick Sell
+# SimpleStock v17 — Reports + Export
 
-Adds a direct sales workflow from Item Details.
+Adds a clean Reports screen without adding charts or clutter.
 
-## Workflow
-Tap item → **Mark Sold**
+## Reports
+- Active inventory count
+- Active inventory cost
+- Potential sales value
+- Sold revenue
+- Net profit
+- Average profit per sale
+- Inventory aging:
+  - 0–29 days
+  - 30–59 days
+  - 60–89 days
+  - 90+ days
+- Top categories
 
-Enter:
-- Sold price
-- Fees
-- Shipping
-- Date sold
+## Estate Sale Mode
+Also shows:
+- For Sale
+- Sold
+- Family Keep
+- Donate
+- Bulk Buyer
+- Dispose
 
-Then SimpleStock:
-- Marks the item Sold
-- Calculates net profit
-- Removes it from active inventory
-- Adds it to Sales
-- Records the sale in History
-- Syncs the update to phone + desktop cloud storage
+## Export
+Two simple CSV exports:
+- Inventory Report
+- Sales Report
 
-Sold items no longer show the Mark Sold button.
+Reports automatically respect the current mode:
+- Reseller
+- Estate Sale
 
-All existing reseller, estate sale, inline editing, fast intake, branding, and cloud sync functionality remains intact.
+All existing quick intake, inline editing, quick sell, cloud sync, and branding remain intact.
 
 Demo Admin PIN: `1234`

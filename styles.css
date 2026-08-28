@@ -1603,3 +1603,143 @@ button{
     display:flex;
   }
 }
+
+
+/* v17 — Reports + Export */
+.report-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.report-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:16px;
+}
+.report-card{
+  padding:14px 15px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fbfcfd;
+}
+.report-card span{
+  display:block;
+  color:var(--muted);
+  font-size:.75rem;
+  font-weight:700;
+  margin-bottom:6px;
+}
+.report-card strong{
+  display:block;
+  font-size:1.18rem;
+  color:var(--text);
+  letter-spacing:-.02em;
+}
+.report-card small{
+  display:block;
+  color:#8a96a4;
+  font-size:.72rem;
+  margin-top:3px;
+}
+.report-split{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.report-panel{
+  padding:14px 15px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fff;
+}
+.report-title{
+  font-size:.76rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  color:#7b8795;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.aging-list,
+.category-report{
+  display:grid;
+}
+.aging-list>div,
+.category-report>div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 0;
+  border-bottom:1px solid var(--line);
+}
+.aging-list>div:last-child,
+.category-report>div:last-child{
+  border-bottom:0;
+}
+.aging-list span,
+.category-report span{
+  color:var(--muted);
+  font-size:.85rem;
+}
+.aging-list strong,
+.category-report strong{
+  color:var(--text);
+}
+.estate-report{
+  margin-top:12px;
+}
+.disposition-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+.disposition-grid>div{
+  padding:10px 11px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:#fafbfd;
+}
+.disposition-grid span{
+  display:block;
+  color:var(--muted);
+  font-size:.72rem;
+  margin-bottom:4px;
+}
+.disposition-grid strong{
+  font-size:1rem;
+}
+.report-empty{
+  color:#8a96a4;
+  font-size:.84rem;
+  padding:8px 0;
+}
+
+@media(max-width:900px){
+  .report-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+@media(max-width:760px){
+  .report-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .report-grid{
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .report-card{
+    padding:11px 12px;
+  }
+  .report-card strong{
+    font-size:1.02rem;
+  }
+  .report-split{
+    grid-template-columns:1fr;
+  }
+  .disposition-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}

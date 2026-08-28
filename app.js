@@ -518,6 +518,7 @@ function render(){
  $('soldRevenue').textContent=money(sold.reduce((s,i)=>s+(Number(i.soldPrice)||0),0));
  $('netProfit').textContent=money(sold.reduce((s,i)=>s+profit(i),0));
  renderHistory();
+ if($('reportsSection')&&!$('reportsSection').classList.contains('hidden')) renderReports();
 }
 function renderHistory(){
  const sold=modeItems().filter(i=>i.status==='Sold');
@@ -547,6 +548,113 @@ function renderHistory(){
   ?history.slice(0,20).map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(h.detail||'')}</div><small>${esc(h.time)}</small></div>`).join('')
   :'<div class="empty-state compact-empty">No activity yet.</div>';
 }
+
+function reportScopedItems(){
+ return modeItems();
+}
+function renderReports(){
+ const scoped=reportScopedItems();
+ const estate=currentMode==='estate';
+
+ const sold=scoped.filter(i=>i.status==='Sold');
+ const active=estate
+   ?scoped.filter(i=>!['Sold','Family Keep','Donate','Bulk Buyer','Dispose'].includes(i.status))
+   :scoped.filter(i=>!['Sold','Donate / Bulk','Donated','Bulk Sale'].includes(i.status));
+
+ const activeCost=active.reduce((s,i)=>s+(Number(i.cost)||0),0);
+ const potential=active.reduce((s,i)=>s+(estate?currentEstatePrice(i):(Number(i.askingPrice)||0)),0);
+ const revenue=sold.reduce((s,i)=>s+(Number(i.soldPrice)||0),0);
+ const net=sold.reduce((s,i)=>s+profit(i),0);
+ const avg=sold.length?net/sold.length:0;
+
+ $('reportActiveCount').textContent=active.length;
+ $('reportActiveCost').textContent=`${money(activeCost)} invested`;
+ $('reportPotential').textContent=money(potential);
+ $('reportSoldRevenue').textContent=money(revenue);
+ $('reportSoldCount').textContent=`${sold.length} sold`;
+ $('reportNetProfit').textContent=money(net);
+ $('reportAverageProfit').textContent=`${money(avg)} avg per sale`;
+
+ const ages=active.map(daysOld);
+ $('age0to29').textContent=ages.filter(d=>d<30).length;
+ $('age30to59').textContent=ages.filter(d=>d>=30&&d<60).length;
+ $('age60to89').textContent=ages.filter(d=>d>=60&&d<90).length;
+ $('age90plus').textContent=ages.filter(d=>d>=90).length;
+
+ const counts={};
+ scoped.forEach(i=>{
+   const c=(i.category||'Uncategorized').trim()||'Uncategorized';
+   counts[c]=(counts[c]||0)+1;
+ });
+ const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+ $('categoryReport').innerHTML=top.length
+   ?top.map(([name,count])=>`<div><span>${esc(name)}</span><strong>${count}</strong></div>`).join('')
+   :'<div class="report-empty">No categories yet.</div>';
+
+ $('estateDispositionPanel').classList.toggle('hidden',!estate);
+ if(estate){
+   $('dispForSale').textContent=scoped.filter(i=>i.status==='For Sale').length;
+   $('dispSold').textContent=sold.length;
+   $('dispFamily').textContent=scoped.filter(i=>i.status==='Family Keep').length;
+   $('dispDonate').textContent=scoped.filter(i=>i.status==='Donate').length;
+   $('dispBulk').textContent=scoped.filter(i=>i.status==='Bulk Buyer').length;
+   $('dispDispose').textContent=scoped.filter(i=>i.status==='Dispose').length;
+ }
+}
+
+function downloadCsv(filename,headers,rows){
+ const csv=[headers,...rows]
+   .map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','))
+   .join('\n');
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+ a.download=filename;
+ a.click();
+ URL.revokeObjectURL(a.href);
+}
+
+function exportInventoryReport(){
+ const scoped=modeItems();
+ const headers=['Mode','Item','ID','Category','Location','Status','Cost','Asking/Tag Price','Current Price','Platform','Date Acquired','Days Held','Quantity','Notes'];
+ const rows=scoped.map(i=>[
+   (i.recordType||'reseller')==='estate'?'Estate Sale':'Reseller',
+   i.name,
+   i.itemId,
+   i.category,
+   i.location,
+   i.status,
+   i.cost,
+   i.askingPrice,
+   (i.recordType||'reseller')==='estate'?currentEstatePrice(i):i.askingPrice,
+   i.platform,
+   i.acquiredDate,
+   daysOld(i),
+   i.quantity,
+   i.notes
+ ]);
+ downloadCsv(`simplestock-${currentMode}-inventory-${todayISO()}.csv`,headers,rows);
+}
+
+function exportSalesReport(){
+ const scoped=modeItems().filter(i=>i.status==='Sold');
+ const headers=['Mode','Item','ID','Category','Sold Price','Cost','Fees','Shipping','Net Profit','Date Sold','Platform','Location'];
+ const rows=scoped.map(i=>[
+   (i.recordType||'reseller')==='estate'?'Estate Sale':'Reseller',
+   i.name,
+   i.itemId,
+   i.category,
+   i.soldPrice,
+   i.cost,
+   i.fees,
+   i.shipping,
+   profit(i),
+   i.soldDate||'',
+   i.platform,
+   i.location
+ ]);
+ downloadCsv(`simplestock-${currentMode}-sales-${todayISO()}.csv`,headers,rows);
+}
+
 let activeDetailKey=null;
 
 function openDetails(key){
@@ -763,12 +871,21 @@ function setPhotoPreview(src=''){
 }
 function setView(view){
  const inventory=view==='inventory';
+ const sales=view==='history';
+ const reports=view==='reports';
+
  $('inventorySection').classList.toggle('hidden',!inventory);
- $('historySection').classList.toggle('hidden',inventory);
+ $('historySection').classList.toggle('hidden',!sales);
+ $('reportsSection').classList.toggle('hidden',!reports);
+
  $('showInventoryBtn').classList.toggle('active-tab',inventory);
- $('showHistoryBtn').classList.toggle('active-tab',!inventory);
- $('viewLabel').textContent=inventory?'Inventory':'Sales';
- if(!inventory) renderHistory();
+ $('showHistoryBtn').classList.toggle('active-tab',sales);
+ $('showReportsBtn').classList.toggle('active-tab',reports);
+
+ if($('viewLabel')) $('viewLabel').textContent=inventory?'Inventory':sales?'Sales':'Reports';
+
+ if(sales) renderHistory();
+ if(reports) renderReports();
 }
 function openAdd(){
  if(!isAdmin){openAdmin();return;}
@@ -910,6 +1027,9 @@ $('detailsCancelBtn').addEventListener('click',cancelInlineEdit);
 $('detailsSaveBtn').addEventListener('click',saveInlineEdit);
 $('resellerModeBtn').addEventListener('click',()=>setMode('reseller'));
 $('estateModeBtn').addEventListener('click',()=>setMode('estate'));
+$('showReportsBtn').addEventListener('click',()=>setView('reports'));
+$('exportInventoryReportBtn').addEventListener('click',exportInventoryReport);
+$('exportSalesReportBtn').addEventListener('click',exportSalesReport);
 $('showHistoryBtn').addEventListener('click',()=>setView('history'));
 $('showInventoryBtn').addEventListener('click',()=>setView('inventory'));
 $('exportBtn').addEventListener('click',()=>{
