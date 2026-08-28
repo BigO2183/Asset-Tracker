@@ -44,7 +44,6 @@ async function getSession(store, request) {
     type: 'json',
     consistency: 'strong'
   });
-
   if (!session) return null;
 
   if (!session.expiresAt || Date.now() > Number(session.expiresAt)) {
@@ -56,7 +55,6 @@ async function getSession(store, request) {
     type: 'json',
     consistency: 'strong'
   });
-
   if (!user) return null;
 
   return { token, session, user };
@@ -70,15 +68,8 @@ export default async (request) => {
 
     if (request.method === 'GET' && action === 'me') {
       const active = await getSession(store, request);
-
-      if (!active) {
-        return json({ ok: false, error: 'Not signed in.' }, 401);
-      }
-
-      return json({
-        ok: true,
-        user: safeUser(active.user)
-      });
+      if (!active) return json({ ok: false, error: 'Not signed in.' }, 401);
+      return json({ ok: true, user: safeUser(active.user) });
     }
 
     if (request.method !== 'POST') {
@@ -91,50 +82,27 @@ export default async (request) => {
       const workspaceName = String(body.workspaceName || '').trim();
       const email = normalizeEmail(body.email);
       const password = String(body.password || '');
-      const defaultMode =
-        body.defaultMode === 'estate' ? 'estate' : 'reseller';
+      const defaultMode = body.defaultMode === 'estate' ? 'estate' : 'reseller';
 
       if (workspaceName.length < 2) {
-        return json(
-          { ok: false, error: 'Enter a business or workspace name.' },
-          400
-        );
+        return json({ ok: false, error: 'Enter a business or workspace name.' }, 400);
       }
-
       if (!email.includes('@')) {
-        return json(
-          { ok: false, error: 'Enter a valid email.' },
-          400
-        );
+        return json({ ok: false, error: 'Enter a valid email.' }, 400);
       }
-
       if (password.length < 8) {
-        return json(
-          {
-            ok: false,
-            error: 'Password must be at least 8 characters.'
-          },
-          400
-        );
+        return json({ ok: false, error: 'Password must be at least 8 characters.' }, 400);
       }
 
       const existing = await store.get(emailKey(email), {
         type: 'json',
         consistency: 'strong'
       });
-
       if (existing) {
-        return json(
-          {
-            ok: false,
-            error: 'An account with that email already exists.'
-          },
-          409
-        );
+        return json({ ok: false, error: 'An account with that email already exists.' }, 409);
       }
 
       const salt = randomBytes(16).toString('hex');
-
       const user = {
         email,
         role: 'owner',
@@ -149,7 +117,6 @@ export default async (request) => {
       await store.setJSON(emailKey(email), user);
 
       const token = randomBytes(32).toString('hex');
-
       await store.setJSON(sessionKey(token), {
         email,
         workspaceId: user.workspaceId,
@@ -172,33 +139,16 @@ export default async (request) => {
         type: 'json',
         consistency: 'strong'
       });
+      if (!user) return json({ ok: false, error: 'Incorrect email or password.' }, 401);
 
-      if (!user) {
-        return json(
-          { ok: false, error: 'Incorrect email or password.' },
-          401
-        );
-      }
-
-      const supplied = Buffer.from(
-        passwordHash(password, user.salt),
-        'hex'
-      );
-
+      const supplied = Buffer.from(passwordHash(password, user.salt), 'hex');
       const expected = Buffer.from(user.passwordHash, 'hex');
 
-      if (
-        supplied.length !== expected.length ||
-        !timingSafeEqual(supplied, expected)
-      ) {
-        return json(
-          { ok: false, error: 'Incorrect email or password.' },
-          401
-        );
+      if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
+        return json({ ok: false, error: 'Incorrect email or password.' }, 401);
       }
 
       const token = randomBytes(32).toString('hex');
-
       await store.setJSON(sessionKey(token), {
         email,
         workspaceId: user.workspaceId,
@@ -215,26 +165,15 @@ export default async (request) => {
 
     if (action === 'logout') {
       const active = await getSession(store, request);
-
-      if (active) {
-        await store.delete(sessionKey(active.token));
-      }
-
+      if (active) await store.delete(sessionKey(active.token));
       return json({ ok: true });
     }
 
-    return json(
-      { ok: false, error: 'Unknown action.' },
-      404
-    );
+    return json({ ok: false, error: 'Unknown action.' }, 404);
   } catch (error) {
     console.error('SimpleStock auth error:', error);
-
     return json(
-      {
-        ok: false,
-        error: error?.message || 'Authentication error.'
-      },
+      { ok: false, error: error?.message || 'Authentication error.' },
       500
     );
   }
