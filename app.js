@@ -122,6 +122,8 @@ function saveCurrentItem({addAnother=false}={}){
    setTimeout(()=>$('photoFile').click(),120);
  }else{
    $('itemDialog').close();
+   setView('inventory');
+   setTimeout(()=>$('inventorySection').scrollIntoView({behavior:'smooth',block:'start'}),80);
  }
  return true;
 }

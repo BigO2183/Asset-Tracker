@@ -1,21 +1,9 @@
-# SimpleStock v9 — Fast Intake
+# SimpleStock v9.1
 
-This version focuses on repeated inventory intake.
+Small workflow fix.
 
-## New workflow
-Add Item → Camera → Name → Paid → Ask → Location → Save + Add Another
-
-## New features
-- Camera/photo picker opens as soon as Fast Intake opens
-- Auto-generated Item ID / SKU
-- Save + Add Another
-- Recent location quick picks
-- Remembers last category and platform
-- Keeps the previous location when adding another item
-- Simple save confirmation toast
-- Secondary fields remain under More Details
-
-## Goal
-Make it realistic to enter many reseller or estate-sale items back-to-back without friction.
+## Save behavior
+- **Save Item** → saves the item, closes Fast Intake, and returns to Inventory.
+- **Save + Add Another** → saves the item and keeps Fast Intake open for the next item.
 
 Demo Admin PIN: `1234`
