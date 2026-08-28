@@ -80,7 +80,7 @@
 
   <header class="topbar">
     <div class="brand-wrap">
-      <div class="brand-mark">SS</div>
+      <div id="workspaceLogoMark" class="brand-mark">SS</div>
       <div>
         <p class="eyebrow">RESELLER + ESTATE INVENTORY</p>
         <h1>SimpleStock</h1><span class="brand-tagline">Inventory made simple.</span>
@@ -113,6 +113,16 @@
   <button id="adminToggle" type="button" class="hidden" aria-hidden="true">Sign out</button>
 
   <main class="shell workspace-shell">
+
+    <section id="onboardingBanner" class="onboarding-banner hidden">
+      <div>
+        <strong>Welcome to SimpleStock</strong>
+        <span id="onboardingText">Add your first item to start tracking inventory.</span>
+      </div>
+      <button id="onboardingActionBtn" type="button" class="primary-btn">Add First Item</button>
+      <button id="dismissOnboardingBtn" type="button" class="icon-btn" aria-label="Dismiss">✕</button>
+    </section>
+
     <section class="workspace-toolbar simple-toolbar">
       <div class="mode-switch" role="group" aria-label="Inventory mode">
         <button id="resellerModeBtn" type="button" class="mode-btn active">Reseller</button>
@@ -301,6 +311,11 @@
               <option value="estate">Estate Sale</option>
             </select>
           </label>
+          <label>Workspace Logo
+            <input id="settingsLogoFile" type="file" accept="image/*" />
+          </label>
+          <div id="settingsLogoPreview" class="settings-logo-preview hidden"></div>
+          <button id="removeWorkspaceLogoBtn" type="button" class="secondary-btn">Remove Logo</button>
           <button id="saveWorkspaceSettingsBtn" type="button" class="primary-btn">Save Workspace</button>
         </section>
 
@@ -592,8 +607,16 @@
     </div>
   </dialog>
 
-<footer class="brand-footer">SimpleStock · Inventory made simple.</footer>
+<footer class="brand-footer">SimpleStock · Inventory made simple. · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></footer>
 
+  <div id="loadingOverlay" class="loading-overlay hidden" aria-live="polite">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <span id="loadingText">Loading…</span>
+    </div>
+  </div>
+
+  <div id="syncStatus" class="sync-status hidden" role="status" aria-live="polite"></div>
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <script src="app.js"></script>

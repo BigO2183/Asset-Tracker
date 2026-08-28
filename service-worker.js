@@ -1,10 +1,13 @@
-const CACHE_NAME = 'simplestock-v21-shell';
+const CACHE_NAME = 'simplestock-v22-shell';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/styles.css',
   '/app.js',
   '/manifest.webmanifest',
+  '/terms.html',
+  '/privacy.html',
+  '/landing.html',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/icon-maskable-512.png'

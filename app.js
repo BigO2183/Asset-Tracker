@@ -17,6 +17,8 @@ let bulkMode=false;
 let selectedKeys=new Set();
 let scannerStream=null;
 let scannerTimer=null;
+let currentWorkspaceLogo='';
+let saveInProgress=false;
 items=items.map(i=>({...i,status:i.status==='Reserved'?'Hold':(['Donated','Bulk Sale'].includes(i.status)?'Donate / Bulk':i.status)}));
 
 const $=id=>document.getElementById(id);
@@ -47,6 +49,69 @@ const savePrefs=()=>{
 };
 
 
+
+function showLoading(message='Loading…'){
+ $('loadingText').textContent=message;
+ $('loadingOverlay').classList.remove('hidden');
+}
+function hideLoading(){
+ $('loadingOverlay').classList.add('hidden');
+}
+function setSyncStatus(message,type='info'){
+ const el=$('syncStatus');
+ el.textContent=message;
+ el.className=`sync-status ${type}`;
+ el.classList.remove('hidden');
+ clearTimeout(setSyncStatus.timer);
+ setSyncStatus.timer=setTimeout(()=>el.classList.add('hidden'),2400);
+}
+function setSaving(on,message='Saving…'){
+ saveInProgress=Boolean(on);
+ document.body.classList.toggle('is-saving',saveInProgress);
+ if(on)setSyncStatus(message,'saving');
+}
+function workspacePrefKey(name){
+ return `simpleStock.workspace.${authState?.user?.workspaceId||'local'}.${name}`;
+}
+function updateOnboarding(){
+ const banner=$('onboardingBanner');
+ if(!banner)return;
+
+ const dismissed=localStorage.getItem(workspacePrefKey('onboardingDismissed'))==='1';
+ const scoped=modeItems();
+ const show=!dismissed && scoped.length===0 && Boolean(authState?.user);
+
+ banner.classList.toggle('hidden',!show);
+ $('onboardingText').textContent=currentMode==='estate'
+   ?'Add the first estate-sale item to start organizing the sale.'
+   :'Add your first item to start tracking inventory, sales, and locations.';
+}
+function applyWorkspaceLogo(){
+ const stored=localStorage.getItem(workspacePrefKey('logo'))||'';
+ currentWorkspaceLogo=stored;
+ const mark=$('workspaceLogoMark');
+ if(!mark)return;
+
+ if(stored){
+   mark.innerHTML=`<img src="${stored}" alt="Workspace logo" />`;
+   mark.classList.add('has-logo');
+ }else{
+   mark.textContent='SS';
+   mark.classList.remove('has-logo');
+ }
+}
+function compressLogo(file,{maxSize=300,quality=.8}={}){
+ return compressPhoto(file,{maxSize,quality});
+}
+function friendlyError(err,fallback='Something went wrong.'){
+ const message=err?.message||String(err||fallback);
+ if(/network|fetch|offline/i.test(message))return 'Connection problem. Check your internet and try again.';
+ if(/401|not signed in|session/i.test(message))return 'Your session expired. Please sign in again.';
+ if(/403|view-only|owner access/i.test(message))return 'This account does not have permission to make that change.';
+ if(/storage/i.test(message))return 'Storage is full. Download a backup or remove older photos/items.';
+ return message||fallback;
+}
+
 function authHeaders(extra={}){
  return authState?.token
    ?{...extra,Authorization:`Bearer ${authState.token}`}
@@ -73,6 +138,7 @@ function updateWorkspaceUI(){
  $('workspaceNameLabel').textContent=user.workspaceName||'Workspace';
  isAdmin=user.role==='owner' || Boolean(user.canEdit);
  updateAdminButton();
+ applyWorkspaceLogo();
  $('addItemBtn')?.classList.toggle('disabled-nav',!isAdmin);
  $('bulkSelectBtn')?.classList.toggle('hidden',!isAdmin);
 }
@@ -202,6 +268,7 @@ function mergeHistory(localHistory=[],cloudHistory=[]){
 }
 async function pushCloud({quiet=false}={}){
  if(!cloudEnabled || authState?.demo)return false;
+ if(!quiet)setSaving(true,'Saving…');
  try{
    const res=await fetch(CLOUD_ENDPOINT,{
      method:'POST',
@@ -209,12 +276,14 @@ async function pushCloud({quiet=false}={}){
      body:JSON.stringify({items,history})
    });
    if(!res.ok)throw new Error(`Cloud save failed (${res.status})`);
-   if(!quiet)showToast('Saved everywhere ✓');
+   if(!quiet)setSyncStatus('Saved everywhere ✓','success');
    return true;
  }catch(err){
    console.error(err);
-   if(!quiet)showToast('Saved on this device — cloud sync failed');
+   if(!quiet)setSyncStatus(friendlyError(err,'Saved on this device — cloud sync failed'),'error');
    return false;
+ }finally{
+   if(!quiet)setSaving(false);
  }
 }
 function queueCloudSync(){
@@ -224,6 +293,7 @@ function queueCloudSync(){
 }
 async function loadCloud(){
  if(authState?.demo)return false;
+ showLoading('Loading inventory…');
  try{
    const res=await fetch(CLOUD_ENDPOINT,{headers:authHeaders(),cache:'no-store'});
    if(!res.ok)throw new Error(`Cloud load failed (${res.status})`);
@@ -253,12 +323,15 @@ async function loadCloud(){
      }
    }
 
+   setSyncStatus('Inventory synced ✓','success');
    return true;
  }catch(err){
    console.warn('Cloud sync unavailable; using device storage.',err);
    cloudEnabled=false;
-   setTimeout(()=>showToast('Cloud sync offline — device only'),500);
+   setSyncStatus(friendlyError(err,'Cloud sync unavailable'),'error');
    return false;
+ }finally{
+   hideLoading();
  }
 }
 
@@ -430,6 +503,7 @@ function buildRecord(){
  };
 }
 function saveCurrentItem({addAnother=false}={}){
+ if(saveInProgress)return false;
  if(!$('name').value.trim()){
    $('name').focus();
    $('name').reportValidity();
@@ -468,7 +542,9 @@ function saveCurrentItem({addAnother=false}={}){
 
  // Save inventory before changing UI. If mobile browser storage is full,
  // keep the intake screen open and show the user exactly what happened.
+ setSaving(true,'Saving item…');
  if(!save()){
+   setSaving(false);
    items=previousItems;
    history=previousHistory;
    showToast('Could not save — browser storage is full');
@@ -483,9 +559,10 @@ function saveCurrentItem({addAnother=false}={}){
 
  render();
  if(cloudEnabled){
-   pushCloud({quiet:true}).then(ok=>showToast(ok?`${record.name} saved everywhere ✓`:`${record.name} saved on this device`));
+   pushCloud({quiet:true}).then(ok=>setSyncStatus(ok?`${record.name} saved everywhere ✓`:`${record.name} saved on this device`,ok?'success':'error')).finally(()=>setSaving(false));
  }else{
-   showToast(`${record.name} saved ✓`);
+   setSaving(false);
+   setSyncStatus(`${record.name} saved ✓`,'success');
  }
 
  if(addAnother){
@@ -718,6 +795,7 @@ function render(){
  renderHistory();
  if($('reportsSection')&&!$('reportsSection').classList.contains('hidden')) renderReports();
  updateBulkBar();
+ updateOnboarding();
  setTimeout(updateNavScrollHint,30);
 }
 function renderHistory(){
@@ -777,7 +855,7 @@ function searchScannedCode(code){
 
 async function openScanner(){
  $('scannerDialog').showModal();
- $('scannerStatus').textContent='Point the camera at a barcode or QR code.';
+ $('scannerStatus').textContent='Opening camera…';
  if(!('BarcodeDetector' in window)){
    $('scannerStatus').textContent='Camera scanning is not supported here. Enter the code below.';
    return;
@@ -787,6 +865,7 @@ async function openScanner(){
    const detector=new BarcodeDetector({formats:formats.filter(f=>['qr_code','code_128','code_39','ean_13','ean_8','upc_a','upc_e'].includes(f))});
    scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
    $('scannerVideo').srcObject=scannerStream;
+   $('scannerStatus').textContent='Camera ready. Point at a barcode or QR code.';
    await $('scannerVideo').play();
 
    const tick=async()=>{
@@ -823,6 +902,9 @@ async function renderSettings(){
  $('settingsDefaultMode').value=user.defaultMode==='estate'?'estate':'reseller';
  $('settingsEmail').textContent=user.email||'';
  $('settingsRole').textContent=user.role==='owner'?'Owner':(user.canEdit?'Staff · Can edit':'Staff · View only');
+ const logo=localStorage.getItem(workspacePrefKey('logo'))||'';
+ $('settingsLogoPreview').classList.toggle('hidden',!logo);
+ if(logo)$('settingsLogoPreview').innerHTML=`<img src="${logo}" alt="Workspace logo preview" />`;
  $('staffSettingsCard').classList.toggle('hidden',user.role!=='owner');
  if(user.role==='owner')await loadStaff();
 }
@@ -866,7 +948,8 @@ async function loadStaff(){
 
 function downloadBackup(){
  const backup={
-   version:21,
+   version:22,
+   checksum:`${items.length}:${history.length}:${todayISO()}`,
    workspace:{
      name:authState?.user?.workspaceName||'SimpleStock',
      defaultMode:authState?.user?.defaultMode||'reseller'
@@ -888,6 +971,7 @@ async function restoreBackupFile(file){
    const text=await file.text();
    const data=JSON.parse(text);
    if(!Array.isArray(data.items)||!Array.isArray(data.history))throw new Error('Invalid SimpleStock backup');
+   if(data.version && Number(data.version)<21)throw new Error('This backup is too old to restore safely');
    if(!confirm(`Restore ${data.items.length} items? This replaces the current workspace data.`))return;
    items=data.items.map(normalizeItemStatus);
    history=data.history;
@@ -903,6 +987,19 @@ async function restoreBackupFile(file){
 function reportScopedItems(){
  return modeItems();
 }
+
+function runPermissionSelfCheck(){
+ const user=authState?.user;
+ const checks=[
+   {name:'Signed in',ok:Boolean(user)},
+   {name:'Workspace assigned',ok:Boolean(user?.workspaceId)},
+   {name:'Role recognized',ok:['owner','staff'].includes(user?.role)||Boolean(authState?.demo)},
+   {name:'Edit permission',ok:user?.role==='owner'||typeof user?.canEdit==='boolean'||Boolean(authState?.demo)}
+ ];
+ const failed=checks.filter(c=>!c.ok);
+ return {checks,ok:failed.length===0,failed};
+}
+
 function renderReports(){
  const scoped=reportScopedItems();
  const estate=currentMode==='estate';
@@ -1433,7 +1530,15 @@ $('exportBtn').addEventListener('click',()=>{
 
 
 
+
+$('onboardingActionBtn')?.addEventListener('click',openAdd);
+$('dismissOnboardingBtn')?.addEventListener('click',()=>{
+ localStorage.setItem(workspacePrefKey('onboardingDismissed'),'1');
+ updateOnboarding();
+});
+
 $('saveWorkspaceSettingsBtn')?.addEventListener('click',async()=>{
+ showLoading('Saving workspace…');
  try{
    const payload=await authRequest('update_workspace',{
      workspaceName:$('settingsWorkspaceName').value,
@@ -1443,8 +1548,32 @@ $('saveWorkspaceSettingsBtn')?.addEventListener('click',async()=>{
    authState.workspace=payload.workspace;
    setAuthState(authState);
    updateWorkspaceUI();
+   applyWorkspaceLogo();
    showToast('Workspace updated ✓');
- }catch(err){showToast(err.message);}
+ }catch(err){showToast(friendlyError(err));}
+ finally{hideLoading();}
+});
+
+
+$('settingsLogoFile')?.addEventListener('change',async e=>{
+ const file=e.target.files?.[0];
+ if(!file)return;
+ try{
+   const data=await compressLogo(file);
+   localStorage.setItem(workspacePrefKey('logo'),data);
+   $('settingsLogoPreview').innerHTML=`<img src="${data}" alt="Workspace logo preview" />`;
+   $('settingsLogoPreview').classList.remove('hidden');
+   applyWorkspaceLogo();
+   showToast('Logo updated ✓');
+ }catch(err){showToast('Could not use that logo');}
+ e.target.value='';
+});
+$('removeWorkspaceLogoBtn')?.addEventListener('click',()=>{
+ localStorage.removeItem(workspacePrefKey('logo'));
+ $('settingsLogoPreview').classList.add('hidden');
+ $('settingsLogoPreview').innerHTML='';
+ applyWorkspaceLogo();
+ showToast('Logo removed');
 });
 
 $('changePasswordBtn')?.addEventListener('click',async()=>{
@@ -1506,6 +1635,7 @@ $('signupTabBtn').addEventListener('click',()=>switchAuthTab('signup'));
 $('loginForm').addEventListener('submit',async e=>{
  e.preventDefault();
  showAuthError('');
+ showLoading('Signing in…');
  const btn=e.submitter;
  if(btn)btn.disabled=true;
  try{
@@ -1520,15 +1650,17 @@ $('loginForm').addEventListener('submit',async e=>{
    localStorage.removeItem(HISTORY_KEY);
    await startWorkspace();
  }catch(err){
-   showAuthError(err.message);
+   showAuthError(friendlyError(err));
  }finally{
    if(btn)btn.disabled=false;
+   hideLoading();
  }
 });
 
 $('signupForm').addEventListener('submit',async e=>{
  e.preventDefault();
  showAuthError('');
+ showLoading('Creating workspace…');
  const btn=e.submitter;
  if(btn)btn.disabled=true;
  try{
@@ -1550,9 +1682,10 @@ $('signupForm').addEventListener('submit',async e=>{
    alert(`Workspace created.\n\nSAVE THIS RECOVERY CODE:\n${payload.recoveryCode}\n\nYou will need it if you forget your password.`);
    showToast('Workspace created ✓');
  }catch(err){
-   showAuthError(err.message);
+   showAuthError(friendlyError(err));
  }finally{
    if(btn)btn.disabled=false;
+   hideLoading();
  }
 });
 
@@ -1641,6 +1774,7 @@ async function startDemo(){
 }
 
 async function startWorkspace(){
+ showLoading('Opening workspace…');
  showAuthGate(false);
  updateWorkspaceUI();
 
@@ -1657,7 +1791,10 @@ async function startWorkspace(){
  renderRecentLocations();
  render();
 
+ const permissionCheck=runPermissionSelfCheck();
+ if(!permissionCheck.ok)setSyncStatus('Account permission check needs attention','error');
  if(connected)showToast('Workspace synced ✓');
+ hideLoading();
 }
 
 async function bootstrap(){

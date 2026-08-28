@@ -1,14 +1,39 @@
-# SimpleStock v21.1 — Mobile Setup Polish
+# SimpleStock v22 — Launch Ready
 
-Small UX polish to the sign-in / create-workspace screen.
+This version focuses on polish, safety, onboarding, and launch preparation.
 
-## Improvements
-- Shorter hero block
-- More compact branding
-- Smaller Sign In / Create Workspace tabs
-- Reduced field spacing
-- Shorter inputs/buttons
-- Less scrolling on phones
-- Extra compression on shorter phone screens
+## Added
+- First-use onboarding banner
+- Loading overlay
+- Saving / sync status messages
+- Friendlier error messages
+- Permission self-check
+- Better scanner status messages
+- Workspace logo support
+- Backup version validation
+- Pricing / plan placeholders
+- Separate public landing page
+- Privacy Policy page
+- Terms of Use page
 
-No feature changes.
+## Existing Business Features
+- Reseller + Estate Sale modes
+- Phone + desktop sync
+- Business workspaces
+- Staff roles
+- Password recovery
+- Backup / restore
+- Bulk actions
+- Duplicate item
+- Barcode / QR lookup
+- Reports
+- Quick Sell
+- PWA install
+
+## Public Pages
+- `/landing.html`
+- `/privacy.html`
+- `/terms.html`
+
+## Note
+The legal pages are starter drafts for early access and should be professionally reviewed before a public paid launch.
