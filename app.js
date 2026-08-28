@@ -640,14 +640,175 @@ function saveCurrentItem({addAnother=false}={}){
 
 function sampleData(){
  if(items.length)return;
- const dateDaysAgo=n=>{const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().slice(0,10)};
+
+ const dateDaysAgo=n=>{
+   const d=new Date();
+   d.setDate(d.getDate()-n);
+   return d.toISOString().slice(0,10);
+ };
+
  items=[
-  {key:uid(),recordType:'reseller',name:'DeWalt 20V MAX Drill',itemId:'RS-001',category:'Tools',quantity:1,location:'Garage Shelf A3',cost:20,askingPrice:70,platform:'Facebook Marketplace',status:'Listed',acquiredDate:dateDaysAgo(9),soldPrice:0,fees:0,shipping:0,notes:'Battery + charger included',photo:''},
-  {key:uid(),recordType:'reseller',name:'Vintage Brass Table Lamp',itemId:'RS-002',category:'Home Decor',quantity:1,location:'Storage Rack B1',cost:8,askingPrice:65,platform:'',status:'Unlisted',acquiredDate:dateDaysAgo(18),soldPrice:0,fees:0,shipping:0,notes:'Needs shade measurements',photo:''},
-  {key:uid(),recordType:'reseller',name:'Samsung 55-inch Frame TV',itemId:'RS-003',category:'Electronics',quantity:1,location:'Garage Floor TV Area',cost:0,askingPrice:180,platform:'Facebook Marketplace',status:'Listed',acquiredDate:dateDaysAgo(67),soldPrice:0,fees:0,shipping:0,notes:'Missing One Connect box',photo:''},
-  {key:uid(),recordType:'reseller',name:'Commercial Pressure Fryer',itemId:'RS-004',category:'Restaurant Equipment',quantity:1,location:'Storage Unit',cost:40,askingPrice:325,platform:'Local',status:'Sold',acquiredDate:dateDaysAgo(31),soldPrice:275,fees:0,shipping:0,notes:'Local pickup',photo:''}
+  // ---------------- RESELLER INVENTORY ----------------
+  {
+   key:uid(),recordType:'reseller',name:'DeWalt 20V MAX Cordless Drill Kit',
+   itemId:'RS-001',category:'Tools',quantity:1,location:'Garage Shelf A2',
+   cost:25,askingPrice:75,platform:'Facebook Marketplace',status:'Listed',
+   acquiredDate:dateDaysAgo(6),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Drill, battery, charger and soft bag. Tested and working.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'KitchenAid Artisan 5-Qt Stand Mixer',
+   itemId:'RS-002',category:'Small Appliances',quantity:1,location:'Kitchen Rack B1',
+   cost:40,askingPrice:140,platform:'Facebook Marketplace',status:'Listed',
+   acquiredDate:dateDaysAgo(11),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Includes bowl and paddle. Light cosmetic wear.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'Samsung 55-Inch 4K Smart TV',
+   itemId:'RS-003',category:'Electronics',quantity:1,location:'Garage TV Area',
+   cost:0,askingPrice:160,platform:'Facebook Marketplace',status:'Needs Attention',
+   acquiredDate:dateDaysAgo(22),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Powers on. Missing original remote. Needs model number added to listing.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'Ring Stick Up Cam Battery',
+   itemId:'RS-004',category:'Electronics',quantity:2,location:'Bin E-4',
+   cost:18,askingPrice:45,platform:'eBay',status:'Listed',
+   acquiredDate:dateDaysAgo(9),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Two cameras. One sealed, one open-box.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'Craftsman Rolling Tool Chest',
+   itemId:'RS-005',category:'Tools',quantity:1,location:'Garage Floor C1',
+   cost:35,askingPrice:110,platform:'Local',status:'Unlisted',
+   acquiredDate:dateDaysAgo(3),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Drawer slides work. Needs wipe-down before photos.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'Vintage Brass Table Lamp',
+   itemId:'RS-006',category:'Home Decor',quantity:1,location:'Shelf D-2',
+   cost:8,askingPrice:55,platform:'',status:'Unlisted',
+   acquiredDate:dateDaysAgo(18),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Working. Shade not included.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'Dyson V8 Cordless Vacuum',
+   itemId:'RS-007',category:'Home Appliances',quantity:1,location:'Closet Rack A',
+   cost:30,askingPrice:95,platform:'Facebook Marketplace',status:'Hold',
+   acquiredDate:dateDaysAgo(15),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Battery holds charge. Buyer scheduled for pickup Saturday.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'Sonos Play:5 Wireless Speaker',
+   itemId:'RS-008',category:'Audio',quantity:1,location:'Shelf E-1',
+   cost:35,askingPrice:90,platform:'eBay',status:'Sold',
+   acquiredDate:dateDaysAgo(29),soldPrice:82,fees:11.50,shipping:14.25,soldDate:dateDaysAgo(2),
+   notes:'Tested before shipping. Packed with foam corners.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'Honda 2800 PSI Pressure Washer',
+   itemId:'RS-009',category:'Outdoor Equipment',quantity:1,location:'Garage Bay 2',
+   cost:60,askingPrice:185,platform:'Facebook Marketplace',status:'Listed',
+   acquiredDate:dateDaysAgo(41),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Starts and runs. Includes hose and wand.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'Solid Wood Nightstand Pair',
+   itemId:'RS-010',category:'Furniture',quantity:2,location:'Storage Unit Wall B',
+   cost:20,askingPrice:95,platform:'Facebook Marketplace',status:'Listed',
+   acquiredDate:dateDaysAgo(67),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Pair sold together. Minor scratches on tops.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'Commercial Pressure Fryer',
+   itemId:'RS-011',category:'Restaurant Equipment',quantity:1,location:'Storage Unit Rear',
+   cost:40,askingPrice:325,platform:'Local',status:'Sold',
+   acquiredDate:dateDaysAgo(35),soldPrice:275,fees:0,shipping:0,soldDate:dateDaysAgo(5),
+   notes:'Local pickup. Buyer inspected before purchase.',photo:''
+  },
+  {
+   key:uid(),recordType:'reseller',name:'Milwaukee Packout Organizer',
+   itemId:'RS-012',category:'Tools',quantity:1,location:'Garage Shelf A4',
+   cost:12,askingPrice:40,platform:'',status:'Unlisted',
+   acquiredDate:dateDaysAgo(2),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Good condition. No cracked latches.',photo:''
+  },
+
+  // ---------------- ESTATE SALE INVENTORY ----------------
+  {
+   key:uid(),recordType:'estate',name:'Mid-Century Walnut Dresser',
+   itemId:'ES-013',category:'Furniture',quantity:1,location:'Primary Bedroom',
+   cost:0,askingPrice:225,platform:'Estate Sale',status:'For Sale',
+   acquiredDate:dateDaysAgo(4),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Six drawers. Minor wear consistent with age.',photo:'',
+   discountStage:'full',finalPrice:0
+  },
+  {
+   key:uid(),recordType:'estate',name:'Lenox China Dinnerware Set',
+   itemId:'ES-014',category:'Collectibles',quantity:1,location:'Dining Room',
+   cost:0,askingPrice:120,platform:'Estate Sale',status:'For Sale',
+   acquiredDate:dateDaysAgo(4),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Service for 8. Two cups have small chips.',photo:'',
+   discountStage:'25',finalPrice:0
+  },
+  {
+   key:uid(),recordType:'estate',name:'Brass Floor Lamp',
+   itemId:'ES-015',category:'Home Decor',quantity:1,location:'Living Room',
+   cost:0,askingPrice:60,platform:'Estate Sale',status:'For Sale',
+   acquiredDate:dateDaysAgo(4),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Tested and working.',photo:'',
+   discountStage:'full',finalPrice:0
+  },
+  {
+   key:uid(),recordType:'estate',name:'Framed Coastal Oil Painting',
+   itemId:'ES-016',category:'Art',quantity:1,location:'Hallway',
+   cost:0,askingPrice:150,platform:'Estate Sale',status:'Hold',
+   acquiredDate:dateDaysAgo(4),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Family deciding whether to keep.',photo:'',
+   discountStage:'full',finalPrice:0
+  },
+  {
+   key:uid(),recordType:'estate',name:'Patio Table with 4 Chairs',
+   itemId:'ES-017',category:'Outdoor Furniture',quantity:1,location:'Lanai',
+   cost:0,askingPrice:180,platform:'Estate Sale',status:'Sold',
+   acquiredDate:dateDaysAgo(4),soldPrice:135,fees:0,shipping:0,soldDate:dateDaysAgo(1),
+   notes:'Sold during first sale day.',photo:'',
+   discountStage:'25',finalPrice:0
+  },
+  {
+   key:uid(),recordType:'estate',name:'Craftsman Hand Tool Lot',
+   itemId:'ES-018',category:'Tools',quantity:1,location:'Garage Workbench',
+   cost:0,askingPrice:75,platform:'Estate Sale',status:'For Sale',
+   acquiredDate:dateDaysAgo(4),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Mixed sockets, wrenches and screwdrivers sold as one lot.',photo:'',
+   discountStage:'50',finalPrice:0
+  },
+  {
+   key:uid(),recordType:'estate',name:'Leather Recliner',
+   itemId:'ES-019',category:'Furniture',quantity:1,location:'Family Room',
+   cost:0,askingPrice:125,platform:'Estate Sale',status:'Donate',
+   acquiredDate:dateDaysAgo(4),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Did not sell. Marked for donation pickup.',photo:'',
+   discountStage:'final',finalPrice:50
+  },
+  {
+   key:uid(),recordType:'estate',name:'Holiday Decor Storage Lot',
+   itemId:'ES-020',category:'Seasonal',quantity:4,location:'Garage Shelving',
+   cost:0,askingPrice:80,platform:'Estate Sale',status:'Bulk Buyer',
+   acquiredDate:dateDaysAgo(4),soldPrice:0,fees:0,shipping:0,soldDate:'',
+   notes:'Four plastic totes of mixed Christmas decor.',photo:'',
+   discountStage:'final',finalPrice:35
+  }
  ];
- log('Demo data created',{name:'Reseller Tracker'},'4 starter records added');save();
+
+ history=[
+  {id:uid(),time:now(),actor:'demo@simplestock.app',action:'Sold',itemName:'Commercial Pressure Fryer',detail:'Sold for $275.00 · Local pickup'},
+  {id:uid(),time:now(),actor:'demo@simplestock.app',action:'Sold',itemName:'Sonos Play:5 Wireless Speaker',detail:'Sold for $82.00 · eBay'},
+  {id:uid(),time:now(),actor:'demo@simplestock.app',action:'Sold',itemName:'Patio Table with 4 Chairs',detail:'Estate sale item sold for $135.00'},
+  {id:uid(),time:now(),actor:'demo@simplestock.app',action:'Updated',itemName:'Leather Recliner',detail:'Final disposition changed to Donate'}
+ ];
+
+ save();
 }
 
 function updateFilters(){

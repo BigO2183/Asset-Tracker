@@ -1,28 +1,47 @@
-# SimpleStock v22.3 — Simplified Main Screen
+# SimpleStock v22.4 — Realistic Demo Inventory
 
-The daily workspace is intentionally stripped back.
+The Try Demo workspace now contains realistic reseller and estate-sale inventory instead of generic placeholder data.
 
-## Visible on the main screen
-- Inventory
-- Add Item
-- Sales
-- Reports
-- Settings
-- Reseller / Estate Sale
-- Search
-- Status
-- Scan
-- Select
-- Filters
-- One simple item count
-- Inventory list
+## Reseller examples
+- DeWalt cordless drill
+- KitchenAid stand mixer
+- Samsung 55-inch TV
+- Ring cameras
+- Craftsman tool chest
+- Vintage brass lamp
+- Dyson vacuum
+- Sonos speaker
+- Honda pressure washer
+- Wood nightstands
+- Commercial pressure fryer
+- Milwaukee organizer
 
-## Removed from the daily workspace
-- Export from the top navigation (still available inside Reports)
-- Extra onboarding banner
-- Ready-to-list mini-stat
-- 60+ day mini-stat
-- Duplicate summary information
+Includes realistic:
+- purchase costs
+- asking prices
+- storage locations
+- listing platforms
+- statuses
+- notes
+- sold prices
+- fees
+- shipping
+- profit examples
 
-## Rule
-Daily actions stay visible. Secondary actions live in Item Details, Reports, or Settings.
+## Estate Sale examples
+- Walnut dresser
+- Lenox china
+- Brass floor lamp
+- Framed artwork
+- Patio furniture
+- Tool lot
+- Leather recliner
+- Holiday decor lot
+
+Includes:
+- rooms
+- tag prices
+- discount stages
+- sold / hold / donate / bulk-buyer dispositions
+
+Real customer workspaces still start empty. The realistic inventory only appears in **Try Demo** mode.
