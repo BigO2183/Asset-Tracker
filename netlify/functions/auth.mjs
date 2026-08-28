@@ -13,27 +13,33 @@ const SESSION_DAYS = 30;
 const json = (body, status = 200) =>
   Response.json(body, {
     status,
-    headers: {
-      'Cache-Control': 'no-store'
-    }
+    headers: { 'Cache-Control': 'no-store' }
   });
 
 const normalizeEmail = (value = '') => String(value).trim().toLowerCase();
-const emailKey = (email) =>
+const userKey = (email) =>
   `user:${createHash('sha256').update(normalizeEmail(email)).digest('hex')}`;
 const sessionKey = (token) =>
   `session:${createHash('sha256').update(String(token)).digest('hex')}`;
+const workspaceKey = (workspaceId) => `workspace:${workspaceId}:meta`;
 
 const passwordHash = (password, salt) =>
   scryptSync(String(password), salt, 64).toString('hex');
+const recoveryHash = (code) =>
+  createHash('sha256').update(String(code).trim().toLowerCase()).digest('hex');
 
 const safeUser = (user) => ({
   email: user.email,
   role: user.role,
+  canEdit: user.role === 'owner' || Boolean(user.canEdit),
   workspaceId: user.workspaceId,
   workspaceName: user.workspaceName,
   defaultMode: user.defaultMode || 'reseller'
 });
+
+async function loadUser(store, email) {
+  return store.get(userKey(email), { type: 'json', consistency: 'strong' });
+}
 
 async function getSession(store, request) {
   const header = request.headers.get('authorization') || '';
@@ -51,13 +57,40 @@ async function getSession(store, request) {
     return null;
   }
 
-  const user = await store.get(emailKey(session.email), {
-    type: 'json',
-    consistency: 'strong'
-  });
-  if (!user) return null;
+  const user = await loadUser(store, session.email);
+  if (!user) {
+    await store.delete(sessionKey(token));
+    return null;
+  }
 
   return { token, session, user };
+}
+
+async function requireOwner(store, request) {
+  const active = await getSession(store, request);
+  if (!active || active.user.role !== 'owner') return null;
+  return active;
+}
+
+async function issueSession(store, user) {
+  const token = randomBytes(32).toString('hex');
+  await store.setJSON(sessionKey(token), {
+    email: user.email,
+    workspaceId: user.workspaceId,
+    role: user.role,
+    expiresAt: Date.now() + SESSION_DAYS * 86400000
+  });
+  return token;
+}
+
+async function updateWorkspaceUsers(store, meta) {
+  for (const member of meta.members || []) {
+    const user = await loadUser(store, member.email);
+    if (!user) continue;
+    user.workspaceName = meta.name;
+    user.defaultMode = meta.defaultMode || 'reseller';
+    await store.setJSON(userKey(user.email), user);
+  }
 }
 
 export default async (request) => {
@@ -69,7 +102,43 @@ export default async (request) => {
     if (request.method === 'GET' && action === 'me') {
       const active = await getSession(store, request);
       if (!active) return json({ ok: false, error: 'Not signed in.' }, 401);
-      return json({ ok: true, user: safeUser(active.user) });
+
+      const meta = await store.get(workspaceKey(active.user.workspaceId), {
+        type: 'json',
+        consistency: 'strong'
+      });
+
+      return json({
+        ok: true,
+        user: safeUser(active.user),
+        workspace: meta ? {
+          id: meta.id,
+          name: meta.name,
+          defaultMode: meta.defaultMode || 'reseller'
+        } : null
+      });
+    }
+
+    if (request.method === 'GET' && action === 'staff') {
+      const active = await requireOwner(store, request);
+      if (!active) return json({ ok: false, error: 'Owner access required.' }, 403);
+
+      const meta = await store.get(workspaceKey(active.user.workspaceId), {
+        type: 'json',
+        consistency: 'strong'
+      });
+
+      return json({
+        ok: true,
+        staff: (meta?.members || [])
+          .filter(m => m.email !== active.user.email)
+          .map(m => ({
+            email: m.email,
+            role: m.role || 'staff',
+            canEdit: Boolean(m.canEdit),
+            createdAt: m.createdAt || null
+          }))
+      });
     }
 
     if (request.method !== 'POST') {
@@ -94,40 +163,52 @@ export default async (request) => {
         return json({ ok: false, error: 'Password must be at least 8 characters.' }, 400);
       }
 
-      const existing = await store.get(emailKey(email), {
-        type: 'json',
-        consistency: 'strong'
-      });
-      if (existing) {
+      if (await loadUser(store, email)) {
         return json({ ok: false, error: 'An account with that email already exists.' }, 409);
       }
 
+      const workspaceId = randomUUID();
       const salt = randomBytes(16).toString('hex');
+      const recoveryCode = randomBytes(10).toString('hex');
+
       const user = {
         email,
         role: 'owner',
-        workspaceId: randomUUID(),
+        canEdit: true,
+        workspaceId,
         workspaceName,
         defaultMode,
         salt,
         passwordHash: passwordHash(password, salt),
+        recoveryHash: recoveryHash(recoveryCode),
         createdAt: new Date().toISOString()
       };
 
-      await store.setJSON(emailKey(email), user);
+      const meta = {
+        id: workspaceId,
+        name: workspaceName,
+        defaultMode,
+        ownerEmail: email,
+        members: [{
+          email,
+          role: 'owner',
+          canEdit: true,
+          createdAt: user.createdAt
+        }],
+        createdAt: user.createdAt
+      };
 
-      const token = randomBytes(32).toString('hex');
-      await store.setJSON(sessionKey(token), {
-        email,
-        workspaceId: user.workspaceId,
-        role: user.role,
-        expiresAt: Date.now() + SESSION_DAYS * 86400000
-      });
+      await store.setJSON(userKey(email), user);
+      await store.setJSON(workspaceKey(workspaceId), meta);
+
+      const token = await issueSession(store, user);
 
       return json({
         ok: true,
         token,
-        user: safeUser(user)
+        recoveryCode,
+        user: safeUser(user),
+        workspace: { id: workspaceId, name: workspaceName, defaultMode }
       });
     }
 
@@ -135,10 +216,7 @@ export default async (request) => {
       const email = normalizeEmail(body.email);
       const password = String(body.password || '');
 
-      const user = await store.get(emailKey(email), {
-        type: 'json',
-        consistency: 'strong'
-      });
+      const user = await loadUser(store, email);
       if (!user) return json({ ok: false, error: 'Incorrect email or password.' }, 401);
 
       const supplied = Buffer.from(passwordHash(password, user.salt), 'hex');
@@ -148,19 +226,8 @@ export default async (request) => {
         return json({ ok: false, error: 'Incorrect email or password.' }, 401);
       }
 
-      const token = randomBytes(32).toString('hex');
-      await store.setJSON(sessionKey(token), {
-        email,
-        workspaceId: user.workspaceId,
-        role: user.role,
-        expiresAt: Date.now() + SESSION_DAYS * 86400000
-      });
-
-      return json({
-        ok: true,
-        token,
-        user: safeUser(user)
-      });
+      const token = await issueSession(store, user);
+      return json({ ok: true, token, user: safeUser(user) });
     }
 
     if (action === 'logout') {
@@ -169,12 +236,169 @@ export default async (request) => {
       return json({ ok: true });
     }
 
+    if (action === 'recover') {
+      const email = normalizeEmail(body.email);
+      const code = String(body.recoveryCode || '').trim();
+      const newPassword = String(body.newPassword || '');
+
+      const user = await loadUser(store, email);
+      if (!user || !user.recoveryHash || recoveryHash(code) !== user.recoveryHash) {
+        return json({ ok: false, error: 'Email or recovery code is incorrect.' }, 401);
+      }
+      if (newPassword.length < 8) {
+        return json({ ok: false, error: 'New password must be at least 8 characters.' }, 400);
+      }
+
+      user.salt = randomBytes(16).toString('hex');
+      user.passwordHash = passwordHash(newPassword, user.salt);
+      user.recoveryHash = recoveryHash(randomBytes(10).toString('hex')); // invalidate old code
+      await store.setJSON(userKey(email), user);
+
+      return json({ ok: true, message: 'Password reset. Sign in with your new password.' });
+    }
+
+    if (action === 'change_password') {
+      const active = await getSession(store, request);
+      if (!active) return json({ ok: false, error: 'Not signed in.' }, 401);
+
+      const currentPassword = String(body.currentPassword || '');
+      const newPassword = String(body.newPassword || '');
+      if (newPassword.length < 8) {
+        return json({ ok: false, error: 'New password must be at least 8 characters.' }, 400);
+      }
+
+      const supplied = Buffer.from(passwordHash(currentPassword, active.user.salt), 'hex');
+      const expected = Buffer.from(active.user.passwordHash, 'hex');
+      if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
+        return json({ ok: false, error: 'Current password is incorrect.' }, 401);
+      }
+
+      active.user.salt = randomBytes(16).toString('hex');
+      active.user.passwordHash = passwordHash(newPassword, active.user.salt);
+      await store.setJSON(userKey(active.user.email), active.user);
+      return json({ ok: true });
+    }
+
+    if (action === 'update_workspace') {
+      const active = await requireOwner(store, request);
+      if (!active) return json({ ok: false, error: 'Owner access required.' }, 403);
+
+      const name = String(body.workspaceName || '').trim();
+      const defaultMode = body.defaultMode === 'estate' ? 'estate' : 'reseller';
+      if (name.length < 2) {
+        return json({ ok: false, error: 'Enter a workspace name.' }, 400);
+      }
+
+      const meta = await store.get(workspaceKey(active.user.workspaceId), {
+        type: 'json',
+        consistency: 'strong'
+      });
+      if (!meta) return json({ ok: false, error: 'Workspace not found.' }, 404);
+
+      meta.name = name;
+      meta.defaultMode = defaultMode;
+      await store.setJSON(workspaceKey(meta.id), meta);
+      await updateWorkspaceUsers(store, meta);
+
+      const refreshed = await loadUser(store, active.user.email);
+      return json({
+        ok: true,
+        user: safeUser(refreshed),
+        workspace: { id: meta.id, name: meta.name, defaultMode: meta.defaultMode }
+      });
+    }
+
+    if (action === 'add_staff') {
+      const active = await requireOwner(store, request);
+      if (!active) return json({ ok: false, error: 'Owner access required.' }, 403);
+
+      const email = normalizeEmail(body.email);
+      const password = String(body.password || '');
+      const canEdit = body.canEdit !== false;
+
+      if (!email.includes('@')) return json({ ok: false, error: 'Enter a valid staff email.' }, 400);
+      if (password.length < 8) return json({ ok: false, error: 'Temporary password must be at least 8 characters.' }, 400);
+      if (await loadUser(store, email)) return json({ ok: false, error: 'That email already has a SimpleStock account.' }, 409);
+
+      const meta = await store.get(workspaceKey(active.user.workspaceId), {
+        type: 'json',
+        consistency: 'strong'
+      });
+      if (!meta) return json({ ok: false, error: 'Workspace not found.' }, 404);
+
+      const salt = randomBytes(16).toString('hex');
+      const recoveryCode = randomBytes(10).toString('hex');
+      const createdAt = new Date().toISOString();
+
+      const user = {
+        email,
+        role: 'staff',
+        canEdit,
+        workspaceId: meta.id,
+        workspaceName: meta.name,
+        defaultMode: meta.defaultMode || 'reseller',
+        salt,
+        passwordHash: passwordHash(password, salt),
+        recoveryHash: recoveryHash(recoveryCode),
+        createdAt
+      };
+
+      await store.setJSON(userKey(email), user);
+      meta.members = [...(meta.members || []), {
+        email,
+        role: 'staff',
+        canEdit,
+        createdAt
+      }];
+      await store.setJSON(workspaceKey(meta.id), meta);
+
+      return json({ ok: true, recoveryCode });
+    }
+
+    if (action === 'reset_staff_password') {
+      const active = await requireOwner(store, request);
+      if (!active) return json({ ok: false, error: 'Owner access required.' }, 403);
+
+      const email = normalizeEmail(body.email);
+      const password = String(body.password || '');
+      if (password.length < 8) return json({ ok: false, error: 'Password must be at least 8 characters.' }, 400);
+
+      const user = await loadUser(store, email);
+      if (!user || user.workspaceId !== active.user.workspaceId || user.role === 'owner') {
+        return json({ ok: false, error: 'Staff account not found.' }, 404);
+      }
+
+      user.salt = randomBytes(16).toString('hex');
+      user.passwordHash = passwordHash(password, user.salt);
+      await store.setJSON(userKey(email), user);
+      return json({ ok: true });
+    }
+
+    if (action === 'remove_staff') {
+      const active = await requireOwner(store, request);
+      if (!active) return json({ ok: false, error: 'Owner access required.' }, 403);
+
+      const email = normalizeEmail(body.email);
+      const user = await loadUser(store, email);
+      if (!user || user.workspaceId !== active.user.workspaceId || user.role === 'owner') {
+        return json({ ok: false, error: 'Staff account not found.' }, 404);
+      }
+
+      await store.delete(userKey(email));
+      const meta = await store.get(workspaceKey(active.user.workspaceId), {
+        type: 'json',
+        consistency: 'strong'
+      });
+      if (meta) {
+        meta.members = (meta.members || []).filter(m => m.email !== email);
+        await store.setJSON(workspaceKey(meta.id), meta);
+      }
+      return json({ ok: true });
+    }
+
     return json({ ok: false, error: 'Unknown action.' }, 404);
   } catch (error) {
     console.error('SimpleStock auth error:', error);
-    return json(
-      { ok: false, error: error?.message || 'Authentication error.' },
-      500
-    );
+    return json({ ok: false, error: error?.message || 'Authentication error.' }, 500);
   }
 };
