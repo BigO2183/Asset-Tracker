@@ -1,14 +1,15 @@
-# Reseller / Estate Inventory Tracker v2
+# FlipFlow Inventory / Reseller Estate Tracker v3
 
-A cleaner, more polished version of the Reseller / Estate Inventory Tracker with a friendlier UI.
+This version leans into:
+- **Bold and branded** styling
+- **Simple / minimal** layout
+- Cleaner visual hierarchy
+- Easier-to-scan dashboard and cards
 
-## What's improved
-- Smoother visual design
-- More appealing dashboard cards and layout
-- Friendlier helper copy and onboarding cues
-- Better mobile presentation
-- Cleaner inventory cards
-- Clear active view and active filter states
+## Style direction
+A blend of:
+1. more bold and branded
+2. more simple / minimal
 
 ## Demo Admin PIN
 1234
@@ -18,11 +19,5 @@ A cleaner, more polished version of the Reseller / Estate Inventory Tracker with
 - `styles.css`
 - `app.js`
 
-## Storage
-This version still uses browser localStorage for demo/testing.
-
-## Next likely upgrades
-- Cloud database
-- Real logins / user accounts
-- Photo storage
-- AI item suggestion flow
+## Notes
+This still uses browser localStorage for demo/testing.
