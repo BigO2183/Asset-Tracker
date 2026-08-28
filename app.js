@@ -2,6 +2,9 @@ const STORAGE_KEY='resellerEstateTrackerV1.items';
 const HISTORY_KEY='resellerEstateTrackerV1.history';
 const ADMIN_PIN='1234';
 const PREF_KEY='simpleStockV9.preferences';
+const CLOUD_ENDPOINT='/.netlify/functions/inventory';
+let cloudEnabled=false;
+let cloudSyncTimer=null;
 let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
 let history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
 let prefs=JSON.parse(localStorage.getItem(PREF_KEY)||'{"recentLocations":[],"lastCategory":"","lastPlatform":""}');
@@ -33,7 +36,102 @@ const savePrefs=()=>{
    return false;
  }
 };
-const log=(action,item,detail='')=>{history.unshift({id:uid(),time:now(),action,itemName:item?.name||'Unknown item',detail});history=history.slice(0,500);save();};
+
+function normalizeItemStatus(i){
+ return {...i,status:i.status==='Reserved'?'Hold':(['Donated','Bulk Sale'].includes(i.status)?'Donate / Bulk':i.status)};
+}
+function mergeItems(localItems=[],cloudItems=[]){
+ const map=new Map();
+ const add=(item,prefer=false)=>{
+   const normalized=normalizeItemStatus(item);
+   const key=normalized.key || normalized.itemId || `${normalized.name}|${normalized.acquiredDate}|${normalized.location}`;
+   if(prefer || !map.has(key)) map.set(key,normalized);
+ };
+ localItems.forEach(i=>add(i,false));
+ cloudItems.forEach(i=>add(i,true));
+
+ // Deduplicate demo / migrated rows that may have different random keys but same item ID.
+ const byItemId=new Map();
+ [...map.values()].forEach(item=>{
+   const id=(item.itemId||'').trim();
+   if(id){
+     if(!byItemId.has(id)) byItemId.set(id,item);
+     else {
+       const existing=byItemId.get(id);
+       // Prefer whichever copy contains more meaningful data.
+       const score=x=>Object.values(x||{}).filter(v=>v!==''&&v!==0&&v!==null&&v!==undefined).length;
+       if(score(item)>=score(existing)) byItemId.set(id,item);
+     }
+   } else {
+     byItemId.set(`__${item.key||uid()}`,item);
+   }
+ });
+ return [...byItemId.values()];
+}
+function mergeHistory(localHistory=[],cloudHistory=[]){
+ const map=new Map();
+ [...localHistory,...cloudHistory].forEach(h=>{
+   const key=h.id || `${h.time}|${h.action}|${h.itemName}|${h.detail}`;
+   if(!map.has(key)) map.set(key,h);
+ });
+ return [...map.values()].sort((a,b)=>String(b.time||'').localeCompare(String(a.time||''))).slice(0,500);
+}
+async function pushCloud({quiet=false}={}){
+ if(!cloudEnabled)return false;
+ try{
+   const res=await fetch(CLOUD_ENDPOINT,{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({items,history})
+   });
+   if(!res.ok)throw new Error(`Cloud save failed (${res.status})`);
+   if(!quiet)showToast('Saved everywhere ✓');
+   return true;
+ }catch(err){
+   console.error(err);
+   if(!quiet)showToast('Saved on this device — cloud sync failed');
+   return false;
+ }
+}
+function queueCloudSync(){
+ if(!cloudEnabled)return;
+ clearTimeout(cloudSyncTimer);
+ cloudSyncTimer=setTimeout(()=>pushCloud({quiet:true}),250);
+}
+async function loadCloud(){
+ try{
+   const res=await fetch(CLOUD_ENDPOINT,{cache:'no-store'});
+   if(!res.ok)throw new Error(`Cloud load failed (${res.status})`);
+   const payload=await res.json();
+   cloudEnabled=true;
+
+   const cloudItems=payload?.data?.items || [];
+   const cloudHistory=payload?.data?.history || [];
+
+   if(payload.exists){
+     const mergedItems=mergeItems(items,cloudItems);
+     const mergedHistory=mergeHistory(history,cloudHistory);
+     const changed=JSON.stringify(mergedItems)!==JSON.stringify(cloudItems) || JSON.stringify(mergedHistory)!==JSON.stringify(cloudHistory);
+     items=mergedItems;
+     history=mergedHistory;
+     save();
+     if(changed)await pushCloud({quiet:true});
+   }else{
+     // First cloud launch: migrate whatever this device already has.
+     if(items.length || history.length){
+       await pushCloud({quiet:true});
+     }
+   }
+
+   return true;
+ }catch(err){
+   console.warn('Cloud sync unavailable; using device storage.',err);
+   cloudEnabled=false;
+   return false;
+ }
+}
+
+const log=(action,item,detail='')=>{history.unshift({id:uid(),time:now(),action,itemName:item?.name||'Unknown item',detail});history=history.slice(0,500);save();queueCloudSync();};
 const daysOld=i=>{const d=new Date((i.acquiredDate||todayISO())+'T12:00:00');return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));};
 const profit=i=>(Number(i.soldPrice)||0)-(Number(i.cost)||0)-(Number(i.fees)||0)-(Number(i.shipping)||0);
 const attention=i=>i.status==='Needs Attention'||!i.name||!i.location||(!i.askingPrice&&i.status!=='Sold'&&i.status!=='Donated')||((i.status==='Listed')&&!i.platform)||daysOld(i)>=90;
@@ -189,7 +287,11 @@ function saveCurrentItem({addAnother=false}={}){
  savePrefs();
 
  render();
- showToast(`${record.name} saved ✓`);
+ if(cloudEnabled){
+   pushCloud({quiet:true}).then(ok=>showToast(ok?`${record.name} saved everywhere ✓`:`${record.name} saved on this device`));
+ }else{
+   showToast(`${record.name} saved ✓`);
+ }
 
  if(addAnother){
    const lastLocation=record.location;
@@ -464,6 +566,7 @@ $('deleteItemBtn').addEventListener('click',()=>{
  items=items.filter(x=>x.key!==key);
  log('Deleted',i,'Removed from inventory');
  save();
+ queueCloudSync();
  $('itemDialog').close();
  render();
 });
@@ -528,7 +631,20 @@ $('exportBtn').addEventListener('click',()=>{
  URL.revokeObjectURL(a.href);
 });
 
-sampleData();
-renderRecentLocations();
-setView('inventory');
-render();
+async function bootstrap(){
+ setView('inventory');
+ renderRecentLocations();
+
+ const connected=await loadCloud();
+
+ if(!items.length){
+   sampleData();
+   if(connected)await pushCloud({quiet:true});
+ }
+
+ renderRecentLocations();
+ render();
+
+ if(connected)showToast('Cloud sync on ✓');
+}
+bootstrap();

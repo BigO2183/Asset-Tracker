@@ -838,3 +838,29 @@ body{background:#f6f8fb}
     min-height:48px;
   }
 }
+
+
+/* v10 cloud sync */
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.sync-note{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 9px;
+  border-radius:999px;
+  background:#edf7f1;
+  color:#157347;
+  font-size:.76rem;
+  font-weight:800;
+  white-space:nowrap;
+}
+@media(max-width:760px){
+  .sync-note{
+    font-size:.68rem;
+    padding:6px 8px;
+  }
+}

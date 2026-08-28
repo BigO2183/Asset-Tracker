@@ -1,15 +1,26 @@
-# SimpleStock v9.4 — Mobile Save Fix
+# SimpleStock v10 — Shared Phone + Browser Sync
 
-This version fixes a likely mobile-only save failure caused by full-resolution phone photos exceeding browser localStorage limits.
+This version replaces device-only inventory with shared cloud data when deployed on Netlify.
 
-## Fixes
-- Mobile photos are automatically resized to a maximum dimension of 1200px.
-- Photos are compressed to JPEG before being stored.
-- Save failures now show a visible error instead of silently doing nothing.
-- Save Item still returns directly to Inventory.
-- Save + Add Another still remains in intake mode.
+## What changes
+- Save an item on your phone → it is stored in Netlify Blobs.
+- Open the same deployed site on your computer → the same inventory loads.
+- Edit, sell, or delete an item on either device → the shared cloud copy updates.
+- Browser localStorage remains as an offline / fallback copy.
+- Existing local inventory is migrated into cloud storage on the first cloud-enabled launch.
 
-## Why this matters
-Modern phone camera photos can be several megabytes each. Saving the raw base64 photo directly into localStorage can exceed the browser's storage quota very quickly.
+## Deployment
+Upload/deploy the whole project to Netlify, including:
+- `netlify/functions/inventory.mjs`
+- `netlify.toml`
+- `package.json`
 
-Demo Admin PIN: `1234`
+Netlify installs `@netlify/blobs` during deployment.
+
+## Important
+Both phone and computer must open the **same deployed Netlify site**.
+
+This version uses one shared inventory workspace. User accounts / separate customer workspaces are not added yet.
+
+## Demo Admin PIN
+`1234`
