@@ -354,10 +354,8 @@ $('photoFile').addEventListener('change',e=>{
 });
 $('status').addEventListener('change',toggleSaleFields);
 ['soldPrice','cost','fees','shipping'].forEach(id=>$(id).addEventListener('input',updateProfitPreview));
-$('itemForm').addEventListener('submit',e=>{
- e.preventDefault();
- saveCurrentItem({addAnother:false});
-});
+$('itemForm').addEventListener('submit',e=>e.preventDefault());
+$('saveItemBtn').addEventListener('click',()=>saveCurrentItem({addAnother:false}));
 $('saveNextBtn').addEventListener('click',()=>saveCurrentItem({addAnother:true}));
 $('deleteItemBtn').addEventListener('click',()=>{
  const key=$('itemKey').value,i=items.find(x=>x.key===key);

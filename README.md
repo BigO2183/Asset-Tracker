@@ -1,9 +1,10 @@
-# SimpleStock v9.1
+# SimpleStock v9.2
 
-Small workflow fix.
+Save button fix.
 
-## Save behavior
-- **Save Item** → saves the item, closes Fast Intake, and returns to Inventory.
-- **Save + Add Another** → saves the item and keeps Fast Intake open for the next item.
+## Behavior
+- **Save Item** now uses a direct click handler instead of relying on form submission.
+- It saves the item, closes Fast Intake, switches to Inventory, and scrolls back to the inventory workspace.
+- **Save + Add Another** still saves and keeps batch intake open.
 
 Demo Admin PIN: `1234`
