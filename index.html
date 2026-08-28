@@ -151,6 +151,14 @@
         <label class="full">Location<input id="location" placeholder="Garage A3, Bedroom 2…" /></label>
       </div>
 
+      <div class="quick-picks">
+        <div class="quick-picks-head">
+          <span>Recent locations</span>
+          <small>Tap to reuse</small>
+        </div>
+        <div id="recentLocations" class="quick-pick-row"></div>
+      </div>
+
       <button id="moreDetailsBtn" type="button" class="more-details-btn" aria-expanded="false">＋ More Details</button>
 
       <div id="moreDetailsPanel" class="more-details-panel hidden">
@@ -170,11 +178,12 @@
 
       <div id="profitPreview" class="profit-preview hidden"></div>
 
-      <div class="form-actions">
+      <div class="form-actions intake-actions">
         <button type="button" id="deleteItemBtn" class="danger-btn hidden">Delete</button>
         <div class="spacer"></div>
         <button type="button" id="cancelDialog" class="secondary-btn">Cancel</button>
-        <button type="submit" class="primary-btn">Save Item</button>
+        <button type="submit" id="saveItemBtn" class="primary-btn">Save Item</button>
+        <button type="button" id="saveNextBtn" class="primary-btn save-next-btn">Save + Add Another</button>
       </div>
     </form>
   </dialog>
@@ -244,6 +253,8 @@
       </div>
     </div>
   </dialog>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <script src="app.js"></script>
 </body>

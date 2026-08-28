@@ -1,8 +1,10 @@
 const STORAGE_KEY='resellerEstateTrackerV1.items';
 const HISTORY_KEY='resellerEstateTrackerV1.history';
 const ADMIN_PIN='1234';
+const PREF_KEY='simpleStockV9.preferences';
 let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
 let history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
+let prefs=JSON.parse(localStorage.getItem(PREF_KEY)||'{"recentLocations":[],"lastCategory":"","lastPlatform":""}');
 let isAdmin=false,quickFilter='all';
 items=items.map(i=>({...i,status:i.status==='Reserved'?'Hold':(['Donated','Bulk Sale'].includes(i.status)?'Donate / Bulk':i.status)}));
 
@@ -13,10 +15,116 @@ const now=()=>new Date().toLocaleString();
 const todayISO=()=>new Date().toISOString().slice(0,10);
 const esc=(s='')=>String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const save=()=>{localStorage.setItem(STORAGE_KEY,JSON.stringify(items));localStorage.setItem(HISTORY_KEY,JSON.stringify(history));};
+const savePrefs=()=>localStorage.setItem(PREF_KEY,JSON.stringify(prefs));
 const log=(action,item,detail='')=>{history.unshift({id:uid(),time:now(),action,itemName:item?.name||'Unknown item',detail});history=history.slice(0,500);save();};
 const daysOld=i=>{const d=new Date((i.acquiredDate||todayISO())+'T12:00:00');return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));};
 const profit=i=>(Number(i.soldPrice)||0)-(Number(i.cost)||0)-(Number(i.fees)||0)-(Number(i.shipping)||0);
 const attention=i=>i.status==='Needs Attention'||!i.name||!i.location||(!i.askingPrice&&i.status!=='Sold'&&i.status!=='Donated')||((i.status==='Listed')&&!i.platform)||daysOld(i)>=90;
+
+
+function nextItemId(){
+ const nums=items.map(i=>String(i.itemId||'').match(/(\d+)$/)).filter(Boolean).map(m=>Number(m[1])).filter(Number.isFinite);
+ const next=(nums.length?Math.max(...nums):0)+1;
+ return `RS-${String(next).padStart(3,'0')}`;
+}
+function showToast(message){
+ const t=$('toast');
+ t.textContent=message;
+ t.classList.remove('hidden');
+ clearTimeout(showToast.timer);
+ showToast.timer=setTimeout(()=>t.classList.add('hidden'),1800);
+}
+function rememberLocation(location){
+ const value=(location||'').trim();
+ if(!value)return;
+ prefs.recentLocations=[value,...prefs.recentLocations.filter(x=>x!==value)].slice(0,6);
+ savePrefs();
+}
+function renderRecentLocations(){
+ const wrap=$('recentLocations');
+ if(!wrap)return;
+ if(!prefs.recentLocations.length){
+   wrap.innerHTML='<span class="quick-pick-empty">No recent locations yet</span>';
+   return;
+ }
+ wrap.innerHTML=prefs.recentLocations.map(loc=>`<button type="button" class="quick-pick" data-location="${esc(loc)}">${esc(loc)}</button>`).join('');
+ wrap.querySelectorAll('.quick-pick').forEach(btn=>btn.addEventListener('click',()=>{$('location').value=btn.dataset.location;}));
+}
+function prepareFreshIntake({keepContext=true}={}){
+ const keepLocation=keepContext?$('location').value:'';
+ $('itemForm').reset();
+ $('itemKey').value='';
+ $('quantity').value=1;
+ $('status').value='Unlisted';
+ $('acquiredDate').value=todayISO();
+ $('itemId').value=nextItemId();
+ $('category').value=keepContext?(prefs.lastCategory||''):'';
+ $('platform').value=keepContext?(prefs.lastPlatform||''):'';
+ $('location').value=keepLocation;
+ $('dialogTitle').textContent='Fast Intake';
+ $('deleteItemBtn').classList.add('hidden');
+ $('saveNextBtn').classList.remove('hidden');
+ $('moreDetailsPanel').classList.add('hidden');
+ $('moreDetailsBtn').setAttribute('aria-expanded','false');
+ $('moreDetailsBtn').textContent='＋ More Details';
+ setPhotoPreview('');
+ toggleSaleFields();
+ renderRecentLocations();
+}
+function buildRecord(){
+ return {
+  key:$('itemKey').value||uid(),
+  photo:$('photo').value,
+  name:$('name').value.trim(),
+  itemId:$('itemId').value.trim()||nextItemId(),
+  category:$('category').value.trim(),
+  quantity:Number($('quantity').value||1),
+  location:$('location').value.trim(),
+  cost:Number($('cost').value||0),
+  askingPrice:Number($('askingPrice').value||0),
+  platform:$('platform').value,
+  status:$('status').value,
+  acquiredDate:$('acquiredDate').value||todayISO(),
+  soldPrice:Number($('soldPrice').value||0),
+  fees:Number($('fees').value||0),
+  shipping:Number($('shipping').value||0),
+  notes:$('notes').value.trim()
+ };
+}
+function saveCurrentItem({addAnother=false}={}){
+ if(!isAdmin)return false;
+ if(!$('name').value.trim()){
+   $('name').focus();
+   $('name').reportValidity();
+   return false;
+ }
+ const key=$('itemKey').value;
+ const record=buildRecord();
+ if(key){
+   const old=items.find(i=>i.key===key);
+   items=items.map(i=>i.key===key?record:i);
+   log('Updated',record,`${old.status} → ${record.status}; ${old.location||'No location'} → ${record.location||'No location'}`);
+ }else{
+   items.unshift(record);
+   log('Added',record,`${money(record.cost)} paid • ${record.location||'No location'} • ${record.status}`);
+ }
+ rememberLocation(record.location);
+ if(record.category)prefs.lastCategory=record.category;
+ if(record.platform)prefs.lastPlatform=record.platform;
+ savePrefs();
+ save();
+ render();
+ showToast(`${record.name} saved ✓`);
+ if(addAnother){
+   const lastLocation=record.location;
+   prepareFreshIntake({keepContext:true});
+   $('location').value=lastLocation;
+   setTimeout(()=>$('photoFile').click(),120);
+ }else{
+   $('itemDialog').close();
+ }
+ return true;
+}
 
 function sampleData(){
  if(items.length)return;
@@ -195,20 +303,9 @@ function setView(view){
 }
 function openAdd(){
  if(!isAdmin){openAdmin();return;}
- $('itemForm').reset();
- $('itemKey').value='';
- $('quantity').value=1;
- $('status').value='Unlisted';
- $('acquiredDate').value=todayISO();
- $('dialogTitle').textContent='Fast Intake';
- $('deleteItemBtn').classList.add('hidden');
- $('moreDetailsPanel').classList.add('hidden');
- $('moreDetailsBtn').setAttribute('aria-expanded','false');
- $('moreDetailsBtn').textContent='＋ More Details';
- setPhotoPreview('');
- toggleSaleFields();
+ prepareFreshIntake({keepContext:false});
  $('itemDialog').showModal();
- setTimeout(()=>$('name').focus(),80);
+ setTimeout(()=>$('photoFile').click(),120);
 }
 function openEdit(key){
  if(!isAdmin)return;
@@ -218,6 +315,7 @@ function openEdit(key){
  $('itemKey').value=i.key;
  $('dialogTitle').textContent='Edit Item';
  $('deleteItemBtn').classList.remove('hidden');
+ $('saveNextBtn').classList.add('hidden');
  $('moreDetailsPanel').classList.remove('hidden');
  $('moreDetailsBtn').setAttribute('aria-expanded','true');
  $('moreDetailsBtn').textContent='− Less Details';
@@ -256,38 +354,9 @@ $('status').addEventListener('change',toggleSaleFields);
 ['soldPrice','cost','fees','shipping'].forEach(id=>$(id).addEventListener('input',updateProfitPreview));
 $('itemForm').addEventListener('submit',e=>{
  e.preventDefault();
- if(!isAdmin)return;
- const key=$('itemKey').value;
- const record={
-  key:key||uid(),
-  photo:$('photo').value,
-  name:$('name').value.trim(),
-  itemId:$('itemId').value.trim(),
-  category:$('category').value.trim(),
-  quantity:Number($('quantity').value||1),
-  location:$('location').value.trim(),
-  cost:Number($('cost').value||0),
-  askingPrice:Number($('askingPrice').value||0),
-  platform:$('platform').value,
-  status:$('status').value,
-  acquiredDate:$('acquiredDate').value||todayISO(),
-  soldPrice:Number($('soldPrice').value||0),
-  fees:Number($('fees').value||0),
-  shipping:Number($('shipping').value||0),
-  notes:$('notes').value.trim()
- };
- if(key){
-   const old=items.find(i=>i.key===key);
-   items=items.map(i=>i.key===key?record:i);
-   log('Updated',record,`${old.status} → ${record.status}; ${old.location||'No location'} → ${record.location||'No location'}`);
- }else{
-   items.unshift(record);
-   log('Added',record,`${money(record.cost)} paid • ${record.location||'No location'} • ${record.status}`);
- }
- save();
- $('itemDialog').close();
- render();
+ saveCurrentItem({addAnother:false});
 });
+$('saveNextBtn').addEventListener('click',()=>saveCurrentItem({addAnother:true}));
 $('deleteItemBtn').addEventListener('click',()=>{
  const key=$('itemKey').value,i=items.find(x=>x.key===key);
  if(!i||!confirm(`Delete ${i.name}?`))return;
@@ -359,5 +428,6 @@ $('exportBtn').addEventListener('click',()=>{
 });
 
 sampleData();
+renderRecentLocations();
 setView('inventory');
 render();
