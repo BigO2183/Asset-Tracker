@@ -46,9 +46,7 @@ function matchesQuick(i){
 function statusClass(status=''){
  return 'status-' + status.toLowerCase().replace(/\s+/g,'-');
 }
-function updateStatCardState(){
- document.querySelectorAll('.status-link').forEach(btn=>btn.classList.toggle('active',btn.dataset.filter===quickFilter));
-}
+function updateStatCardState(){}
 function render(){
  updateFilters();
  updateStatCardState();
@@ -96,6 +94,8 @@ function render(){
  $('statUnlisted').textContent=active.filter(i=>i.status==='Unlisted').length;
  $('statAged').textContent=active.filter(i=>daysOld(i)>=60).length;
  $('statAttention').textContent=active.filter(attention).length;
+ if($('summaryUnlisted')) $('summaryUnlisted').textContent=active.filter(i=>i.status==='Unlisted').length;
+ if($('summaryAged')) $('summaryAged').textContent=active.filter(i=>daysOld(i)>=60).length;
  $('potentialRevenue').textContent=money(active.reduce((s,i)=>s+(Number(i.askingPrice)||0),0));
  const sold=items.filter(i=>i.status==='Sold');
  $('soldRevenue').textContent=money(sold.reduce((s,i)=>s+(Number(i.soldPrice)||0),0));
@@ -237,12 +237,20 @@ $('adminToggle').addEventListener('click',()=>{
  }else openAdmin();
 });
 ['searchInput','categoryFilter','statusFilter','platformFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',()=>{quickFilter='all';render();}));
-document.querySelectorAll('.status-link').forEach(btn=>btn.addEventListener('click',()=>{
- quickFilter=btn.dataset.filter;
- setView('inventory');
+$('moreFiltersBtn').addEventListener('click',()=>{
+ const panel=$('advancedFilters');
+ const opening=panel.classList.contains('hidden');
+ panel.classList.toggle('hidden',!opening);
+ $('moreFiltersBtn').setAttribute('aria-expanded',opening?'true':'false');
+});
+$('clearFiltersBtn').addEventListener('click',()=>{
+ $('searchInput').value='';
+ $('categoryFilter').value='';
+ $('statusFilter').value='';
+ $('platformFilter').value='';
+ quickFilter='all';
  render();
- $('inventorySection').scrollIntoView({behavior:'smooth'});
-}));
+});
 $('addItemBtn').addEventListener('click',openAdd);
 $('closeDialog').addEventListener('click',()=>$('itemDialog').close());
 $('cancelDialog').addEventListener('click',()=>$('itemDialog').close());

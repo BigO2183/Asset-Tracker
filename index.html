@@ -32,15 +32,15 @@
   </nav>
 
   <main class="shell workspace-shell">
-    <section class="workspace-toolbar">
+    <section class="workspace-toolbar simple-toolbar">
       <div class="search-wrap compact-search">
         <span class="search-icon">⌕</span>
-        <input id="searchInput" type="search" placeholder="Search item, SKU, platform, location, notes…" autocomplete="off" />
+        <input id="searchInput" type="search" placeholder="Search items…" autocomplete="off" />
       </div>
-      <div class="filter-row compact-filters">
-        <select id="categoryFilter"><option value="">Category</option></select>
-        <select id="statusFilter">
-          <option value="">Status</option>
+
+      <div class="core-filter-row">
+        <select id="statusFilter" aria-label="Filter by status">
+          <option value="">All Statuses</option>
           <option>Unlisted</option>
           <option>Listed</option>
           <option>Hold</option>
@@ -48,35 +48,44 @@
           <option>Donate / Bulk</option>
           <option>Needs Attention</option>
         </select>
-        <select id="platformFilter">
-          <option value="">Platform</option>
+        <button id="moreFiltersBtn" type="button" class="filter-toggle" aria-expanded="false">Filters</button>
+      </div>
+
+      <div id="advancedFilters" class="advanced-filters hidden">
+        <select id="categoryFilter" aria-label="Filter by category"><option value="">All Categories</option></select>
+        <select id="platformFilter" aria-label="Filter by platform">
+          <option value="">All Platforms</option>
           <option>eBay</option>
           <option>Facebook Marketplace</option>
           <option>Local</option>
           <option>Estate Sale</option>
           <option>Other</option>
         </select>
+        <button id="clearFiltersBtn" type="button" class="clear-filter-btn">Clear</button>
       </div>
-    </section>
 
-    <section class="status-bar" aria-label="Inventory summary">
-      <button class="status-link active" data-filter="all"><span>Inventory</span><strong id="statActive">0</strong></button>
-      <button class="status-link" data-filter="unlisted"><span>Ready to List</span><strong id="statUnlisted">0</strong></button>
-      <button class="status-link" data-filter="aged"><span>60+ Days</span><strong id="statAged">0</strong></button>
-      <button class="status-link attention" data-filter="attention"><span>Needs Attention</span><strong id="statAttention">0</strong></button>
-      <div class="status-spacer"></div>
-      <div class="mini-money"><span>Potential</span><strong id="potentialRevenue">$0.00</strong></div>
-      <div class="mini-money"><span>Sold</span><strong id="soldRevenue">$0.00</strong></div>
-      <div class="mini-money"><span>Profit</span><strong id="netProfit">$0.00</strong></div>
+      <div class="simple-summary" aria-live="polite">
+        <span id="inventorySummary">0 items</span>
+        <span class="summary-dot">·</span>
+        <span><strong id="summaryUnlisted">0</strong> ready to list</span>
+        <span class="summary-dot">·</span>
+        <span><strong id="summaryAged">0</strong> over 60 days</span>
+      </div>
+
+      <span id="statActive" class="sr-only"></span>
       <span id="statCost" class="sr-only"></span>
+      <span id="statUnlisted" class="sr-only"></span>
+      <span id="statAged" class="sr-only"></span>
+      <span id="statAttention" class="sr-only"></span>
+      <span id="potentialRevenue" class="sr-only"></span>
+      <span id="soldRevenue" class="sr-only"></span>
+      <span id="netProfit" class="sr-only"></span>
+      <span id="viewLabel" class="sr-only">Inventory</span>
     </section>
 
     <section id="inventorySection" class="panel workspace-panel">
-      <div class="panel-head workspace-head">
-        <div>
-          <h2>Inventory</h2>
-          <p class="muted panel-subcopy"><strong id="inventorySummary">0 items</strong> · View: <strong id="viewLabel">Inventory</strong></p>
-        </div>
+      <div class="panel-head workspace-head compact-head">
+        <div><h2>Inventory</h2></div>
       </div>
       <div id="inventoryList" class="inventory-list"></div>
       <div id="emptyState" class="empty-state hidden">

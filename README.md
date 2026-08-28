@@ -1,14 +1,17 @@
-# SimpleStock v5 — Function-First Layout
+# SimpleStock v6
 
-This version removes the large dashboard/hero boxes and prioritizes working space.
+This version simplifies the main inventory workspace around the core functions only.
 
-## Main UX change
-- Full-width horizontal menu from left to right
-- Inventory, Add Item, Sales & History, Export, Admin
-- Search and filters directly below the menu
-- Compact status/financial summary instead of large cards
-- More screen space for actual inventory records
-- Mobile navigation scrolls horizontally instead of stacking into bulky boxes
+## Main change
+The cluttered search/filter/stat area was replaced with:
+
+1. Full-width search
+2. One visible Status filter
+3. A Filters button for Category + Platform
+4. One plain-text summary line
+5. Inventory immediately below
+
+No dashboard boxes or duplicate inventory summary blocks.
 
 ## Demo Admin PIN
 1234
