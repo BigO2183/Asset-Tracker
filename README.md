@@ -1,39 +1,25 @@
-# SimpleStock v22 — Launch Ready
+# SimpleStock v22.1 — Authentication Fix + Diagnostics
 
-This version focuses on polish, safety, onboarding, and launch preparation.
+Fixes the vague "Unable to continue." login error.
 
-## Added
-- First-use onboarding banner
-- Loading overlay
-- Saving / sync status messages
-- Friendlier error messages
-- Permission self-check
-- Better scanner status messages
-- Workspace logo support
-- Backup version validation
-- Pricing / plan placeholders
-- Separate public landing page
-- Privacy Policy page
-- Terms of Use page
+## Changes
+- Added `GET /.netlify/functions/auth?action=health`
+- Login now reports whether the auth function is:
+  - missing / 404
+  - crashing / 500
+  - unreachable
+  - returning a normal account/password error
+- Automatically migrates older owner accounts forward with missing v21/v22 fields.
+- Bumped the PWA service-worker cache so Android receives the fixed `app.js`.
 
-## Existing Business Features
-- Reseller + Estate Sale modes
-- Phone + desktop sync
-- Business workspaces
-- Staff roles
-- Password recovery
-- Backup / restore
-- Bulk actions
-- Duplicate item
-- Barcode / QR lookup
-- Reports
-- Quick Sell
-- PWA install
+## Important GitHub structure
 
-## Public Pages
-- `/landing.html`
-- `/privacy.html`
-- `/terms.html`
+`auth.mjs` must be here:
 
-## Note
-The legal pages are starter drafts for early access and should be professionally reviewed before a public paid launch.
+`netlify/functions/auth.mjs`
+
+and inventory must be here:
+
+`netlify/functions/inventory.mjs`
+
+Do not keep the backend `.mjs` files only at the repository root.

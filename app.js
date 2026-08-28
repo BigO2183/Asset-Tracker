@@ -158,14 +158,60 @@ function switchAuthTab(tab){
  showAuthError('');
 }
 async function authRequest(action,body,{authorized=false}={}){
- const res=await fetch(`${AUTH_ENDPOINT}?action=${encodeURIComponent(action)}`,{
-   method:'POST',
-   headers:authorized?authHeaders({'Content-Type':'application/json'}):{'Content-Type':'application/json'},
-   body:JSON.stringify(body||{})
- });
- const payload=await res.json().catch(()=>({}));
- if(!res.ok)throw new Error(payload.error||'Unable to continue.');
+ let res;
+ try{
+   res=await fetch(`${AUTH_ENDPOINT}?action=${encodeURIComponent(action)}`,{
+     method:'POST',
+     headers:authorized?authHeaders({'Content-Type':'application/json'}):{'Content-Type':'application/json'},
+     body:JSON.stringify(body||{})
+   });
+ }catch(err){
+   throw new Error('Cannot reach the SimpleStock login service. Check your connection or Netlify deployment.');
+ }
+
+ const raw=await res.text();
+ let payload={};
+ try{ payload=raw?JSON.parse(raw):{}; }catch{}
+
+ if(!res.ok){
+   if(payload?.error)throw new Error(payload.error);
+
+   if(res.status===404){
+     throw new Error('Login service is not deployed. Check netlify/functions/auth.mjs in GitHub.');
+   }
+   if(res.status===500){
+     throw new Error('Login service had a server error. Check the latest Netlify function deploy.');
+   }
+
+   throw new Error(`Login service error (${res.status}).`);
+ }
+
+ if(!payload || typeof payload!=='object'){
+   throw new Error('Login service returned an invalid response.');
+ }
+
  return payload;
+}
+
+async function checkAuthService(){
+ try{
+   const res=await fetch(`${AUTH_ENDPOINT}?action=health`,{cache:'no-store'});
+   const raw=await res.text();
+   let payload={};
+   try{payload=JSON.parse(raw)}catch{}
+
+   if(!res.ok || !payload.ok){
+     return {
+       ok:false,
+       message:res.status===404
+         ?'Login backend is missing from this deployment.'
+         :`Login backend error (${res.status}).`
+     };
+   }
+   return {ok:true};
+ }catch{
+   return {ok:false,message:'Cannot reach the login backend.'};
+ }
 }
 async function verifySession(){
  if(!authState?.token)return false;
@@ -1800,6 +1846,11 @@ async function startWorkspace(){
 async function bootstrap(){
  showAuthGate(true);
  switchAuthTab('login');
+
+ const health=await checkAuthService();
+ if(!health.ok){
+   showAuthError(health.message);
+ }
 
  const valid=await verifySession();
  if(valid){
