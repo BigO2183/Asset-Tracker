@@ -864,3 +864,40 @@ body{background:#f6f8fb}
     padding:6px 8px;
   }
 }
+
+
+/* v11 — optional Estate Sale Mode */
+.mode-switch{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  padding:3px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#f3f6fa;
+  width:max-content;
+}
+.mode-btn{
+  border:0;
+  border-radius:9px;
+  padding:8px 12px;
+  background:transparent;
+  color:var(--muted);
+  font-size:.82rem;
+  font-weight:800;
+  cursor:pointer;
+}
+.mode-btn.active{
+  background:#fff;
+  color:var(--text);
+  box-shadow:0 2px 8px rgba(15,23,42,.07);
+}
+@media(max-width:760px){
+  .mode-switch{
+    width:100%;
+  }
+  .mode-btn{
+    flex:1;
+    padding:9px 10px;
+  }
+}

@@ -33,6 +33,11 @@
 
   <main class="shell workspace-shell">
     <section class="workspace-toolbar simple-toolbar">
+      <div class="mode-switch" role="group" aria-label="Inventory mode">
+        <button id="resellerModeBtn" type="button" class="mode-btn active">Reseller</button>
+        <button id="estateModeBtn" type="button" class="mode-btn">Estate Sale</button>
+      </div>
+
       <div class="search-wrap compact-search">
         <span class="search-icon">⌕</span>
         <input id="searchInput" type="search" placeholder="Search items…" autocomplete="off" />
@@ -169,6 +174,17 @@
           <label>Status<select id="status"><option>Unlisted</option><option>Listed</option><option>Hold</option><option>Sold</option><option>Donate / Bulk</option><option>Needs Attention</option></select></label>
           <label>Date Acquired<input id="acquiredDate" type="date" /></label>
           <label>Quantity<input id="quantity" type="number" min="1" step="1" value="1" /></label>
+          <label class="estate-only hidden">Sale Stage
+            <select id="discountStage">
+              <option value="full">Full Price</option>
+              <option value="25">25% Off</option>
+              <option value="50">50% Off</option>
+              <option value="final">Final Price</option>
+            </select>
+          </label>
+          <label class="estate-only hidden">Final Price ($)
+            <input id="finalPrice" type="number" min="0" step="0.01" placeholder="Optional" />
+          </label>
           <label class="sale-only">Sold Price ($)<input id="soldPrice" type="number" min="0" step="0.01" placeholder="0.00" /></label>
           <label class="sale-only">Fees ($)<input id="fees" type="number" min="0" step="0.01" placeholder="0.00" /></label>
           <label class="sale-only">Shipping Cost ($)<input id="shipping" type="number" min="0" step="0.01" placeholder="0.00" /></label>

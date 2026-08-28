@@ -1,26 +1,44 @@
-# SimpleStock v10 — Shared Phone + Browser Sync
+# SimpleStock v11 — Optional Estate Sale Mode
 
-This version replaces device-only inventory with shared cloud data when deployed on Netlify.
+Keeps the working reseller flow intact and adds a separate Estate Sale workflow.
 
-## What changes
-- Save an item on your phone → it is stored in Netlify Blobs.
-- Open the same deployed site on your computer → the same inventory loads.
-- Edit, sell, or delete an item on either device → the shared cloud copy updates.
-- Browser localStorage remains as an offline / fallback copy.
-- Existing local inventory is migrated into cloud storage on the first cloud-enabled launch.
+## Mode switch
+Use the compact switch above Search:
+- **Reseller**
+- **Estate Sale**
 
-## Deployment
-Upload/deploy the whole project to Netlify, including:
-- `netlify/functions/inventory.mjs`
-- `netlify.toml`
-- `package.json`
+Existing inventory defaults to Reseller.
 
-Netlify installs `@netlify/blobs` during deployment.
+## Estate Sale Mode
+Fast intake stays simple:
+- Photo
+- Item name
+- Tag price
+- Room / location
+- Save / Save + Add Another
 
-## Important
-Both phone and computer must open the **same deployed Netlify site**.
+Optional details include:
+- Category
+- Sale stage: Full Price / 25% Off / 50% Off / Final Price
+- Final price
+- Status / disposition
 
-This version uses one shared inventory workspace. User accounts / separate customer workspaces are not added yet.
+Estate statuses:
+- For Sale
+- Hold
+- Sold
+- Family Keep
+- Donate
+- Bulk Buyer
+- Dispose
 
-## Demo Admin PIN
-`1234`
+The inventory card shows the current discounted price automatically.
+
+## Cloud Sync
+The same Netlify Blobs cloud sync remains in place, so estate-sale items also sync between phone and desktop.
+
+## Deploy
+Replace the entire project in your GitHub repo, preserving:
+`netlify/functions/inventory.mjs`
+
+Demo Admin PIN: `1234`

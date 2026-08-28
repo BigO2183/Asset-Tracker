@@ -7,7 +7,8 @@ let cloudEnabled=false;
 let cloudSyncTimer=null;
 let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
 let history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
-let prefs=JSON.parse(localStorage.getItem(PREF_KEY)||'{"recentLocations":[],"lastCategory":"","lastPlatform":""}');
+let prefs=JSON.parse(localStorage.getItem(PREF_KEY)||'{"recentLocations":[],"lastCategory":"","lastPlatform":"","mode":"reseller"}');
+let currentMode=prefs.mode==='estate'?'estate':'reseller';
 let isAdmin=false,quickFilter='all';
 items=items.map(i=>({...i,status:i.status==='Reserved'?'Hold':(['Donated','Bulk Sale'].includes(i.status)?'Donate / Bulk':i.status)}));
 
@@ -38,7 +39,11 @@ const savePrefs=()=>{
 };
 
 function normalizeItemStatus(i){
- return {...i,status:i.status==='Reserved'?'Hold':(['Donated','Bulk Sale'].includes(i.status)?'Donate / Bulk':i.status)};
+ return {
+   ...i,
+   recordType:i.recordType||'reseller',
+   status:i.status==='Reserved'?'Hold':(['Donated','Bulk Sale'].includes(i.status)?'Donate / Bulk':i.status)
+ };
 }
 function mergeItems(localItems=[],cloudItems=[]){
  const map=new Map();
@@ -127,6 +132,7 @@ async function loadCloud(){
  }catch(err){
    console.warn('Cloud sync unavailable; using device storage.',err);
    cloudEnabled=false;
+   setTimeout(()=>showToast('Cloud sync offline — device only'),500);
    return false;
  }
 }
@@ -167,10 +173,63 @@ function compressPhoto(file,{maxSize=1200,quality=.72}={}){
  });
 }
 
+
+const RESELLER_STATUSES=['Unlisted','Listed','Hold','Sold','Donate / Bulk','Needs Attention'];
+const ESTATE_STATUSES=['For Sale','Hold','Sold','Family Keep','Donate','Bulk Buyer','Dispose'];
+
+function modeItems(){
+ return items.filter(i=>(i.recordType||'reseller')===currentMode);
+}
+function setStatusOptions(selected=''){
+ const select=$('status');
+ const options=currentMode==='estate'?ESTATE_STATUSES:RESELLER_STATUSES;
+ select.innerHTML=options.map(s=>`<option>${s}</option>`).join('');
+ select.value=options.includes(selected)?selected:options[0];
+}
+function currentEstatePrice(i){
+ const asking=Number(i.askingPrice)||0;
+ if(i.discountStage==='25')return asking*.75;
+ if(i.discountStage==='50')return asking*.5;
+ if(i.discountStage==='final' && Number(i.finalPrice)>=0)return Number(i.finalPrice)||0;
+ return asking;
+}
+function applyModeUI(){
+ const estate=currentMode==='estate';
+ $('resellerModeBtn').classList.toggle('active',!estate);
+ $('estateModeBtn').classList.toggle('active',estate);
+
+ document.querySelectorAll('.estate-only').forEach(el=>el.classList.toggle('hidden',!estate));
+
+ const locationLabel=$('location').closest('label');
+ if(locationLabel){
+   locationLabel.childNodes[0].nodeValue=estate?'Room / Location':'Location';
+   $('location').placeholder=estate?'Living Room, Garage, Bedroom 2…':'Garage A3, Shelf B2…';
+ }
+ const askLabel=$('askingPrice').closest('label');
+ if(askLabel){
+   askLabel.childNodes[0].nodeValue=estate?'Tag Price ($)':'Asking Price ($)';
+ }
+
+ $('searchInput').placeholder=estate?'Search estate items…':'Search items…';
+ const head=$('inventorySection').querySelector('h2');
+ if(head)head.textContent=estate?'Estate Inventory':'Inventory';
+
+ setStatusOptions();
+ renderRecentLocations();
+ render();
+}
+function setMode(mode){
+ currentMode=mode==='estate'?'estate':'reseller';
+ prefs.mode=currentMode;
+ savePrefs();
+ applyModeUI();
+ setView('inventory');
+}
+
 function nextItemId(){
  const nums=items.map(i=>String(i.itemId||'').match(/(\d+)$/)).filter(Boolean).map(m=>Number(m[1])).filter(Number.isFinite);
  const next=(nums.length?Math.max(...nums):0)+1;
- return `RS-${String(next).padStart(3,'0')}`;
+ return `${currentMode==='estate'?'ES':'RS'}-${String(next).padStart(3,'0')}`;
 }
 function showToast(message){
  const t=$('toast');
@@ -182,17 +241,21 @@ function showToast(message){
 function rememberLocation(location){
  const value=(location||'').trim();
  if(!value)return;
- prefs.recentLocations=[value,...prefs.recentLocations.filter(x=>x!==value)].slice(0,6);
+ const key=currentMode==='estate'?'estateLocations':'recentLocations';
+ const list=Array.isArray(prefs[key])?prefs[key]:[];
+ prefs[key]=[value,...list.filter(x=>x!==value)].slice(0,6);
  savePrefs();
 }
 function renderRecentLocations(){
  const wrap=$('recentLocations');
  if(!wrap)return;
- if(!prefs.recentLocations.length){
-   wrap.innerHTML='<span class="quick-pick-empty">No recent locations yet</span>';
+ const key=currentMode==='estate'?'estateLocations':'recentLocations';
+ const locations=Array.isArray(prefs[key])?prefs[key]:[];
+ if(!locations.length){
+   wrap.innerHTML=`<span class="quick-pick-empty">No recent ${currentMode==='estate'?'rooms':'locations'} yet</span>`;
    return;
  }
- wrap.innerHTML=prefs.recentLocations.map(loc=>`<button type="button" class="quick-pick" data-location="${esc(loc)}">${esc(loc)}</button>`).join('');
+ wrap.innerHTML=locations.map(loc=>`<button type="button" class="quick-pick" data-location="${esc(loc)}">${esc(loc)}</button>`).join('');
  wrap.querySelectorAll('.quick-pick').forEach(btn=>btn.addEventListener('click',()=>{$('location').value=btn.dataset.location;}));
 }
 function prepareFreshIntake({keepContext=true}={}){
@@ -200,9 +263,11 @@ function prepareFreshIntake({keepContext=true}={}){
  $('itemForm').reset();
  $('itemKey').value='';
  $('quantity').value=1;
- $('status').value='Unlisted';
+ setStatusOptions(currentMode==='estate'?'For Sale':'Unlisted');
  $('acquiredDate').value=todayISO();
  $('itemId').value=nextItemId();
+ if($('discountStage'))$('discountStage').value='full';
+ if($('finalPrice'))$('finalPrice').value='';
  $('category').value=keepContext?(prefs.lastCategory||''):'';
  $('platform').value=keepContext?(prefs.lastPlatform||''):'';
  $('location').value=keepLocation;
@@ -219,6 +284,7 @@ function prepareFreshIntake({keepContext=true}={}){
 function buildRecord(){
  return {
   key:$('itemKey').value||uid(),
+  recordType:currentMode,
   photo:$('photo').value,
   name:$('name').value.trim(),
   itemId:$('itemId').value.trim()||nextItemId(),
@@ -233,7 +299,9 @@ function buildRecord(){
   soldPrice:Number($('soldPrice').value||0),
   fees:Number($('fees').value||0),
   shipping:Number($('shipping').value||0),
-  notes:$('notes').value.trim()
+  notes:$('notes').value.trim(),
+  discountStage:currentMode==='estate'?$('discountStage').value:'',
+  finalPrice:currentMode==='estate'?Number($('finalPrice').value||0):0
  };
 }
 function saveCurrentItem({addAnother=false}={}){
@@ -324,17 +392,17 @@ function sampleData(){
  if(items.length)return;
  const dateDaysAgo=n=>{const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().slice(0,10)};
  items=[
-  {key:uid(),name:'DeWalt 20V MAX Drill',itemId:'RS-001',category:'Tools',quantity:1,location:'Garage Shelf A3',cost:20,askingPrice:70,platform:'Facebook Marketplace',status:'Listed',acquiredDate:dateDaysAgo(9),soldPrice:0,fees:0,shipping:0,notes:'Battery + charger included',photo:''},
-  {key:uid(),name:'Vintage Brass Table Lamp',itemId:'RS-002',category:'Home Decor',quantity:1,location:'Storage Rack B1',cost:8,askingPrice:65,platform:'',status:'Unlisted',acquiredDate:dateDaysAgo(18),soldPrice:0,fees:0,shipping:0,notes:'Needs shade measurements',photo:''},
-  {key:uid(),name:'Samsung 55-inch Frame TV',itemId:'RS-003',category:'Electronics',quantity:1,location:'Garage Floor TV Area',cost:0,askingPrice:180,platform:'Facebook Marketplace',status:'Listed',acquiredDate:dateDaysAgo(67),soldPrice:0,fees:0,shipping:0,notes:'Missing One Connect box',photo:''},
-  {key:uid(),name:'Commercial Pressure Fryer',itemId:'RS-004',category:'Restaurant Equipment',quantity:1,location:'Storage Unit',cost:40,askingPrice:325,platform:'Local',status:'Sold',acquiredDate:dateDaysAgo(31),soldPrice:275,fees:0,shipping:0,notes:'Local pickup',photo:''}
+  {key:uid(),recordType:'reseller',name:'DeWalt 20V MAX Drill',itemId:'RS-001',category:'Tools',quantity:1,location:'Garage Shelf A3',cost:20,askingPrice:70,platform:'Facebook Marketplace',status:'Listed',acquiredDate:dateDaysAgo(9),soldPrice:0,fees:0,shipping:0,notes:'Battery + charger included',photo:''},
+  {key:uid(),recordType:'reseller',name:'Vintage Brass Table Lamp',itemId:'RS-002',category:'Home Decor',quantity:1,location:'Storage Rack B1',cost:8,askingPrice:65,platform:'',status:'Unlisted',acquiredDate:dateDaysAgo(18),soldPrice:0,fees:0,shipping:0,notes:'Needs shade measurements',photo:''},
+  {key:uid(),recordType:'reseller',name:'Samsung 55-inch Frame TV',itemId:'RS-003',category:'Electronics',quantity:1,location:'Garage Floor TV Area',cost:0,askingPrice:180,platform:'Facebook Marketplace',status:'Listed',acquiredDate:dateDaysAgo(67),soldPrice:0,fees:0,shipping:0,notes:'Missing One Connect box',photo:''},
+  {key:uid(),recordType:'reseller',name:'Commercial Pressure Fryer',itemId:'RS-004',category:'Restaurant Equipment',quantity:1,location:'Storage Unit',cost:40,askingPrice:325,platform:'Local',status:'Sold',acquiredDate:dateDaysAgo(31),soldPrice:275,fees:0,shipping:0,notes:'Local pickup',photo:''}
  ];
  log('Demo data created',{name:'Reseller Tracker'},'4 starter records added');save();
 }
 
 function updateFilters(){
  const cur=$('categoryFilter').value;
- const cats=[...new Set(items.map(i=>i.category).filter(Boolean))].sort();
+ const cats=[...new Set(modeItems().map(i=>i.category).filter(Boolean))].sort();
  $('categoryFilter').innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join('');
  $('categoryFilter').value=cats.includes(cur)?cur:'';
 }
@@ -353,8 +421,8 @@ function render(){
  updateFilters();
  updateStatCardState();
  const q=$('searchInput').value.trim().toLowerCase(),cat=$('categoryFilter').value,status=$('statusFilter').value,platform=$('platformFilter').value;
- const filtered=items.filter(i=>{
-  const hay=[i.name,i.itemId,i.category,i.location,i.status,i.platform,i.notes].join(' ').toLowerCase();
+ const filtered=modeItems().filter(i=>{
+  const hay=[i.name,i.itemId,i.category,i.location,i.status,i.platform,i.notes,i.discountStage].join(' ').toLowerCase();
   return(!q||hay.includes(q))&&(!cat||i.category===cat)&&(!status||i.status===status)&&(!platform||i.platform===platform)&&matchesQuick(i);
  });
  $('inventorySummary').textContent=`${filtered.length} item${filtered.length===1?'':'s'}`;
@@ -363,8 +431,12 @@ function render(){
  filtered.forEach(i=>{
   const node=$('itemTemplate').content.cloneNode(true),card=node.querySelector('.item-card');
   node.querySelector('.item-name').textContent=i.name;
-  node.querySelector('.asking').textContent=i.status==='Sold'?`Sold ${money(i.soldPrice)}`:`Ask ${money(i.askingPrice)}`;
-  node.querySelector('.cost').textContent=`Paid ${money(i.cost)}`;
+  node.querySelector('.asking').textContent=i.status==='Sold'
+    ?`Sold ${money(i.soldPrice)}`
+    :(currentMode==='estate'?`Price ${money(currentEstatePrice(i))}`:`Ask ${money(i.askingPrice)}`);
+  node.querySelector('.cost').textContent=currentMode==='estate'
+    ?(i.discountStage&&i.discountStage!=='full'?`Tag ${money(i.askingPrice)}`:'')
+    :`Paid ${money(i.cost)}`;
 
   const p=node.querySelector('.profit');
   if(i.status==='Sold'){
@@ -372,20 +444,26 @@ function render(){
     p.classList.add(profit(i)>=0?'positive':'negative');
   }else p.textContent='';
 
-  node.querySelector('.platform-text').textContent=i.platform||'Not listed';
-  node.querySelector('.location-text').textContent=i.location||'No location';
+  node.querySelector('.platform-text').textContent=currentMode==='estate'
+    ?(i.discountStage==='25'?'25% off':i.discountStage==='50'?'50% off':i.discountStage==='final'?'Final price':'Full price')
+    :(i.platform||'Not listed');
+  node.querySelector('.location-text').textContent=i.location||(currentMode==='estate'?'No room':'No location');
 
   const img=node.querySelector('.item-thumb'),ph=node.querySelector('.placeholder-thumb');
   if(i.photo){img.src=i.photo;img.style.display='block';ph.style.display='none';}
 
   const statusSelect=node.querySelector('.quick-status');
+  const statusOptions=currentMode==='estate'?ESTATE_STATUSES:RESELLER_STATUSES;
+  statusSelect.innerHTML=statusOptions.map(s=>`<option>${s}</option>`).join('');
   statusSelect.value=i.status;
   statusSelect.classList.add(statusClass(i.status));
   statusSelect.addEventListener('click',e=>e.stopPropagation());
   statusSelect.addEventListener('change',e=>{
     e.stopPropagation();
     if(!isAdmin){
-      statusSelect.value=i.status;
+      const statusOptions=currentMode==='estate'?ESTATE_STATUSES:RESELLER_STATUSES;
+  statusSelect.innerHTML=statusOptions.map(s=>`<option>${s}</option>`).join('');
+  statusSelect.value=i.status;
       openAdmin();
       return;
     }
@@ -411,22 +489,38 @@ function render(){
 
   $('inventoryList').appendChild(node);
  });
- const active=items.filter(i=>!['Sold','Donate / Bulk','Donated','Bulk Sale'].includes(i.status));
+ const scoped=modeItems();
+ const active=currentMode==='estate'
+   ?scoped.filter(i=>!['Sold','Family Keep','Donate','Bulk Buyer','Dispose'].includes(i.status))
+   :scoped.filter(i=>!['Sold','Donate / Bulk','Donated','Bulk Sale'].includes(i.status));
  $('statActive').textContent=active.length;
  $('statCost').textContent=`${money(active.reduce((s,i)=>s+(Number(i.cost)||0),0))} invested`;
  $('statUnlisted').textContent=active.filter(i=>i.status==='Unlisted').length;
  $('statAged').textContent=active.filter(i=>daysOld(i)>=60).length;
  $('statAttention').textContent=active.filter(attention).length;
- if($('summaryUnlisted')) $('summaryUnlisted').textContent=active.filter(i=>i.status==='Unlisted').length;
+ if($('summaryUnlisted')) $('summaryUnlisted').textContent=currentMode==='estate'
+   ?active.filter(i=>i.status==='For Sale').length
+   :active.filter(i=>i.status==='Unlisted').length;
  if($('summaryAged')) $('summaryAged').textContent=active.filter(i=>daysOld(i)>=60).length;
+ const summarySpans=document.querySelectorAll('.simple-summary > span');
+ if(summarySpans[2]){
+   summarySpans[2].innerHTML=currentMode==='estate'
+     ?`<strong id="summaryUnlisted">${active.filter(i=>i.status==='For Sale').length}</strong> for sale`
+     :`<strong id="summaryUnlisted">${active.filter(i=>i.status==='Unlisted').length}</strong> ready to list`;
+ }
+ if(summarySpans[4]){
+   summarySpans[4].innerHTML=currentMode==='estate'
+     ?`<strong id="summaryAged">${scoped.filter(i=>i.status==='Sold').length}</strong> sold`
+     :`<strong id="summaryAged">${active.filter(i=>daysOld(i)>=60).length}</strong> over 60 days`;
+ }
  $('potentialRevenue').textContent=money(active.reduce((s,i)=>s+(Number(i.askingPrice)||0),0));
- const sold=items.filter(i=>i.status==='Sold');
+ const sold=modeItems().filter(i=>i.status==='Sold');
  $('soldRevenue').textContent=money(sold.reduce((s,i)=>s+(Number(i.soldPrice)||0),0));
  $('netProfit').textContent=money(sold.reduce((s,i)=>s+profit(i),0));
  renderHistory();
 }
 function renderHistory(){
- const sold=items.filter(i=>i.status==='Sold');
+ const sold=modeItems().filter(i=>i.status==='Sold');
  if($('salesCount')) $('salesCount').textContent=sold.length;
  if($('salesRevenue')) $('salesRevenue').textContent=money(sold.reduce((s,i)=>s+(Number(i.soldPrice)||0),0));
  if($('salesProfit')) $('salesProfit').textContent=money(sold.reduce((s,i)=>s+profit(i),0));
@@ -466,8 +560,11 @@ function openDetails(key){
    </div>
    <div class="detail-list">
      <div><span>Status</span><strong>${esc(i.status)}</strong></div>
-     <div><span>Location</span><strong>${esc(i.location||'No location')}</strong></div>
-     <div><span>Platform</span><strong>${esc(i.platform||'Not listed')}</strong></div>
+     <div><span>${(i.recordType||'reseller')==='estate'?'Room':'Location'}</span><strong>${esc(i.location||((i.recordType||'reseller')==='estate'?'No room':'No location'))}</strong></div>
+     ${(i.recordType||'reseller')==='estate'
+       ?`<div><span>Sale Stage</span><strong>${i.discountStage==='25'?'25% Off':i.discountStage==='50'?'50% Off':i.discountStage==='final'?'Final Price':'Full Price'}</strong></div>
+          <div><span>Current Price</span><strong>${money(currentEstatePrice(i))}</strong></div>`
+       :`<div><span>Platform</span><strong>${esc(i.platform||'Not listed')}</strong></div>`}
      <div><span>Category</span><strong>${esc(i.category||'—')}</strong></div>
      <div><span>Item ID</span><strong>${esc(i.itemId||'—')}</strong></div>
      <div><span>Age</span><strong>${age} day${age===1?'':'s'}</strong></div>
@@ -505,7 +602,16 @@ function openEdit(key){
  if(!isAdmin)return;
  const i=items.find(x=>x.key===key);
  if(!i)return;
- for(const id of ['name','itemId','category','location','cost','askingPrice','platform','status','acquiredDate','quantity','soldPrice','fees','shipping','notes']) $(id).value=i[id]??'';
+ if((i.recordType||'reseller')!==currentMode){
+   currentMode=i.recordType||'reseller';
+   prefs.mode=currentMode;
+   savePrefs();
+   applyModeUI();
+ }
+ setStatusOptions(i.status);
+ for(const id of ['name','itemId','category','location','cost','askingPrice','platform','status','acquiredDate','quantity','soldPrice','fees','shipping','notes','discountStage','finalPrice']){
+   if($(id))$(id).value=i[id]??(id==='discountStage'?'full':'');
+ }
  $('itemKey').value=i.key;
  $('dialogTitle').textContent='Edit Item';
  $('deleteItemBtn').classList.remove('hidden');
@@ -618,6 +724,8 @@ $('detailsEditBtn').addEventListener('click',()=>{
  $('detailsDialog').close();
  openEdit(key);
 });
+$('resellerModeBtn').addEventListener('click',()=>setMode('reseller'));
+$('estateModeBtn').addEventListener('click',()=>setMode('estate'));
 $('showHistoryBtn').addEventListener('click',()=>setView('history'));
 $('showInventoryBtn').addEventListener('click',()=>setView('inventory'));
 $('exportBtn').addEventListener('click',()=>{
@@ -633,6 +741,7 @@ $('exportBtn').addEventListener('click',()=>{
 
 async function bootstrap(){
  setView('inventory');
+ applyModeUI();
  renderRecentLocations();
 
  const connected=await loadCloud();
