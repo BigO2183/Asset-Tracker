@@ -1743,3 +1743,19 @@ button{
     grid-template-columns:1fr 1fr;
   }
 }
+
+
+/* v17.1 — Reports nav fix */
+@media(max-width:760px){
+  .main-nav .nav-inner{
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .main-nav .nav-inner::-webkit-scrollbar{
+    display:none;
+  }
+  .main-nav .nav-btn{
+    flex:0 0 auto;
+    white-space:nowrap;
+  }
+}

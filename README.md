@@ -1,39 +1,21 @@
-# SimpleStock v17 — Reports + Export
+# SimpleStock v17.1 — Reports Runtime Fix
 
-Adds a clean Reports screen without adding charts or clutter.
+Fixes the v17 startup issue.
 
-## Reports
-- Active inventory count
-- Active inventory cost
-- Potential sales value
-- Sold revenue
-- Net profit
-- Average profit per sale
-- Inventory aging:
-  - 0–29 days
-  - 30–59 days
-  - 60–89 days
-  - 90+ days
-- Top categories
+## What was wrong
+The Reports section existed in the page, but the `showReportsBtn` navigation button was missing from the HTML. JavaScript tried to access that missing element during startup and stopped execution.
 
-## Estate Sale Mode
-Also shows:
-- For Sale
-- Sold
-- Family Keep
-- Donate
-- Bulk Buyer
-- Dispose
+Symptoms:
+- Inventory did not load
+- Sales & History did not respond
+- Export did not respond
+- Reports button was missing
 
-## Export
-Two simple CSV exports:
-- Inventory Report
-- Sales Report
+## Fixed
+- Added the Reports navigation button
+- Added defensive optional chaining to report/navigation listeners
+- Made the mobile navigation horizontally scrollable if needed
+- Verified critical UI element IDs exist
+- JavaScript syntax check passed
 
-Reports automatically respect the current mode:
-- Reseller
-- Estate Sale
-
-All existing quick intake, inline editing, quick sell, cloud sync, and branding remain intact.
-
-Demo Admin PIN: `1234`
+All v16/v17 features remain intact.

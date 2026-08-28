@@ -878,9 +878,9 @@ function setView(view){
  $('historySection').classList.toggle('hidden',!sales);
  $('reportsSection').classList.toggle('hidden',!reports);
 
- $('showInventoryBtn').classList.toggle('active-tab',inventory);
- $('showHistoryBtn').classList.toggle('active-tab',sales);
- $('showReportsBtn').classList.toggle('active-tab',reports);
+ $('showInventoryBtn')?.classList.toggle('active-tab',inventory);
+ $('showHistoryBtn')?.classList.toggle('active-tab',sales);
+ $('showReportsBtn')?.classList.toggle('active-tab',reports);
 
  if($('viewLabel')) $('viewLabel').textContent=inventory?'Inventory':sales?'Sales':'Reports';
 
@@ -1027,11 +1027,11 @@ $('detailsCancelBtn').addEventListener('click',cancelInlineEdit);
 $('detailsSaveBtn').addEventListener('click',saveInlineEdit);
 $('resellerModeBtn').addEventListener('click',()=>setMode('reseller'));
 $('estateModeBtn').addEventListener('click',()=>setMode('estate'));
-$('showReportsBtn').addEventListener('click',()=>setView('reports'));
-$('exportInventoryReportBtn').addEventListener('click',exportInventoryReport);
-$('exportSalesReportBtn').addEventListener('click',exportSalesReport);
-$('showHistoryBtn').addEventListener('click',()=>setView('history'));
-$('showInventoryBtn').addEventListener('click',()=>setView('inventory'));
+$('showReportsBtn')?.addEventListener('click',()=>setView('reports'));
+$('exportInventoryReportBtn')?.addEventListener('click',exportInventoryReport);
+$('exportSalesReportBtn')?.addEventListener('click',exportSalesReport);
+$('showHistoryBtn')?.addEventListener('click',()=>setView('history'));
+$('showInventoryBtn')?.addEventListener('click',()=>setView('inventory'));
 $('exportBtn').addEventListener('click',()=>{
  const headers=['Item','ID','Category','Location','Cost','Asking Price','Platform','Status','Date Acquired','Days Held','Sold Price','Fees','Shipping','Net Profit','Notes'];
  const rows=items.map(i=>[i.name,i.itemId,i.category,i.location,i.cost,i.askingPrice,i.platform,i.status,i.acquiredDate,daysOld(i),i.soldPrice,i.fees,i.shipping,i.status==='Sold'?profit(i):'',i.notes]);
