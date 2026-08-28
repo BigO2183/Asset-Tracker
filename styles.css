@@ -1273,3 +1273,246 @@ button{
     background:rgba(247,248,250,.98);
   }
 }
+
+
+/* v14 — polish pass: tighter, calmer, more refined */
+
+/* compact mode switch */
+.mode-switch{
+  padding:2px;
+  border-radius:10px;
+}
+.mode-btn{
+  padding:7px 10px;
+  font-size:.78rem;
+  border-radius:8px;
+}
+
+/* reduce vertical bulk in control zone */
+.workspace-toolbar{
+  gap:9px;
+}
+.compact-search{
+  margin-bottom:7px;
+}
+.filter-row.compact-filters{
+  gap:8px;
+  margin-bottom:5px;
+}
+.simple-summary{
+  margin-top:4px;
+  margin-bottom:4px;
+  font-size:.82rem;
+  color:var(--muted);
+}
+.simple-summary strong{
+  color:var(--text);
+  font-weight:800;
+}
+
+/* inventory heading becomes quieter */
+.workspace-head{
+  margin-bottom:10px;
+}
+.workspace-head h2{
+  font-size:1.12rem;
+  font-weight:800;
+  letter-spacing:-.02em;
+}
+.panel-subcopy{
+  font-size:.82rem;
+}
+
+/* cards more compact */
+.inventory-list{
+  gap:8px;
+}
+.item-card{
+  grid-template-columns:58px minmax(0,1fr);
+  gap:10px;
+  padding:10px 11px;
+  border-radius:15px;
+}
+.thumb-wrap{
+  width:58px;
+  height:58px;
+  border-radius:10px;
+}
+.item-main{
+  min-width:0;
+}
+.item-title-row{
+  gap:8px;
+  margin-bottom:2px;
+}
+.item-name{
+  font-size:.94rem;
+  line-height:1.18;
+  font-weight:800;
+  letter-spacing:-.01em;
+}
+.quick-status{
+  max-width:92px;
+  min-height:28px;
+  padding:4px 19px 4px 8px;
+  font-size:.62rem;
+  border-radius:999px;
+}
+.price-row{
+  gap:7px;
+  margin:1px 0 2px;
+  line-height:1.2;
+}
+.price-row .asking{
+  font-size:.89rem;
+}
+.price-row span{
+  font-size:.76rem;
+  color:#7b8795;
+}
+.core-info-row{
+  gap:4px;
+  font-size:.75rem;
+  line-height:1.3;
+  color:#748091;
+}
+.core-dot{
+  color:#b0bac5;
+}
+
+/* softer accent */
+.item-card-accent{
+  width:2px;
+  background:#6f8aa5;
+  opacity:.7;
+}
+
+/* less visual weight on secondary controls */
+#statusFilter,
+#filtersToggle{
+  min-height:40px;
+}
+#filtersToggle{
+  padding-left:13px;
+  padding-right:13px;
+}
+.search-wrap input{
+  min-height:43px;
+  padding-top:11px;
+  padding-bottom:11px;
+}
+
+/* quieter panel */
+.panel{
+  padding:14px;
+}
+.workspace-panel{
+  margin-top:10px;
+}
+
+/* reduce unneeded emphasis */
+.status-pill,
+.age-chip,
+.platform-chip,
+.location-chip{
+  font-size:.7rem;
+  padding:5px 8px;
+}
+
+/* tighter brand/header */
+.topbar{
+  padding-top:11px;
+  padding-bottom:11px;
+}
+.brand-mark{
+  width:40px;
+  height:40px;
+  border-radius:13px;
+}
+.topbar h1{
+  font-size:1.15rem;
+}
+.brand-tagline{
+  font-size:.68rem;
+}
+
+/* refined mobile */
+@media(max-width:760px){
+  .shell{
+    padding:10px;
+  }
+
+  .workspace-toolbar{
+    padding:10px;
+  }
+
+  .mode-switch{
+    margin-bottom:2px;
+  }
+
+  .mode-btn{
+    padding:7px 8px;
+  }
+
+  .search-wrap{
+    margin-top:5px;
+    margin-bottom:6px;
+  }
+
+  .filter-row.compact-filters{
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+
+  .simple-summary{
+    padding:2px 2px 3px;
+    line-height:1.3;
+  }
+
+  .panel{
+    padding:11px;
+  }
+
+  .workspace-head{
+    margin-bottom:8px;
+  }
+
+  .workspace-head h2{
+    font-size:1.04rem;
+  }
+
+  .inventory-list{
+    gap:7px;
+  }
+
+  .item-card{
+    grid-template-columns:54px minmax(0,1fr);
+    gap:9px;
+    padding:9px 10px;
+    border-radius:14px;
+  }
+
+  .thumb-wrap{
+    width:54px;
+    height:54px;
+    border-radius:9px;
+  }
+
+  .item-name{
+    font-size:.9rem;
+  }
+
+  .quick-status{
+    max-width:84px;
+    font-size:.59rem;
+    padding:4px 17px 4px 7px;
+  }
+
+  .price-row .asking{
+    font-size:.86rem;
+  }
+
+  .price-row span,
+  .core-info-row{
+    font-size:.72rem;
+  }
+}

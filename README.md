@@ -1,31 +1,19 @@
-# SimpleStock v13 — Calm Theme
+# SimpleStock v14 — Polished
 
-Finalized visual direction for SimpleStock.
+UI polish only. No workflow changes.
 
-## Brand
-**SimpleStock**
-**Inventory made simple.**
+## Improvements
+- More compact Reseller / Estate Sale switch
+- Less vertical space in search/filter area
+- Smaller, quieter Inventory heading
+- Smaller status controls
+- Softer card accent line
+- More compact inventory cards
+- Tighter spacing between item name, price, platform, and location
+- Lighter secondary text
+- Better use of mobile screen space
+- More items visible at once
 
-## Final palette
-- Deep Navy: `#25476A`
-- Soft Blue: `#EAF0F6`
-- Muted Green: `#3F7D61`
-- Soft Amber: `#FFF7E8`
-- Off White: `#F7F8FA`
-- White: `#FFFFFF`
-- Dark Text: `#17202A`
-- Muted Text: `#667384`
-
-## Design direction
-- Calm
-- Minimal
-- Easy to scan
-- Not intimidating
-- Low visual stimulation
-- Functional first
-
-## UX
-No workflow changes from v12.
-Reseller Mode, Estate Sale Mode, Fast Intake, Sales, and cloud sync remain intact.
+All reseller, estate-sale, sales, fast intake, and cloud sync functionality remains unchanged.
 
 Demo Admin PIN: `1234`
