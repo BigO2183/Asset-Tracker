@@ -2265,3 +2265,139 @@ button{
   .staff-add-grid{grid-template-columns:1fr}
   .bulk-bar{position:sticky;top:50px;z-index:20}
 }
+
+
+/* v21.1 — mobile setup / auth polish */
+@media(max-width:760px){
+  .auth-gate{
+    align-items:start;
+    overflow:auto;
+    padding:12px 10px 22px;
+  }
+
+  .auth-card{
+    width:100%;
+    max-width:520px;
+    padding:15px;
+    border-radius:18px;
+    box-shadow:none;
+  }
+
+  .auth-brand{
+    margin-bottom:11px;
+    gap:10px;
+  }
+
+  .auth-brand .brand-mark{
+    width:44px;
+    height:44px;
+    border-radius:13px;
+  }
+
+  .auth-brand h1{
+    font-size:1.22rem;
+    margin-bottom:1px;
+  }
+
+  .auth-brand p{
+    font-size:.78rem;
+  }
+
+  .landing-intro{
+    padding:12px;
+    margin-bottom:11px;
+    border-radius:14px;
+  }
+
+  .landing-kicker{
+    font-size:.62rem;
+    letter-spacing:.07em;
+  }
+
+  .landing-intro h2{
+    margin:5px 0 6px;
+    font-size:1.02rem;
+    line-height:1.18;
+  }
+
+  .landing-intro p{
+    font-size:.78rem;
+    line-height:1.38;
+  }
+
+  .landing-points{
+    margin:8px 0;
+    gap:5px 10px;
+    font-size:.7rem;
+  }
+
+  .demo-btn{
+    min-height:40px;
+    padding:9px 12px;
+  }
+
+  .auth-tabs{
+    margin-bottom:11px;
+    padding:3px;
+  }
+
+  .auth-tab{
+    padding:8px 7px;
+    font-size:.84rem;
+  }
+
+  .auth-form{
+    gap:9px;
+  }
+
+  .auth-form label{
+    gap:4px;
+    font-size:.82rem;
+  }
+
+  .auth-form input,
+  .auth-form select{
+    min-height:42px;
+    padding:9px 11px;
+    border-radius:11px;
+  }
+
+  .setup-mode{
+    gap:10px;
+    padding:8px 9px;
+    border-radius:11px;
+  }
+
+  .setup-mode legend{
+    font-size:.68rem;
+  }
+
+  .setup-mode label{
+    font-size:.75rem;
+  }
+
+  .auth-submit{
+    min-height:42px;
+    margin-top:1px;
+  }
+
+  .auth-link-btn{
+    padding:2px;
+    font-size:.78rem;
+  }
+
+  .auth-note{
+    margin-top:10px;
+    font-size:.68rem;
+  }
+}
+
+/* extra-short phone screens */
+@media(max-width:760px) and (max-height:760px){
+  .landing-intro p{
+    display:none;
+  }
+  .landing-points{
+    margin:6px 0;
+  }
+}
