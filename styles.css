@@ -1894,3 +1894,16 @@ button{
     white-space:nowrap;
   }
 }
+
+
+/* v19 — PWA install experience */
+.install-btn{
+  color:var(--brand);
+  background:var(--brand-soft);
+  border-color:#d6e0ea;
+}
+@media(max-width:760px){
+  .install-btn{
+    white-space:nowrap;
+  }
+}

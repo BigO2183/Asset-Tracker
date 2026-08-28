@@ -1,50 +1,28 @@
-# SimpleStock v18 — Business Workspaces
+# SimpleStock v19 — Installable PWA
 
-This version turns SimpleStock from one shared tracker into separate private business workspaces.
+SimpleStock can now be installed to a phone home screen and opened like an app.
 
-## First-run setup
-Create a workspace with:
-- Business / workspace name
-- Owner email
-- Password
-- Starting mode: Reseller or Estate Sale
+## PWA features
+- Installable from supported mobile/desktop browsers
+- Standalone app window
+- SimpleStock app name and icon
+- Theme color
+- Basic app-shell caching for faster loading
+- Authentication and cloud inventory always stay live
+- Existing Business Workspaces, Reports, Quick Sell, Reseller Mode, Estate Sale Mode, and cloud sync are unchanged
 
-## Login
-Owners sign in with email + password.
+## Files added
+- `manifest.webmanifest`
+- `service-worker.js`
+- `icons/icon-192.svg`
+- `icons/icon-512.svg`
 
-## Separate data
-Each workspace gets its own Netlify Blobs inventory key:
+## Installation
+### Android / Chrome
+Open the deployed SimpleStock site. If supported, tap **Install App** in SimpleStock or use the browser menu → **Install app / Add to Home screen**.
 
-`workspace:<workspace-id>:inventory-state`
-
-Inventory, sales, history, reports, and cloud sync are isolated by workspace.
-
-## Owner role
-The first account is the workspace **Owner** and has full add/edit/delete access.
-
-Staff accounts are intentionally left for a later version.
-
-## Logout
-The old Admin button is now **Sign out**.
-
-## Backend
-New function:
-- `netlify/functions/auth.mjs`
-
-Updated function:
-- `netlify/functions/inventory.mjs`
-
-## Security note
-This is a strong prototype architecture using server-side password hashing, random session tokens, and private workspace data. Before a large public launch, move authentication to a dedicated managed identity provider and add account recovery / email verification.
+### iPhone / Safari
+Open the deployed site in Safari → Share → **Add to Home Screen**.
 
 ## Deployment
-Deploy the entire v18 project to Netlify, not only `index.html`.
-
-Required:
-- `app.js`
-- `index.html`
-- `styles.css`
-- `package.json`
-- `netlify.toml`
-- `netlify/functions/auth.mjs`
-- `netlify/functions/inventory.mjs`
+Deploy the whole v19 project to Netlify.

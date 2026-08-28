@@ -1177,6 +1177,44 @@ $('signupForm').addEventListener('submit',async e=>{
 });
 
 
+
+let deferredInstallPrompt=null;
+
+function setInstallButtonVisible(show){
+ const btn=$('installAppBtn');
+ if(btn)btn.classList.toggle('hidden',!show);
+}
+
+window.addEventListener('beforeinstallprompt',event=>{
+ event.preventDefault();
+ deferredInstallPrompt=event;
+ setInstallButtonVisible(true);
+});
+
+window.addEventListener('appinstalled',()=>{
+ deferredInstallPrompt=null;
+ setInstallButtonVisible(false);
+ showToast('SimpleStock installed ✓');
+});
+
+$('installAppBtn')?.addEventListener('click',async()=>{
+ if(!deferredInstallPrompt){
+   showToast('Use your browser menu to Add to Home Screen');
+   return;
+ }
+ deferredInstallPrompt.prompt();
+ const choice=await deferredInstallPrompt.userChoice;
+ if(choice.outcome==='accepted')setInstallButtonVisible(false);
+ deferredInstallPrompt=null;
+});
+
+if('serviceWorker' in navigator){
+ window.addEventListener('load',()=>{
+   navigator.serviceWorker.register('/service-worker.js')
+     .catch(err=>console.warn('Service worker registration failed:',err));
+ });
+}
+
 async function startWorkspace(){
  showAuthGate(false);
  updateWorkspaceUI();
