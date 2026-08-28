@@ -14,13 +14,60 @@ const uid=()=>crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math
 const now=()=>new Date().toLocaleString();
 const todayISO=()=>new Date().toISOString().slice(0,10);
 const esc=(s='')=>String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-const save=()=>{localStorage.setItem(STORAGE_KEY,JSON.stringify(items));localStorage.setItem(HISTORY_KEY,JSON.stringify(history));};
-const savePrefs=()=>localStorage.setItem(PREF_KEY,JSON.stringify(prefs));
+const save=()=>{
+ try{
+   localStorage.setItem(STORAGE_KEY,JSON.stringify(items));
+   localStorage.setItem(HISTORY_KEY,JSON.stringify(history));
+   return true;
+ }catch(err){
+   console.error('Storage save failed:',err);
+   return false;
+ }
+};
+const savePrefs=()=>{
+ try{
+   localStorage.setItem(PREF_KEY,JSON.stringify(prefs));
+   return true;
+ }catch(err){
+   console.error('Preference save failed:',err);
+   return false;
+ }
+};
 const log=(action,item,detail='')=>{history.unshift({id:uid(),time:now(),action,itemName:item?.name||'Unknown item',detail});history=history.slice(0,500);save();};
 const daysOld=i=>{const d=new Date((i.acquiredDate||todayISO())+'T12:00:00');return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));};
 const profit=i=>(Number(i.soldPrice)||0)-(Number(i.cost)||0)-(Number(i.fees)||0)-(Number(i.shipping)||0);
 const attention=i=>i.status==='Needs Attention'||!i.name||!i.location||(!i.askingPrice&&i.status!=='Sold'&&i.status!=='Donated')||((i.status==='Listed')&&!i.platform)||daysOld(i)>=90;
 
+
+
+function compressPhoto(file,{maxSize=1200,quality=.72}={}){
+ return new Promise((resolve,reject)=>{
+   const reader=new FileReader();
+   reader.onerror=()=>reject(new Error('Could not read photo'));
+   reader.onload=()=>{
+     const img=new Image();
+     img.onerror=()=>reject(new Error('Could not open photo'));
+     img.onload=()=>{
+       let width=img.naturalWidth||img.width;
+       let height=img.naturalHeight||img.height;
+       const scale=Math.min(1,maxSize/Math.max(width,height));
+       width=Math.max(1,Math.round(width*scale));
+       height=Math.max(1,Math.round(height*scale));
+
+       const canvas=document.createElement('canvas');
+       canvas.width=width;
+       canvas.height=height;
+       const ctx=canvas.getContext('2d',{alpha:false});
+       ctx.drawImage(img,0,0,width,height);
+
+       // JPEG keeps mobile inventory photos dramatically smaller than raw camera files.
+       resolve(canvas.toDataURL('image/jpeg',quality));
+     };
+     img.src=reader.result;
+   };
+   reader.readAsDataURL(file);
+ });
+}
 
 function nextItemId(){
  const nums=items.map(i=>String(i.itemId||'').match(/(\d+)$/)).filter(Boolean).map(m=>Number(m[1])).filter(Number.isFinite);
@@ -92,38 +139,64 @@ function buildRecord(){
  };
 }
 function saveCurrentItem({addAnother=false}={}){
- if(!isAdmin)return false;
  if(!$('name').value.trim()){
    $('name').focus();
    $('name').reportValidity();
+   showToast('Add an item name first');
    return false;
  }
+
  const key=$('itemKey').value;
  const record=buildRecord();
+ const previousItems=[...items];
+ const previousHistory=[...history];
+
  if(key){
    const old=items.find(i=>i.key===key);
    items=items.map(i=>i.key===key?record:i);
-   log('Updated',record,`${old.status} → ${record.status}; ${old.location||'No location'} → ${record.location||'No location'}`);
+   history.unshift({
+     id:uid(),
+     time:now(),
+     action:'Updated',
+     itemName:record.name,
+     detail:`${old?.status||'Unknown'} → ${record.status}; ${old?.location||'No location'} → ${record.location||'No location'}`
+   });
  }else{
    items.unshift(record);
-   log('Added',record,`${money(record.cost)} paid • ${record.location||'No location'} • ${record.status}`);
+   history.unshift({
+     id:uid(),
+     time:now(),
+     action:'Added',
+     itemName:record.name,
+     detail:`${money(record.cost)} paid • ${record.location||'No location'} • ${record.status}`
+   });
  }
+ history=history.slice(0,500);
+
+ // Save inventory before changing UI. If mobile browser storage is full,
+ // keep the intake screen open and show the user exactly what happened.
+ if(!save()){
+   items=previousItems;
+   history=previousHistory;
+   showToast('Could not save — browser storage is full');
+   alert('This item could not be saved because browser storage is full. Try removing older demo items or using a smaller photo.');
+   return false;
+ }
+
  rememberLocation(record.location);
  if(record.category)prefs.lastCategory=record.category;
  if(record.platform)prefs.lastPlatform=record.platform;
  savePrefs();
- save();
+
  render();
  showToast(`${record.name} saved ✓`);
+
  if(addAnother){
    const lastLocation=record.location;
    prepareFreshIntake({keepContext:true});
    $('location').value=lastLocation;
    setTimeout(()=>$('photoFile').click(),120);
  }else{
-   // Mobile-first return flow:
-   // hide the keyboard, close intake, switch to inventory,
-   // then move the viewport back to the inventory workspace.
    if(document.activeElement && typeof document.activeElement.blur==='function'){
      document.activeElement.blur();
    }
@@ -137,14 +210,11 @@ function saveCurrentItem({addAnother=false}={}){
        const topbar=document.querySelector('.topbar');
        const offset=(topbar?.offsetHeight||0)+12;
        const top=inventory.getBoundingClientRect().top+window.scrollY-offset;
-
-       window.scrollTo({
-         top:Math.max(0,top),
-         behavior:'auto'
-       });
+       window.scrollTo({top:Math.max(0,top),behavior:'auto'});
      });
    });
  }
+
  return true;
 }
 
@@ -365,12 +435,19 @@ function updateProfitPreview(){
  $('profitPreview').classList.remove('hidden');
 }
 
-$('photoFile').addEventListener('change',e=>{
+$('photoFile').addEventListener('change',async e=>{
  const f=e.target.files?.[0];
  if(!f)return;
- const r=new FileReader();
- r.onload=()=>setPhotoPreview(r.result);
- r.readAsDataURL(f);
+
+ try{
+   showToast('Preparing photo…');
+   const compressed=await compressPhoto(f);
+   setPhotoPreview(compressed);
+   showToast('Photo ready ✓');
+ }catch(err){
+   console.error(err);
+   alert('That photo could not be prepared. Please try another photo.');
+ }
 });
 $('status').addEventListener('change',toggleSaleFields);
 ['soldPrice','cost','fees','shipping'].forEach(id=>$(id).addEventListener('input',updateProfitPreview));
