@@ -10,12 +10,62 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+
+  <div id="authGate" class="auth-gate hidden">
+    <section class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-mark auth-logo">SS</div>
+        <div>
+          <h1>SimpleStock</h1>
+          <p>Inventory made simple.</p>
+        </div>
+      </div>
+
+      <div class="auth-tabs">
+        <button id="loginTabBtn" type="button" class="auth-tab active">Sign In</button>
+        <button id="signupTabBtn" type="button" class="auth-tab">Create Workspace</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <label>Email
+          <input id="loginEmail" type="email" autocomplete="email" required placeholder="you@business.com" />
+        </label>
+        <label>Password
+          <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••" />
+        </label>
+        <button type="submit" class="primary-btn auth-submit">Sign In</button>
+      </form>
+
+      <form id="signupForm" class="auth-form hidden">
+        <label>Business / Workspace Name
+          <input id="signupWorkspace" required placeholder="Smith Estate Sales" />
+        </label>
+        <label>Email
+          <input id="signupEmail" type="email" autocomplete="email" required placeholder="you@business.com" />
+        </label>
+        <label>Password
+          <input id="signupPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="8+ characters" />
+        </label>
+        <fieldset class="setup-mode">
+          <legend>Start with</legend>
+          <label><input type="radio" name="signupMode" value="reseller" checked /> Reseller</label>
+          <label><input type="radio" name="signupMode" value="estate" /> Estate Sale</label>
+        </fieldset>
+        <button type="submit" class="primary-btn auth-submit">Create Workspace</button>
+      </form>
+
+      <p id="authError" class="auth-error hidden"></p>
+      <p class="auth-note">Each workspace keeps its own private inventory and sales data.</p>
+    </section>
+  </div>
+
   <header class="topbar">
     <div class="brand-wrap">
       <div class="brand-mark">SS</div>
       <div>
         <p class="eyebrow">RESELLER + ESTATE INVENTORY</p>
         <h1>SimpleStock</h1><span class="brand-tagline">Inventory made simple.</span>
+        <span id="workspaceNameLabel" class="workspace-name-label"></span>
       </div>
     </div>
   </header>
@@ -28,7 +78,7 @@
       <button id="showReportsBtn" class="nav-btn">Reports</button>
       <button id="exportBtn" class="nav-btn">Export</button>
       <div class="nav-spacer"></div>
-      <button id="adminToggle" class="nav-btn nav-admin">🔒 Admin</button>
+      <button id="adminToggle" class="nav-btn nav-admin">Sign out</button>
     </div>
   </nav>
 
@@ -274,7 +324,7 @@
     </form>
   </dialog>
 
-  <dialog id="adminDialog" class="dialog small">
+  <dialog id="adminDialog" class="dialog small legacy-admin hidden">
     <form id="adminForm" method="dialog" class="form-card">
       <div class="dialog-head">
         <div>

@@ -3,6 +3,9 @@ const HISTORY_KEY='resellerEstateTrackerV1.history';
 const ADMIN_PIN='1234';
 const PREF_KEY='simpleStockV9.preferences';
 const CLOUD_ENDPOINT='/.netlify/functions/inventory';
+const AUTH_ENDPOINT='/.netlify/functions/auth';
+const AUTH_KEY='simpleStock.auth.v18';
+let authState=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');
 let cloudEnabled=false;
 let cloudSyncTimer=null;
 let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
@@ -37,6 +40,92 @@ const savePrefs=()=>{
    return false;
  }
 };
+
+
+function authHeaders(extra={}){
+ return authState?.token
+   ?{...extra,Authorization:`Bearer ${authState.token}`}
+   :extra;
+}
+function setAuthState(state){
+ authState=state||null;
+ if(authState)localStorage.setItem(AUTH_KEY,JSON.stringify(authState));
+ else localStorage.removeItem(AUTH_KEY);
+}
+function showAuthError(message=''){
+ const el=$('authError');
+ if(!el)return;
+ el.textContent=message;
+ el.classList.toggle('hidden',!message);
+}
+function showAuthGate(show=true){
+ $('authGate')?.classList.toggle('hidden',!show);
+ document.body.classList.toggle('auth-locked',show);
+}
+function updateWorkspaceUI(){
+ const user=authState?.user;
+ if(!user)return;
+ $('workspaceNameLabel').textContent=user.workspaceName||'Workspace';
+ $('adminToggle').textContent='Sign out';
+ isAdmin=user.role==='owner';
+}
+function switchAuthTab(tab){
+ const login=tab==='login';
+ $('loginTabBtn').classList.toggle('active',login);
+ $('signupTabBtn').classList.toggle('active',!login);
+ $('loginForm').classList.toggle('hidden',!login);
+ $('signupForm').classList.toggle('hidden',login);
+ showAuthError('');
+}
+async function authRequest(action,body){
+ const res=await fetch(`${AUTH_ENDPOINT}?action=${encodeURIComponent(action)}`,{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify(body||{})
+ });
+ const payload=await res.json().catch(()=>({}));
+ if(!res.ok)throw new Error(payload.error||'Unable to continue.');
+ return payload;
+}
+async function verifySession(){
+ if(!authState?.token)return false;
+ try{
+   const res=await fetch(`${AUTH_ENDPOINT}?action=me`,{
+     headers:authHeaders(),
+     cache:'no-store'
+   });
+   if(!res.ok)throw new Error('Session expired');
+   const payload=await res.json();
+   authState.user=payload.user;
+   setAuthState(authState);
+   return true;
+ }catch(err){
+   setAuthState(null);
+   return false;
+ }
+}
+async function signOut(){
+ try{
+   if(authState?.token){
+     await fetch(`${AUTH_ENDPOINT}?action=logout`,{
+       method:'POST',
+       headers:authHeaders({'Content-Type':'application/json'}),
+       body:'{}'
+     });
+   }
+ }catch(err){
+   console.warn('Logout request failed:',err);
+ }
+ setAuthState(null);
+ isAdmin=false;
+ cloudEnabled=false;
+ items=[];
+ history=[];
+ localStorage.removeItem(STORAGE_KEY);
+ localStorage.removeItem(HISTORY_KEY);
+ showAuthGate(true);
+ switchAuthTab('login');
+}
 
 function normalizeItemStatus(i){
  return {
@@ -86,7 +175,7 @@ async function pushCloud({quiet=false}={}){
  try{
    const res=await fetch(CLOUD_ENDPOINT,{
      method:'POST',
-     headers:{'Content-Type':'application/json'},
+     headers:authHeaders({'Content-Type':'application/json'}),
      body:JSON.stringify({items,history})
    });
    if(!res.ok)throw new Error(`Cloud save failed (${res.status})`);
@@ -105,7 +194,7 @@ function queueCloudSync(){
 }
 async function loadCloud(){
  try{
-   const res=await fetch(CLOUD_ENDPOINT,{cache:'no-store'});
+   const res=await fetch(CLOUD_ENDPOINT,{headers:authHeaders(),cache:'no-store'});
    if(!res.ok)throw new Error(`Cloud load failed (${res.status})`);
    const payload=await res.json();
    cloudEnabled=true;
@@ -919,9 +1008,11 @@ function openEdit(key){
  $('itemDialog').showModal();
 }
 function openAdmin(){
- $('adminPin').value='';
- $('adminDialog').showModal();
- setTimeout(()=>$('adminPin').focus(),50);
+ if(authState?.user?.role==='owner'){
+   isAdmin=true;
+   return;
+ }
+ showToast('Owner access required');
 }
 function toggleSaleFields(){
  const sold=$('status').value==='Sold';
@@ -971,22 +1062,8 @@ $('deleteItemBtn').addEventListener('click',()=>{
  $('itemDialog').close();
  render();
 });
-$('adminForm').addEventListener('submit',e=>{
- e.preventDefault();
- if($('adminPin').value===ADMIN_PIN){
-   isAdmin=true;
-   $('adminToggle').textContent='🔓 Admin';
-   $('adminDialog').close();
-   render();
- }else alert('Incorrect PIN');
-});
-$('adminToggle').addEventListener('click',()=>{
- if(isAdmin){
-   isAdmin=false;
-   $('adminToggle').textContent='🔒 Admin';
-   render();
- }else openAdmin();
-});
+$('adminForm')?.addEventListener('submit',e=>e.preventDefault());
+$('adminToggle').addEventListener('click',signOut);
 ['searchInput','categoryFilter','statusFilter','platformFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',()=>{quickFilter='all';render();}));
 $('moreFiltersBtn').addEventListener('click',()=>{
  const panel=$('advancedFilters');
@@ -1005,7 +1082,7 @@ $('clearFiltersBtn').addEventListener('click',()=>{
 $('addItemBtn').addEventListener('click',openAdd);
 $('closeDialog').addEventListener('click',()=>$('itemDialog').close());
 $('cancelDialog').addEventListener('click',()=>$('itemDialog').close());
-$('closeAdminDialog').addEventListener('click',()=>$('adminDialog').close());
+$('closeAdminDialog')?.addEventListener('click',()=>$('adminDialog')?.close());
 $('moreDetailsBtn').addEventListener('click',()=>{
  const panel=$('moreDetailsPanel');
  const opening=panel.classList.contains('hidden');
@@ -1043,21 +1120,90 @@ $('exportBtn').addEventListener('click',()=>{
  URL.revokeObjectURL(a.href);
 });
 
-async function bootstrap(){
+
+$('loginTabBtn').addEventListener('click',()=>switchAuthTab('login'));
+$('signupTabBtn').addEventListener('click',()=>switchAuthTab('signup'));
+
+$('loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ showAuthError('');
+ const btn=e.submitter;
+ if(btn)btn.disabled=true;
+ try{
+   const payload=await authRequest('login',{
+     email:$('loginEmail').value,
+     password:$('loginPassword').value
+   });
+   setAuthState({token:payload.token,user:payload.user});
+   items=[];
+   history=[];
+   localStorage.removeItem(STORAGE_KEY);
+   localStorage.removeItem(HISTORY_KEY);
+   await startWorkspace();
+ }catch(err){
+   showAuthError(err.message);
+ }finally{
+   if(btn)btn.disabled=false;
+ }
+});
+
+$('signupForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ showAuthError('');
+ const btn=e.submitter;
+ if(btn)btn.disabled=true;
+ try{
+   const selected=document.querySelector('input[name="signupMode"]:checked');
+   const payload=await authRequest('signup',{
+     workspaceName:$('signupWorkspace').value,
+     email:$('signupEmail').value,
+     password:$('signupPassword').value,
+     defaultMode:selected?.value||'reseller'
+   });
+   setAuthState({token:payload.token,user:payload.user});
+   prefs.mode=payload.user.defaultMode||'reseller';
+   savePrefs();
+   items=[];
+   history=[];
+   localStorage.removeItem(STORAGE_KEY);
+   localStorage.removeItem(HISTORY_KEY);
+   await startWorkspace();
+   showToast('Workspace created ✓');
+ }catch(err){
+   showAuthError(err.message);
+ }finally{
+   if(btn)btn.disabled=false;
+ }
+});
+
+
+async function startWorkspace(){
+ showAuthGate(false);
+ updateWorkspaceUI();
+
+ // First login/setup chooses the starting mode.
+ const preferred=authState?.user?.defaultMode==='estate'?'estate':'reseller';
+ if(!prefs.mode)prefs.mode=preferred;
+ currentMode=prefs.mode==='estate'?'estate':'reseller';
+
  setView('inventory');
  applyModeUI();
  renderRecentLocations();
 
  const connected=await loadCloud();
-
- if(!items.length){
-   sampleData();
-   if(connected)await pushCloud({quiet:true});
- }
-
  renderRecentLocations();
  render();
 
- if(connected)showToast('Cloud sync on ✓');
+ if(connected)showToast('Workspace synced ✓');
+}
+
+async function bootstrap(){
+ showAuthGate(true);
+ switchAuthTab('login');
+
+ const valid=await verifySession();
+ if(valid){
+   await startWorkspace();
+ }
 }
 bootstrap();
