@@ -2027,3 +2027,74 @@ button{
     border-radius:9px;
   }
 }
+
+
+/* v20.2 — header polish + clearer mobile nav hint */
+
+/* slightly smaller always-visible account buttons */
+.account-actions{
+  gap:6px;
+}
+.account-btn{
+  padding:7px 9px;
+  font-size:.72rem;
+  border-radius:10px;
+}
+
+@media(max-width:760px){
+  .account-actions{
+    gap:4px;
+    align-self:flex-start;
+    margin-top:2px;
+  }
+  .account-btn{
+    padding:6px 8px;
+    font-size:.64rem;
+    border-radius:8px;
+  }
+}
+
+/* move scroll hint to the far-right edge and strengthen the fade */
+@media(max-width:760px){
+  .main-nav{
+    position:relative;
+  }
+
+  .nav-inner{
+    padding-right:42px; /* create clean space for the far-right hint */
+  }
+
+  .nav-scroll-hint{
+    right:0;
+    top:0;
+    bottom:0;
+    width:46px;
+    justify-content:flex-end;
+  }
+
+  .nav-scroll-hint-fade{
+    position:absolute;
+    right:0;
+    top:0;
+    bottom:0;
+    width:46px;
+    background:linear-gradient(
+      90deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,.72) 35%,
+      rgba(255,255,255,.94) 68%,
+      #ffffff 100%
+    );
+  }
+
+  .nav-scroll-hint-arrow{
+    position:relative;
+    z-index:1;
+    width:auto;
+    margin-right:10px;
+    color:#6f7f91;
+    font-size:1.25rem;
+    font-weight:900;
+    line-height:1;
+  }
+}

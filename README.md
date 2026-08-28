@@ -1,17 +1,13 @@
-# SimpleStock v20.1 — Visible Account Controls
+# SimpleStock v20.2 — Header + Mobile Nav Polish
 
-Mobile UX update.
+Small UI polish update.
 
 ## Changes
-- **Admin On / Admin Off** is always visible in the header.
-- **Sign out** is always visible in the header.
-- Removed Sign out from the horizontally scrolling menu.
-- Main nav stays focused on:
-  - Inventory
-  - Add Item
-  - Sales & History
-  - Reports
-  - Export
-- Admin button can temporarily hide/show editing controls for the signed-in owner.
+- Slightly smaller **Admin On / Admin Off** button
+- Slightly smaller **Sign out** button
+- More breathing room in the header
+- Mobile nav scroll hint moved all the way to the far-right edge
+- Stronger right-side fade behind the nav arrow
+- Clearer cue that more menu options are off-screen
 
-This keeps important account actions accessible without cluttering the scrolling navigation.
+No workflow changes.
