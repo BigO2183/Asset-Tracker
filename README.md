@@ -1,13 +1,17 @@
-# SimpleStock v20 — Mobile Menu Hint
+# SimpleStock v20.1 — Visible Account Controls
 
-Adds a subtle mobile hint so users know the top navigation can scroll horizontally.
+Mobile UX update.
 
-## What changed
-- Right-edge fade on mobile nav
-- Small right arrow / chevron
-- Hint only shows when the nav actually overflows
-- Hint disappears once the user scrolls to the end
-- Re-checks on resize, page load, render changes, and install button visibility changes
+## Changes
+- **Admin On / Admin Off** is always visible in the header.
+- **Sign out** is always visible in the header.
+- Removed Sign out from the horizontally scrolling menu.
+- Main nav stays focused on:
+  - Inventory
+  - Add Item
+  - Sales & History
+  - Reports
+  - Export
+- Admin button can temporarily hide/show editing controls for the signed-in owner.
 
-## Result
-Mobile users can tell there are more menu options without making the header feel cluttered.
+This keeps important account actions accessible without cluttering the scrolling navigation.

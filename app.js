@@ -66,8 +66,15 @@ function updateWorkspaceUI(){
  const user=authState?.user;
  if(!user)return;
  $('workspaceNameLabel').textContent=user.workspaceName||'Workspace';
- $('adminToggle').textContent='Sign out';
  isAdmin=user.role==='owner';
+ updateAdminButton();
+}
+
+function updateAdminButton(){
+ const btn=$('headerAdminBtn');
+ if(!btn)return;
+ btn.textContent=isAdmin?'Admin On':'Admin Off';
+ btn.classList.toggle('admin-off',!isAdmin);
 }
 function switchAuthTab(tab){
  const login=tab==='login';
@@ -104,6 +111,18 @@ async function verifySession(){
    return false;
  }
 }
+
+function toggleAdminControls(){
+ if(authState?.user?.role!=='owner'){
+   showToast('Owner access required');
+   return;
+ }
+ isAdmin=!isAdmin;
+ updateAdminButton();
+ render();
+ showToast(isAdmin?'Admin controls on':'Admin controls off');
+}
+
 async function signOut(){
  try{
    if(authState?.token){
@@ -118,6 +137,7 @@ async function signOut(){
  }
  setAuthState(null);
  isAdmin=false;
+ updateAdminButton();
  cloudEnabled=false;
  items=[];
  history=[];
@@ -1064,7 +1084,9 @@ $('deleteItemBtn').addEventListener('click',()=>{
  render();
 });
 $('adminForm')?.addEventListener('submit',e=>e.preventDefault());
-$('adminToggle').addEventListener('click',signOut);
+$('adminToggle')?.addEventListener('click',signOut);
+$('headerSignOutBtn')?.addEventListener('click',signOut);
+$('headerAdminBtn')?.addEventListener('click',toggleAdminControls);
 ['searchInput','categoryFilter','statusFilter','platformFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',()=>{quickFilter='all';render();}));
 $('moreFiltersBtn').addEventListener('click',()=>{
  const panel=$('advancedFilters');

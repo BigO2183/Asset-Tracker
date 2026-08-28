@@ -75,6 +75,11 @@
         <span id="workspaceNameLabel" class="workspace-name-label"></span>
       </div>
     </div>
+
+    <div class="account-actions">
+      <button id="headerAdminBtn" type="button" class="account-btn admin-account-btn">Admin On</button>
+      <button id="headerSignOutBtn" type="button" class="account-btn signout-account-btn">Sign out</button>
+    </div>
   </header>
 
   <nav class="main-nav" aria-label="Main menu">
@@ -86,13 +91,13 @@
       <button id="exportBtn" class="nav-btn">Export</button>
       <div class="nav-spacer"></div>
       <button id="installAppBtn" class="nav-btn install-btn hidden">Install App</button>
-      <button id="adminToggle" class="nav-btn nav-admin">Sign out</button>
     </div>
     <div id="navScrollHint" class="nav-scroll-hint hidden" aria-hidden="true">
       <span class="nav-scroll-hint-fade"></span>
       <span class="nav-scroll-hint-arrow">›</span>
     </div>
   </nav>
+  <button id="adminToggle" type="button" class="hidden" aria-hidden="true">Sign out</button>
 
   <main class="shell workspace-shell">
     <section class="workspace-toolbar simple-toolbar">
