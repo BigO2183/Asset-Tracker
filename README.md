@@ -1,28 +1,30 @@
-# SimpleStock v19 — Installable PWA
+# SimpleStock v19.1 — Android PWA Fix
 
-SimpleStock can now be installed to a phone home screen and opened like an app.
+This version fixes Android installation / icon recognition.
 
-## PWA features
-- Installable from supported mobile/desktop browsers
-- Standalone app window
-- SimpleStock app name and icon
-- Theme color
-- Basic app-shell caching for faster loading
-- Authentication and cloud inventory always stay live
-- Existing Business Workspaces, Reports, Quick Sell, Reseller Mode, Estate Sale Mode, and cloud sync are unchanged
+## Changes
+- Replaced SVG PWA icons with PNG icons.
+- Added 192×192 PNG.
+- Added 512×512 PNG.
+- Added a separate 512×512 maskable Android icon.
+- Updated the web manifest.
+- Added a stable app `id`.
+- Bumped the service-worker cache version so Chrome fetches the new files.
+- Updated favicon / Apple touch icon references.
 
-## Files added
-- `manifest.webmanifest`
-- `service-worker.js`
-- `icons/icon-192.svg`
-- `icons/icon-512.svg`
+## GitHub icon folder
+Upload these files inside `icons/`:
+- `icon-192.png`
+- `icon-512.png`
+- `icon-maskable-512.png`
 
-## Installation
-### Android / Chrome
-Open the deployed SimpleStock site. If supported, tap **Install App** in SimpleStock or use the browser menu → **Install app / Add to Home screen**.
+## After deploying
+On Android Chrome:
+1. Remove any old SimpleStock shortcut that was created.
+2. Chrome → Settings → Site settings → All sites → your Netlify site → Clear & reset, OR clear the site's cached data.
+3. Reopen the live Netlify URL.
+4. Wait a few seconds / refresh once.
+5. Chrome menu should recognize the installable app more reliably.
+6. Choose **Install app** if offered.
 
-### iPhone / Safari
-Open the deployed site in Safari → Share → **Add to Home Screen**.
-
-## Deployment
-Deploy the whole v19 project to Netlify.
+The installed icon should now use the SimpleStock navy inventory icon instead of the gray N.

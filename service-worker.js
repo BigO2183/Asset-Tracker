@@ -1,12 +1,13 @@
-const CACHE_NAME = 'simplestock-v19-shell';
+const CACHE_NAME = 'simplestock-v19-1-shell';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/styles.css',
   '/app.js',
   '/manifest.webmanifest',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg'
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/icon-maskable-512.png'
 ];
 
 self.addEventListener('install', event => {
