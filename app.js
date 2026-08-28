@@ -47,7 +47,7 @@ function statusClass(status=''){
  return 'status-' + status.toLowerCase().replace(/\s+/g,'-');
 }
 function updateStatCardState(){
- document.querySelectorAll('.stat-card').forEach(btn=>btn.classList.toggle('active',btn.dataset.filter===quickFilter));
+ document.querySelectorAll('.status-link').forEach(btn=>btn.classList.toggle('active',btn.dataset.filter===quickFilter));
 }
 function render(){
  updateFilters();
@@ -224,7 +224,7 @@ $('adminForm').addEventListener('submit',e=>{
  e.preventDefault();
  if($('adminPin').value===ADMIN_PIN){
    isAdmin=true;
-   $('adminToggle').textContent='🔓 Admin On';
+   $('adminToggle').textContent='🔓 Admin';
    $('adminDialog').close();
    render();
  }else alert('Incorrect PIN');
@@ -232,12 +232,12 @@ $('adminForm').addEventListener('submit',e=>{
 $('adminToggle').addEventListener('click',()=>{
  if(isAdmin){
    isAdmin=false;
-   $('adminToggle').textContent='🔒 Admin Mode';
+   $('adminToggle').textContent='🔒 Admin';
    render();
  }else openAdmin();
 });
 ['searchInput','categoryFilter','statusFilter','platformFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',()=>{quickFilter='all';render();}));
-document.querySelectorAll('.stat-card').forEach(btn=>btn.addEventListener('click',()=>{
+document.querySelectorAll('.status-link').forEach(btn=>btn.addEventListener('click',()=>{
  quickFilter=btn.dataset.filter;
  setView('inventory');
  render();

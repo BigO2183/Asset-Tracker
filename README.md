@@ -1,27 +1,14 @@
-# SimpleStock — Reseller & Estate Inventory Tracker v4
+# SimpleStock v5 — Function-First Layout
 
-Designed around one goal: make inventory and sales tracking simple, calm, and easy for resellers and estate-sale operators.
+This version removes the large dashboard/hero boxes and prioritizes working space.
 
-## Core experience
-- Fast Intake
-- Inventory organization
-- Item location
-- Listing status
-- Sales tracking
-- Profit tracking
-- Needs Attention view
-- Simple history
-
-## Design direction
-- Low visual stimulation
-- Fewer choices
-- Plain language
-- Calm colors
-- Mobile friendly
-- No unnecessary charts or clutter
+## Main UX change
+- Full-width horizontal menu from left to right
+- Inventory, Add Item, Sales & History, Export, Admin
+- Search and filters directly below the menu
+- Compact status/financial summary instead of large cards
+- More screen space for actual inventory records
+- Mobile navigation scrolls horizontally instead of stacking into bulky boxes
 
 ## Demo Admin PIN
 1234
-
-## Storage
-Uses browser localStorage for demo/testing.
