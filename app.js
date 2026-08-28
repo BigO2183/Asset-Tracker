@@ -1,385 +1,110 @@
-const supabaseUrl = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
-const supabaseAnonKey = "PASTE_YOUR_SUPABASE_ANON_PUBLIC_KEY_HERE";
+const STORAGE_KEY='inventoryTrackerBaseV1.items';
+const HISTORY_KEY='inventoryTrackerBaseV1.history';
+const ADMIN_PIN='1234'; // Change before deploying for a customer.
 
-const storageKey = "equipment-asset-tracker-assets";
-const historyStorageKey = "equipment-asset-tracker-history";
+let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+let isAdmin = false;
+let quickFilter = 'all';
 
-const starterEquipment = [
-  {
-    assetId: "EQ-001",
-    equipmentName: "Milwaukee Drill",
-    category: "Power Tool",
-    barcode: "EQ-001",
-    status: "Available",
-    location: "Warehouse",
-    currentHolder: "",
-    projectJob: "",
-    checkoutDate: "",
-    returnDate: "",
-    condition: "Good",
-    notes: "Test asset",
-  },
-];
+const $ = (id)=>document.getElementById(id);
+const inventoryList=$('inventoryList'), itemDialog=$('itemDialog'), itemForm=$('itemForm');
 
-const fields = {
-  assetId: document.querySelector("#asset-id"),
-  equipmentName: document.querySelector("#asset-name"),
-  category: document.querySelector("#asset-category"),
-  barcode: document.querySelector("#asset-barcode"),
-  status: document.querySelector("#asset-status"),
-  listStatus: document.querySelector("#list-status"),
-  location: document.querySelector("#asset-location"),
-  currentHolder: document.querySelector("#asset-holder"),
-  projectJob: document.querySelector("#asset-project"),
-  checkoutDate: document.querySelector("#asset-checkout-date"),
-  returnDate: document.querySelector("#asset-return-date"),
-  assetLink: document.querySelector("#asset-link"),
-  condition: document.querySelector("#asset-condition"),
-  notes: document.querySelector("#asset-notes"),
-  qrCode: document.querySelector("#qr-code"),
-  qrLabel: document.querySelector("#qr-label"),
-  qrLinkText: document.querySelector("#qr-link-text"),
-  printQrButton: document.querySelector("#print-qr-button"),
-  holderInput: document.querySelector("#holder-input"),
-  projectInput: document.querySelector("#project-input"),
-  checkoutForm: document.querySelector("#checkout-form"),
-  returnButton: document.querySelector("#return-button"),
-  historyList: document.querySelector("#history-list"),
-};
+function uid(){return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));}
+function now(){return new Date().toLocaleString();}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(items));localStorage.setItem(HISTORY_KEY,JSON.stringify(history));}
+function log(action,item,detail=''){history.unshift({id:uid(),time:now(),action,itemName:item?.name||'Unknown item',detail});history=history.slice(0,500);save();}
+function esc(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 
-const hasSupabaseConfig =
-  supabaseUrl.startsWith("https://") &&
-  !supabaseAnonKey.includes("PASTE_YOUR");
-
-const db = hasSupabaseConfig
-  ? window.supabase.createClient(supabaseUrl, supabaseAnonKey)
-  : null;
-
-let equipment = [];
-let history = [];
-let selectedAsset = null;
-
-function toAppAsset(row) {
-  return {
-    assetId: row.asset_id,
-    equipmentName: row.equipment_name,
-    category: row.category || "",
-    barcode: row.barcode || "",
-    status: row.status || "Available",
-    location: row.location || "",
-    currentHolder: row.current_holder || "",
-    projectJob: row.project_job || "",
-    checkoutDate: row.checkout_date || "",
-    returnDate: row.return_date || "",
-    condition: row.condition || "",
-    notes: row.notes || "",
-  };
+function sampleData(){
+ if(items.length) return;
+ items=[
+  {key:uid(),name:'DeWalt 20V Drill',itemId:'DW-001',category:'Tools',quantity:4,lowStockAt:1,location:'Shelf A3',status:'In Stock',notes:'Battery + charger included',photo:''},
+  {key:uid(),name:'Samsung 55-inch TV',itemId:'TV-014',category:'Electronics',quantity:1,lowStockAt:1,location:'Back Room B',status:'Needs Attention',notes:'Missing remote; needs testing',photo:''},
+  {key:uid(),name:'Extension Ladder 28 ft',itemId:'EQ-028',category:'Equipment',quantity:1,lowStockAt:0,location:'Assigned - Crew 2',status:'Checked Out',notes:'Return inspection required',photo:''}
+ ];
+ log('Demo data created',{name:'Inventory Tracker Base'},'3 starter records added');
+ save();
 }
 
-function toDatabaseAsset(asset) {
-  return {
-    asset_id: asset.assetId,
-    equipment_name: asset.equipmentName,
-    category: asset.category,
-    barcode: asset.barcode,
-    status: asset.status,
-    location: asset.location,
-    current_holder: asset.currentHolder,
-    project_job: asset.projectJob,
-    checkout_date: asset.checkoutDate || null,
-    return_date: asset.returnDate || null,
-    condition: asset.condition,
-    notes: asset.notes,
-  };
+function updateCategories(){
+ const current=$('categoryFilter').value;
+ const cats=[...new Set(items.map(i=>i.category).filter(Boolean))].sort();
+ $('categoryFilter').innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join('');
+ $('categoryFilter').value=cats.includes(current)?current:'';
 }
 
-function toAppHistory(row) {
-  return {
-    assetId: row.asset_id,
-    action: row.action,
-    holder: row.holder || "",
-    projectJob: row.project_job || "",
-    date: formatDate(row.action_date),
-  };
+function matchesQuick(i){
+ if(quickFilter==='all') return true;
+ if(quickFilter==='checked-out') return i.status==='Checked Out';
+ if(quickFilter==='low-stock') return Number(i.quantity)<=Number(i.lowStockAt||0);
+ if(quickFilter==='attention') return i.status==='Needs Attention' || Number(i.quantity)<=Number(i.lowStockAt||0);
+ return true;
 }
 
-function loadLocalEquipment() {
-  const savedEquipment = localStorage.getItem(storageKey);
-
-  if (!savedEquipment) {
-    return starterEquipment;
-  }
-
-  try {
-    return JSON.parse(savedEquipment);
-  } catch (error) {
-    return starterEquipment;
-  }
+function render(){
+ updateCategories();
+ const q=$('searchInput').value.trim().toLowerCase();
+ const cat=$('categoryFilter').value, status=$('statusFilter').value;
+ const filtered=items.filter(i=>{
+  const hay=[i.name,i.itemId,i.category,i.location,i.status,i.notes].join(' ').toLowerCase();
+  return (!q||hay.includes(q)) && (!cat||i.category===cat) && (!status||i.status===status) && matchesQuick(i);
+ });
+ inventoryList.innerHTML='';
+ $('emptyState').classList.toggle('hidden',filtered.length!==0);
+ const tpl=$('itemTemplate');
+ filtered.forEach(i=>{
+  const node=tpl.content.cloneNode(true);
+  const card=node.querySelector('.item-card');
+  node.querySelector('.item-name').textContent=i.name;
+  node.querySelector('.item-meta').textContent=[i.itemId&&`ID: ${i.itemId}`,i.category].filter(Boolean).join(' • ');
+  node.querySelector('.item-notes').textContent=i.notes||'';
+  node.querySelector('.status-pill').textContent=i.status;
+  node.querySelector('.qty-chip').textContent=`Qty ${i.quantity}`;
+  node.querySelector('.location-chip').textContent=i.location||'No location';
+  const img=node.querySelector('.item-thumb'), ph=node.querySelector('.placeholder-thumb');
+  if(i.photo){img.src=i.photo;img.style.display='block';ph.style.display='none';img.onerror=()=>{img.style.display='none';ph.style.display='grid';};}
+  const edit=node.querySelector('.edit-btn');
+  edit.classList.toggle('hidden',!isAdmin); edit.addEventListener('click',()=>openEdit(i.key));
+  card.addEventListener('dblclick',()=>{if(isAdmin)openEdit(i.key)});
+  inventoryList.appendChild(node);
+ });
+ $('statInStock').textContent=items.filter(i=>i.status==='In Stock').length;
+ $('statCheckedOut').textContent=items.filter(i=>i.status==='Checked Out').length;
+ $('statLowStock').textContent=items.filter(i=>Number(i.quantity)<=Number(i.lowStockAt||0)).length;
+ $('statAttention').textContent=items.filter(i=>i.status==='Needs Attention'||Number(i.quantity)<=Number(i.lowStockAt||0)).length;
+ renderHistory();
 }
 
-function saveLocalEquipment() {
-  localStorage.setItem(storageKey, JSON.stringify(equipment));
+function renderHistory(){
+ $('historyList').innerHTML=history.length?history.map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(h.detail||'')}</div><small>${esc(h.time)}</small></div>`).join(''):'<div class="empty-state">No history yet.</div>';
 }
 
-function loadLocalHistory() {
-  const savedHistory = localStorage.getItem(historyStorageKey);
-
-  if (!savedHistory) {
-    return [];
-  }
-
-  try {
-    return JSON.parse(savedHistory);
-  } catch (error) {
-    return [];
-  }
+function openAdd(){
+ if(!isAdmin){openAdmin();return;}
+ itemForm.reset(); $('itemKey').value=''; $('quantity').value=1; $('lowStockAt').value=1; $('status').value='In Stock'; $('dialogTitle').textContent='Add Item'; $('deleteItemBtn').classList.add('hidden'); itemDialog.showModal();
 }
-
-function saveLocalHistory() {
-  localStorage.setItem(historyStorageKey, JSON.stringify(history));
+function openEdit(key){
+ if(!isAdmin) return;
+ const i=items.find(x=>x.key===key); if(!i)return;
+ $('itemKey').value=i.key; $('photo').value=i.photo||''; $('name').value=i.name||''; $('itemId').value=i.itemId||''; $('category').value=i.category||''; $('quantity').value=i.quantity??1; $('lowStockAt').value=i.lowStockAt??1; $('location').value=i.location||''; $('status').value=i.status||'In Stock'; $('notes').value=i.notes||''; $('dialogTitle').textContent='Edit Item'; $('deleteItemBtn').classList.remove('hidden'); itemDialog.showModal();
 }
+function openAdmin(){ $('adminPin').value=''; $('adminDialog').showModal(); setTimeout(()=>$('adminPin').focus(),50); }
+function toggleAdmin(){ if(isAdmin){isAdmin=false;$('adminToggle').textContent='🔒 Admin Mode';render();} else openAdmin(); }
 
-function displayValue(value) {
-  return value || "None";
-}
-
-function formatDate(value) {
-  if (!value) {
-    return "";
-  }
-
-  return new Date(value).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function todayForDatabase() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function todayForDisplay() {
-  return formatDate(new Date().toISOString());
-}
-
-function updateStatusStyle(status) {
-  const isCheckedOut = status === "Checked Out";
-
-  fields.status.classList.toggle("is-checked-out", isCheckedOut);
-  fields.listStatus.classList.toggle("is-checked-out", isCheckedOut);
-}
-
-function renderQrCode(asset, assetUrl) {
-  fields.qrCode.innerHTML = "";
-  fields.qrLabel.textContent = asset.assetId;
-  fields.qrLinkText.textContent = `Open ${asset.assetId} from a scan`;
-
-  if (!window.QRCode) {
-    fields.qrCode.textContent = "QR unavailable";
-    return;
-  }
-
-  new window.QRCode(fields.qrCode, {
-    text: assetUrl.toString(),
-    width: 104,
-    height: 104,
-  });
-}
-
-async function loadEquipment() {
-  if (!db) {
-    equipment = loadLocalEquipment();
-    history = loadLocalHistory();
-    return;
-  }
-
-  const { data: equipmentRows, error: equipmentError } = await db
-    .from("equipment")
-    .select("*")
-    .order("asset_id");
-
-  if (equipmentError) {
-    console.error(equipmentError);
-    equipment = loadLocalEquipment();
-  } else {
-    equipment = equipmentRows.map(toAppAsset);
-  }
-
-  const { data: historyRows, error: historyError } = await db
-    .from("checkout_history")
-    .select("*")
-    .order("action_date", { ascending: false });
-
-  if (historyError) {
-    console.error(historyError);
-    history = [];
-  } else {
-    history = historyRows.map(toAppHistory);
-  }
-}
-
-async function saveAsset(asset) {
-  if (!db) {
-    saveLocalEquipment();
-    return;
-  }
-
-  const { error } = await db
-    .from("equipment")
-    .update(toDatabaseAsset(asset))
-    .eq("asset_id", asset.assetId);
-
-  if (error) {
-    console.error(error);
-    alert("Supabase could not save this asset. Check your table permissions.");
-  }
-}
-
-async function addHistoryEvent(asset, action) {
-  const event = {
-    assetId: asset.assetId,
-    action,
-    holder: asset.currentHolder,
-    projectJob: asset.projectJob,
-    date: todayForDisplay(),
-  };
-
-  history.unshift(event);
-
-  if (!db) {
-    saveLocalHistory();
-    return;
-  }
-
-  const { error } = await db.from("checkout_history").insert({
-    asset_id: asset.assetId,
-    action,
-    holder: asset.currentHolder,
-    project_job: asset.projectJob,
-  });
-
-  if (error) {
-    console.error(error);
-    alert("Supabase could not save the history record.");
-  }
-}
-
-function renderHistory(assetId) {
-  const assetHistory = history.filter((event) => event.assetId === assetId);
-
-  fields.historyList.innerHTML = "";
-
-  if (assetHistory.length === 0) {
-    const emptyItem = document.createElement("li");
-    emptyItem.className = "empty-history";
-    emptyItem.textContent = "No history yet";
-    fields.historyList.append(emptyItem);
-    return;
-  }
-
-  assetHistory.forEach((event) => {
-    const item = document.createElement("li");
-    const title = document.createElement("strong");
-    const detail = document.createElement("span");
-
-    title.textContent = `${event.action} on ${event.date}`;
-    detail.textContent = `${displayValue(event.holder)} · ${displayValue(
-      event.projectJob
-    )}`;
-
-    item.append(title, detail);
-    fields.historyList.append(item);
-  });
-}
-
-function showAsset(asset) {
-  selectedAsset = asset;
-  const assetUrl = new URL(window.location.href);
-
-  assetUrl.searchParams.set("asset", asset.assetId);
-
-  fields.assetId.textContent = asset.assetId;
-  fields.equipmentName.textContent = asset.equipmentName;
-  fields.category.textContent = asset.category;
-  fields.barcode.textContent = asset.barcode;
-  fields.status.textContent = asset.status;
-  fields.listStatus.textContent = asset.status;
-  fields.location.textContent = asset.location;
-  fields.currentHolder.textContent = displayValue(asset.currentHolder);
-  fields.projectJob.textContent = displayValue(asset.projectJob);
-  fields.checkoutDate.textContent = displayValue(formatDate(asset.checkoutDate));
-  fields.returnDate.textContent = displayValue(formatDate(asset.returnDate));
-  fields.assetLink.href = assetUrl.toString();
-  fields.assetLink.textContent = `Open ${asset.assetId}`;
-  fields.condition.textContent = asset.condition;
-  fields.notes.textContent = asset.notes;
-  fields.holderInput.value = asset.currentHolder;
-  fields.projectInput.value = asset.projectJob;
-  fields.returnButton.disabled = asset.status !== "Checked Out";
-
-  updateStatusStyle(asset.status);
-  renderQrCode(asset, assetUrl);
-  renderHistory(asset.assetId);
-}
-
-document.querySelectorAll("[data-asset-id]").forEach((button) => {
-  button.addEventListener("click", () => {
-    const asset = equipment.find(
-      (item) => item.assetId === button.dataset.assetId
-    );
-
-    if (asset) {
-      showAsset(asset);
-      window.history.replaceState(null, "", `?asset=${asset.assetId}`);
-    }
-  });
+itemForm.addEventListener('submit',(e)=>{
+ e.preventDefault(); if(!isAdmin)return;
+ const key=$('itemKey').value;
+ const record={key:key||uid(),photo:$('photo').value.trim(),name:$('name').value.trim(),itemId:$('itemId').value.trim(),category:$('category').value.trim(),quantity:Number($('quantity').value),lowStockAt:Number($('lowStockAt').value||0),location:$('location').value.trim(),status:$('status').value,notes:$('notes').value.trim()};
+ if(key){const old=items.find(i=>i.key===key);items=items.map(i=>i.key===key?record:i);log('Updated',record,`Qty ${old.quantity} → ${record.quantity}; Status ${old.status} → ${record.status}; Location ${old.location||'—'} → ${record.location||'—'}`);} else {items.unshift(record);log('Added',record,`Qty ${record.quantity}; ${record.location||'No location'}`);} save();itemDialog.close();render();
 });
 
-fields.checkoutForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
+$('deleteItemBtn').addEventListener('click',()=>{const key=$('itemKey').value;const i=items.find(x=>x.key===key);if(!i||!confirm(`Delete ${i.name}?`))return;items=items.filter(x=>x.key!==key);log('Deleted',i,`Removed from inventory`);save();itemDialog.close();render();});
+$('adminForm').addEventListener('submit',(e)=>{e.preventDefault();if($('adminPin').value===ADMIN_PIN){isAdmin=true;$('adminToggle').textContent='🔓 Admin On';$('adminDialog').close();render();}else{alert('Incorrect PIN');}});
+['searchInput','categoryFilter','statusFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',()=>{quickFilter='all';render();}));
+document.querySelectorAll('.stat-card').forEach(btn=>btn.addEventListener('click',()=>{quickFilter=btn.dataset.filter;render();$('inventorySection').scrollIntoView({behavior:'smooth'});}));
+$('addItemBtn').addEventListener('click',openAdd);$('adminToggle').addEventListener('click',toggleAdmin);$('closeDialog').addEventListener('click',()=>itemDialog.close());$('cancelDialog').addEventListener('click',()=>itemDialog.close());$('closeAdminDialog').addEventListener('click',()=> $('adminDialog').close());
+$('showHistoryBtn').addEventListener('click',()=>{$('historySection').classList.remove('hidden');$('inventorySection').classList.add('hidden');renderHistory();});
+$('showInventoryBtn').addEventListener('click',()=>{$('historySection').classList.add('hidden');$('inventorySection').classList.remove('hidden');});
 
-  selectedAsset.status = "Checked Out";
-  selectedAsset.currentHolder = fields.holderInput.value.trim();
-  selectedAsset.projectJob = fields.projectInput.value.trim();
-  selectedAsset.checkoutDate = todayForDatabase();
-  selectedAsset.returnDate = "";
-
-  await addHistoryEvent(selectedAsset, "Checked out");
-  await saveAsset(selectedAsset);
-  showAsset(selectedAsset);
-});
-
-fields.returnButton.addEventListener("click", async () => {
-  await addHistoryEvent(selectedAsset, "Returned");
-
-  selectedAsset.status = "Available";
-  selectedAsset.currentHolder = "";
-  selectedAsset.projectJob = "";
-  selectedAsset.returnDate = todayForDatabase();
-
-  await saveAsset(selectedAsset);
-  showAsset(selectedAsset);
-});
-
-fields.printQrButton.addEventListener("click", () => {
-  window.print();
-});
-
-async function startApp() {
-  await loadEquipment();
-  const requestedAssetId = new URLSearchParams(window.location.search).get(
-    "asset"
-  );
-  const requestedAsset = equipment.find(
-    (asset) => asset.assetId === requestedAssetId
-  );
-
-  if (requestedAsset) {
-    showAsset(requestedAsset);
-  } else if (equipment.length > 0) {
-    showAsset(equipment[0]);
-  }
-}
-
-startApp();
+sampleData();render();

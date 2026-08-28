@@ -1,68 +1,43 @@
-# Equipment Asset Tracker MVP
+# Inventory Tracker Base v1
 
-A lightweight static starter for tracking equipment assets. It is designed for GitHub + Netlify and can connect to Supabase when you are ready.
+A clean, reusable, mobile-friendly inventory and asset tracker starter that can be customized for warehouses, resellers, equipment operations, estate sales, contractors, and small businesses.
 
-## What Is Included
+## Core workflow
 
-- `index.html` - app structure
-- `styles.css` - responsive layout and styling
-- `app.js` - Supabase connection placeholders, starter fallback data, history, and simple checkout/return logic
-- One test asset: `EQ-001`, Milwaukee Drill, status `Available`
-- Browser-only checkout and return buttons for the first workflow test
-- Supabase-ready equipment and checkout history logic
-- Browser storage fallback until your Supabase values are pasted into `app.js`
-- Direct asset QR code display and print button
+Add Item → Search → Update Quantity / Location / Status → View History
 
-## Run Locally
+## Included
 
-Open `index.html` in your browser.
+- Mobile-friendly inventory dashboard
+- Real-time search
+- Item name, ID/barcode, category, quantity, low-stock threshold, location, status, photo URL, notes
+- Statuses: In Stock, Checked Out, Sold, Reserved, Needs Attention
+- Low-stock and needs-attention dashboard filters
+- Admin mode for adding/editing/deleting
+- Audit history
+- Browser localStorage persistence
+- Demo starter inventory
+- Netlify-ready static files
 
-No install step is required.
+## Demo admin PIN
 
-## Connect Supabase
+`1234`
 
-In `app.js`, replace these two placeholder values:
+Change `ADMIN_PIN` near the top of `app.js` before using this with a customer.
 
-```js
-const supabaseUrl = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
-const supabaseAnonKey = "PASTE_YOUR_SUPABASE_ANON_PUBLIC_KEY_HERE";
-```
+## Deploy to Netlify
 
-Use your Supabase **Project URL** and **anon public key**. Do not use the `service_role` key.
+Upload this folder as a static site or push the files to a GitHub repository connected to Netlify. No build command is required.
 
-After saving, upload the changed `app.js` and `index.html` to GitHub. Netlify should redeploy automatically.
+## What to customize next
 
-## Deploy With GitHub + Netlify
+Keep this repository generic. Clone it to create industry versions, for example:
 
-1. Create a new GitHub repository.
-2. Add these files to the repository root:
-   - `index.html`
-   - `styles.css`
-   - `app.js`
-   - `README.md`
-3. Commit and push the files to GitHub.
-4. In Netlify, choose **Add new site**.
-5. Select **Import an existing project**.
-6. Connect the GitHub repository.
-7. Leave the build command blank.
-8. Set the publish directory to `/` if the files are in the repository root.
-9. Deploy the site.
+- Reseller Tracker: purchase cost, asking price, sold price, platform, fees, profit
+- Equipment Tracker: employee/project assignment, checkout/return dates, condition
+- Estate Sale Tracker: room, asking price, discount schedule, disposition
+- Warehouse Tracker: vendor, PO, receiver, project/property, reorder point
 
-## Easy Next Steps
+## Important
 
-- Add more equipment records in Supabase.
-- Add basic sign-in before letting a full team use the tracker.
-
-## Asset Links For QR Codes
-
-Each asset can open directly with an `asset` value in the URL:
-
-```text
-https://your-site-name.netlify.app/?asset=EQ-001
-```
-
-Use that URL when creating a QR code for the asset.
-
-The app also shows a QR code in the asset detail view. Use **Print QR** to print the current asset label.
-
-Keep the first version simple: list equipment, open one asset, confirm the status.
+This v1 stores data in the browser. For multi-user/customer deployments, the next step should be replacing localStorage with a shared database and authentication.
