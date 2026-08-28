@@ -1,23 +1,27 @@
-# FlipFlow Inventory / Reseller Estate Tracker v3
+# SimpleStock — Reseller & Estate Inventory Tracker v4
 
-This version leans into:
-- **Bold and branded** styling
-- **Simple / minimal** layout
-- Cleaner visual hierarchy
-- Easier-to-scan dashboard and cards
+Designed around one goal: make inventory and sales tracking simple, calm, and easy for resellers and estate-sale operators.
 
-## Style direction
-A blend of:
-1. more bold and branded
-2. more simple / minimal
+## Core experience
+- Fast Intake
+- Inventory organization
+- Item location
+- Listing status
+- Sales tracking
+- Profit tracking
+- Needs Attention view
+- Simple history
+
+## Design direction
+- Low visual stimulation
+- Fewer choices
+- Plain language
+- Calm colors
+- Mobile friendly
+- No unnecessary charts or clutter
 
 ## Demo Admin PIN
 1234
 
-## Files
-- `index.html`
-- `styles.css`
-- `app.js`
-
-## Notes
-This still uses browser localStorage for demo/testing.
+## Storage
+Uses browser localStorage for demo/testing.

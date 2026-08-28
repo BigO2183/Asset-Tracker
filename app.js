@@ -4,6 +4,8 @@ const ADMIN_PIN='1234';
 let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
 let history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
 let isAdmin=false,quickFilter='all';
+items=items.map(i=>({...i,status:i.status==='Reserved'?'Hold':(['Donated','Bulk Sale'].includes(i.status)?'Donate / Bulk':i.status)}));
+
 const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)||0);
 const uid=()=>crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
@@ -37,7 +39,7 @@ function updateFilters(){
 function matchesQuick(i){
  if(quickFilter==='all')return true;
  if(quickFilter==='unlisted')return i.status==='Unlisted';
- if(quickFilter==='aged')return daysOld(i)>=60&& !['Sold','Donated'].includes(i.status);
+ if(quickFilter==='aged')return daysOld(i)>=60&& !['Sold','Donate / Bulk','Donated','Bulk Sale'].includes(i.status);
  if(quickFilter==='attention')return attention(i);
  return true;
 }
@@ -88,7 +90,7 @@ function render(){
   card.addEventListener('dblclick',()=>{if(isAdmin)openEdit(i.key)});
   $('inventoryList').appendChild(node);
  });
- const active=items.filter(i=>!['Sold','Donated'].includes(i.status));
+ const active=items.filter(i=>!['Sold','Donate / Bulk','Donated','Bulk Sale'].includes(i.status));
  $('statActive').textContent=active.length;
  $('statCost').textContent=`${money(active.reduce((s,i)=>s+(Number(i.cost)||0),0))} invested`;
  $('statUnlisted').textContent=active.filter(i=>i.status==='Unlisted').length;

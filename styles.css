@@ -193,3 +193,27 @@ code{background:#f1f4f9;padding:2px 6px;border-radius:6px}
   .photo-help{grid-column:1/-1}
   .dialog{width:96vw}.form-card{padding:17px}.form-grid{grid-template-columns:1fr}.form-grid .full{grid-column:auto}
 }
+
+/* v4 calm/minimal refinements */
+:root{--primary:#3c5a8a;--primary-strong:#2f466c;--primary-soft:#edf2f8;--dark:#243244;--shadow:0 10px 26px rgba(31,45,61,.06);--shadow-soft:0 4px 14px rgba(31,45,61,.05)}
+body{background:linear-gradient(180deg,#fafbfd 0%,#f5f7fa 100%)}
+.hero-card{background:#fff}
+.hero-badge{background:#eef2f6;color:#46566a}
+.brand-mark{background:linear-gradient(135deg,#2e3c4e 0%,#5a6f88 100%);box-shadow:none}
+.primary-btn{background:#2f4054;box-shadow:none}
+.secondary-btn.active-tab{background:#2f4054}
+.stat-card.active{background:#2f4054;border-color:#2f4054}
+.stat-card.attention{background:#fffdf7}
+.item-card-accent{background:#9aa8b7}
+.simple-list{display:grid;gap:10px;color:#3d4d60;font-weight:600}
+.calm-card{background:#fbfcfd}
+.hero-side{align-content:start}
+.quick-actions{gap:8px}
+.money-strip strong{font-size:1.32rem}
+.money-strip span{letter-spacing:.04em}
+.info-strip{box-shadow:none;background:#fafbfd}
+.panel,.hero-card,.money-strip,.info-strip{box-shadow:0 8px 22px rgba(31,45,61,.05)}
+.status-pill.status-unlisted{background:#eef3f8;color:#50647d}
+.status-pill.status-listed,.status-pill.status-sold{background:#eef6f1;color:#39654d}
+.status-pill.status-hold,.status-pill.status-donate-bulk,.status-pill.status-needs-attention{background:#fff7e7;color:#7d6327}
+@media(max-width:760px){.hero-side{display:none}.info-strip{gap:6px}.friendly-chip{font-size:.84rem;padding:8px 10px}}
