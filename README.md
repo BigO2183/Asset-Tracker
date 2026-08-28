@@ -1,25 +1,28 @@
-# SimpleStock v22.1 — Authentication Fix + Diagnostics
+# SimpleStock v22.3 — Simplified Main Screen
 
-Fixes the vague "Unable to continue." login error.
+The daily workspace is intentionally stripped back.
 
-## Changes
-- Added `GET /.netlify/functions/auth?action=health`
-- Login now reports whether the auth function is:
-  - missing / 404
-  - crashing / 500
-  - unreachable
-  - returning a normal account/password error
-- Automatically migrates older owner accounts forward with missing v21/v22 fields.
-- Bumped the PWA service-worker cache so Android receives the fixed `app.js`.
+## Visible on the main screen
+- Inventory
+- Add Item
+- Sales
+- Reports
+- Settings
+- Reseller / Estate Sale
+- Search
+- Status
+- Scan
+- Select
+- Filters
+- One simple item count
+- Inventory list
 
-## Important GitHub structure
+## Removed from the daily workspace
+- Export from the top navigation (still available inside Reports)
+- Extra onboarding banner
+- Ready-to-list mini-stat
+- 60+ day mini-stat
+- Duplicate summary information
 
-`auth.mjs` must be here:
-
-`netlify/functions/auth.mjs`
-
-and inventory must be here:
-
-`netlify/functions/inventory.mjs`
-
-Do not keep the backend `.mjs` files only at the repository root.
+## Rule
+Daily actions stay visible. Secondary actions live in Item Details, Reports, or Settings.

@@ -98,10 +98,10 @@
     <div id="navInner" class="nav-inner">
       <button id="showInventoryBtn" class="nav-btn active-tab">Inventory</button>
       <button id="addItemBtn" class="nav-btn nav-primary">＋ Add Item</button>
-      <button id="showHistoryBtn" class="nav-btn">Sales & History</button>
+      <button id="showHistoryBtn" class="nav-btn">Sales</button>
       <button id="showReportsBtn" class="nav-btn">Reports</button>
       <button id="showSettingsBtn" class="nav-btn">Settings</button>
-      <button id="exportBtn" class="nav-btn">Export</button>
+      <button id="exportBtn" class="nav-btn hidden" aria-hidden="true" tabindex="-1">Export</button>
       <div class="nav-spacer"></div>
       <button id="installAppBtn" class="nav-btn install-btn hidden">Install App</button>
     </div>
@@ -114,7 +114,7 @@
 
   <main class="shell workspace-shell">
 
-    <section id="onboardingBanner" class="onboarding-banner hidden">
+    <section id="onboardingBanner" class="onboarding-banner hidden simplified-hidden" aria-hidden="true">
       <div>
         <strong>Welcome to SimpleStock</strong>
         <span id="onboardingText">Add your first item to start tracking inventory.</span>
@@ -172,11 +172,9 @@
       </div>
 
       <div class="simple-summary" aria-live="polite">
-        <span id="inventorySummary">0 items</span>
-        <span class="summary-dot">·</span>
-        <span><strong id="summaryUnlisted">0</strong> ready to list</span>
-        <span class="summary-dot">·</span>
-        <span><strong id="summaryAged">0</strong> over 60 days</span>
+        <strong id="summaryInventory">0 items</strong>
+        <span id="summaryUnlisted" class="hidden" aria-hidden="true">0</span>
+        <span id="summaryAged" class="hidden" aria-hidden="true">0</span>
       </div>
 
       <span id="statActive" class="sr-only"></span>
@@ -192,14 +190,14 @@
 
     <section id="inventorySection" class="panel workspace-panel">
       <div class="panel-head workspace-head compact-head">
-        <div><h2>Inventory</h2></div>
+        <div><h2>Inventory</h2><span id="inventorySummary" class="hidden" aria-hidden="true"></span></div>
       </div>
       <div id="inventoryList" class="inventory-list"></div>
       <div id="emptyState" class="empty-state hidden">
         <div class="empty-illustration">📦</div>
         <h3 id="emptyTitle">No matching inventory records</h3>
         <p id="emptyCopy">Try a different search or filter — or add your next item.</p>
-        <button id="emptyAddBtn" type="button" class="primary-btn empty-add-btn">＋ Add First Item</button>
+        <button id="emptyAddBtn" type="button" class="primary-btn empty-add-btn">＋ Add Item</button>
       </div>
     </section>
 
