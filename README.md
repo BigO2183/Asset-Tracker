@@ -1,43 +1,31 @@
-# Inventory Tracker Base v1
+# Reseller / Estate Inventory Tracker v1
 
-A clean, reusable, mobile-friendly inventory and asset tracker starter that can be customized for warehouses, resellers, equipment operations, estate sales, contractors, and small businesses.
-
-## Core workflow
-
-Add Item → Search → Update Quantity / Location / Status → View History
+A lightweight mobile-friendly reseller inventory tracker built from the reusable Inventory Tracker Base.
 
 ## Included
-
-- Mobile-friendly inventory dashboard
-- Real-time search
-- Item name, ID/barcode, category, quantity, low-stock threshold, location, status, photo URL, notes
-- Statuses: In Stock, Checked Out, Sold, Reserved, Needs Attention
-- Low-stock and needs-attention dashboard filters
-- Admin mode for adding/editing/deleting
+- Fast intake workflow with phone photo upload
+- Item name, SKU, category, quantity and physical location
+- Cost / asking price / sold price
+- Platform tracking: eBay, Facebook Marketplace, local, estate sale, other
+- Status workflow: Unlisted, Listed, Reserved, Sold, Donated, Bulk Sale, Needs Attention
+- Date acquired + automatic inventory age
+- 60+ day aging dashboard
+- Needs Attention detection for missing price/location/platform and 90+ day inventory
+- Fees, shipping and automatic net profit calculation
+- Potential revenue, sold revenue and profit dashboard
+- Search and filters
 - Audit history
-- Browser localStorage persistence
-- Demo starter inventory
-- Netlify-ready static files
+- CSV export
+- Mobile-first responsive UI
+- Demo data
 
-## Demo admin PIN
-
+## Demo Admin PIN
 `1234`
 
-Change `ADMIN_PIN` near the top of `app.js` before using this with a customer.
+Change `ADMIN_PIN` near the top of `app.js` before customer use.
 
-## Deploy to Netlify
+## Storage
+This version uses browser localStorage. It is ideal for demos and single-device use. For a real customer/multi-user deployment, connect it to a shared database/auth system so inventory synchronizes across devices.
 
-Upload this folder as a static site or push the files to a GitHub repository connected to Netlify. No build command is required.
-
-## What to customize next
-
-Keep this repository generic. Clone it to create industry versions, for example:
-
-- Reseller Tracker: purchase cost, asking price, sold price, platform, fees, profit
-- Equipment Tracker: employee/project assignment, checkout/return dates, condition
-- Estate Sale Tracker: room, asking price, discount schedule, disposition
-- Warehouse Tracker: vendor, PO, receiver, project/property, reorder point
-
-## Important
-
-This v1 stores data in the browser. For multi-user/customer deployments, the next step should be replacing localStorage with a shared database and authentication.
+## Deploy
+The folder is static and can be deployed directly to Netlify, GitHub Pages, or any static host.

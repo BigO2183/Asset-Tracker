@@ -3,53 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Inventory Tracker Base v1</title>
+  <title>Reseller / Estate Inventory Tracker v1</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="topbar">
-    <div>
-      <p class="eyebrow">SMALL BUSINESS OPERATIONS</p>
-      <h1>Inventory Tracker</h1>
-    </div>
+    <div><p class="eyebrow">RESELLER OPERATIONS</p><h1>Reseller Inventory</h1></div>
     <button id="adminToggle" class="ghost-btn">🔒 Admin Mode</button>
   </header>
 
   <main class="shell">
     <section class="hero-card">
-      <div class="search-wrap">
-        <input id="searchInput" type="search" placeholder="Search item, ID, category, location, status, notes…" autocomplete="off" />
-      </div>
+      <div class="search-wrap"><input id="searchInput" type="search" placeholder="Search item, ID, platform, location, status, notes…" autocomplete="off" /></div>
       <div class="quick-actions">
-        <button id="addItemBtn" class="primary-btn">＋ Add Item</button>
+        <button id="addItemBtn" class="primary-btn">＋ Fast Intake</button>
         <button id="showInventoryBtn" class="secondary-btn">Inventory</button>
         <button id="showHistoryBtn" class="secondary-btn">History</button>
+        <button id="exportBtn" class="secondary-btn">Export CSV</button>
       </div>
     </section>
 
-    <section id="dashboard" class="dashboard-grid" aria-label="Inventory dashboard">
-      <button class="stat-card" data-filter="all"><span>In Stock</span><strong id="statInStock">0</strong></button>
-      <button class="stat-card" data-filter="checked-out"><span>Checked Out</span><strong id="statCheckedOut">0</strong></button>
-      <button class="stat-card" data-filter="low-stock"><span>Low Stock</span><strong id="statLowStock">0</strong></button>
-      <button class="stat-card attention" data-filter="attention"><span>Needs Attention</span><strong id="statAttention">0</strong></button>
+    <section class="dashboard-grid" aria-label="Reseller dashboard">
+      <button class="stat-card" data-filter="all"><span>Active Inventory</span><strong id="statActive">0</strong><small id="statCost">$0 invested</small></button>
+      <button class="stat-card" data-filter="unlisted"><span>Not Listed</span><strong id="statUnlisted">0</strong><small>Needs listing</small></button>
+      <button class="stat-card" data-filter="aged"><span>60+ Days</span><strong id="statAged">0</strong><small>Slow inventory</small></button>
+      <button class="stat-card attention" data-filter="attention"><span>Needs Attention</span><strong id="statAttention">0</strong><small>Missing info / action</small></button>
+    </section>
+
+    <section class="money-strip">
+      <div><span>Potential Revenue</span><strong id="potentialRevenue">$0.00</strong></div>
+      <div><span>Sold Revenue</span><strong id="soldRevenue">$0.00</strong></div>
+      <div><span>Net Profit</span><strong id="netProfit">$0.00</strong></div>
     </section>
 
     <section id="inventorySection" class="panel">
       <div class="panel-head">
-        <div>
-          <p class="eyebrow">LIVE RECORDS</p>
-          <h2>Inventory</h2>
-        </div>
+        <div><p class="eyebrow">LIVE RECORDS</p><h2>Inventory</h2></div>
         <div class="filter-row">
           <select id="categoryFilter"><option value="">All categories</option></select>
           <select id="statusFilter">
-            <option value="">All statuses</option>
-            <option>In Stock</option>
-            <option>Checked Out</option>
-            <option>Sold</option>
-            <option>Reserved</option>
-            <option>Needs Attention</option>
+            <option value="">All statuses</option><option>Unlisted</option><option>Listed</option><option>Reserved</option><option>Sold</option><option>Donated</option><option>Bulk Sale</option><option>Needs Attention</option>
           </select>
+          <select id="platformFilter"><option value="">All platforms</option><option>eBay</option><option>Facebook Marketplace</option><option>Local</option><option>Estate Sale</option><option>Other</option></select>
         </div>
       </div>
       <div id="inventoryList" class="inventory-list"></div>
@@ -64,28 +59,31 @@
 
   <dialog id="itemDialog" class="dialog">
     <form id="itemForm" method="dialog" class="form-card">
-      <div class="dialog-head">
-        <div><p class="eyebrow">ITEM RECORD</p><h2 id="dialogTitle">Add Item</h2></div>
-        <button type="button" id="closeDialog" class="icon-btn" aria-label="Close">✕</button>
-      </div>
+      <div class="dialog-head"><div><p class="eyebrow">FAST INTAKE</p><h2 id="dialogTitle">Add Item</h2><p class="muted compact">Photo first. Enter only what you know — finish the listing details later.</p></div><button type="button" id="closeDialog" class="icon-btn" aria-label="Close">✕</button></div>
       <input type="hidden" id="itemKey" />
+      <div class="photo-intake">
+        <label class="photo-picker">📷 Add Photo<input id="photoFile" type="file" accept="image/*" capture="environment" /></label>
+        <div id="photoPreviewWrap" class="photo-preview-wrap"><div id="photoPlaceholder">No photo</div><img id="photoPreview" alt="Item preview" /></div>
+        <input type="hidden" id="photo" />
+      </div>
       <div class="form-grid">
-        <label>Photo URL<input id="photo" type="url" placeholder="https://…" /></label>
-        <label>Item Name*<input id="name" required /></label>
-        <label>Item ID / Barcode<input id="itemId" /></label>
-        <label>Category<input id="category" /></label>
-        <label>Quantity*<input id="quantity" type="number" min="0" step="1" value="1" required /></label>
-        <label>Low Stock At<input id="lowStockAt" type="number" min="0" step="1" value="1" /></label>
-        <label>Location<input id="location" placeholder="Shelf A3, Garage, Van 2…" /></label>
-        <label>Status<select id="status"><option>In Stock</option><option>Checked Out</option><option>Sold</option><option>Reserved</option><option>Needs Attention</option></select></label>
-        <label class="full">Notes<textarea id="notes" rows="4" placeholder="Condition, missing parts, project, customer, etc."></textarea></label>
+        <label>Item Name*<input id="name" required placeholder="Vintage lamp, DeWalt drill…" /></label>
+        <label>Item ID / SKU<input id="itemId" placeholder="Optional" /></label>
+        <label>Category<input id="category" placeholder="Tools, Furniture, Electronics…" /></label>
+        <label>Location<input id="location" placeholder="Garage A3, Bedroom 2…" /></label>
+        <label>What You Paid ($)<input id="cost" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+        <label>Asking Price ($)<input id="askingPrice" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+        <label>Platform<select id="platform"><option value="">Not chosen</option><option>eBay</option><option>Facebook Marketplace</option><option>Local</option><option>Estate Sale</option><option>Other</option></select></label>
+        <label>Status<select id="status"><option>Unlisted</option><option>Listed</option><option>Reserved</option><option>Sold</option><option>Donated</option><option>Bulk Sale</option><option>Needs Attention</option></select></label>
+        <label>Date Acquired<input id="acquiredDate" type="date" /></label>
+        <label>Quantity<input id="quantity" type="number" min="1" step="1" value="1" /></label>
+        <label class="sale-only">Sold Price ($)<input id="soldPrice" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+        <label class="sale-only">Fees ($)<input id="fees" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+        <label class="sale-only">Shipping Cost ($)<input id="shipping" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+        <label class="full">Notes<textarea id="notes" rows="3" placeholder="Condition, missing parts, pickup details, listing notes…"></textarea></label>
       </div>
-      <div class="form-actions">
-        <button type="button" id="deleteItemBtn" class="danger-btn hidden">Delete</button>
-        <div class="spacer"></div>
-        <button type="button" id="cancelDialog" class="secondary-btn">Cancel</button>
-        <button type="submit" class="primary-btn">Save Item</button>
-      </div>
+      <div id="profitPreview" class="profit-preview hidden"></div>
+      <div class="form-actions"><button type="button" id="deleteItemBtn" class="danger-btn hidden">Delete</button><div class="spacer"></div><button type="button" id="cancelDialog" class="secondary-btn">Cancel</button><button type="submit" class="primary-btn">Save Item</button></div>
     </form>
   </dialog>
 
@@ -93,7 +91,7 @@
     <form id="adminForm" method="dialog" class="form-card">
       <div class="dialog-head"><div><p class="eyebrow">ADMIN ACCESS</p><h2>Enter PIN</h2></div><button type="button" id="closeAdminDialog" class="icon-btn">✕</button></div>
       <label>PIN<input id="adminPin" type="password" inputmode="numeric" maxlength="8" placeholder="••••" /></label>
-      <p class="muted">Demo PIN: 1234. Change it in <code>app.js</code> before using this for a customer.</p>
+      <p class="muted">Demo PIN: 1234. Change it in <code>app.js</code> before customer use.</p>
       <div class="form-actions"><div class="spacer"></div><button type="submit" class="primary-btn">Unlock</button></div>
     </form>
   </dialog>
@@ -103,8 +101,9 @@
       <div class="thumb-wrap"><img class="item-thumb" alt="" /><div class="placeholder-thumb">📦</div></div>
       <div class="item-main">
         <div class="item-title-row"><div><h3 class="item-name"></h3><p class="item-meta"></p></div><span class="status-pill"></span></div>
+        <div class="price-row"><strong class="asking"></strong><span class="cost"></span><span class="profit"></span></div>
         <p class="item-notes"></p>
-        <div class="item-bottom"><span class="qty-chip"></span><span class="location-chip"></span><button class="edit-btn hidden">Edit</button></div>
+        <div class="item-bottom"><span class="age-chip"></span><span class="platform-chip"></span><span class="location-chip"></span><button class="edit-btn hidden">Edit</button></div>
       </div>
     </article>
   </template>

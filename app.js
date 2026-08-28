@@ -1,110 +1,98 @@
-const STORAGE_KEY='inventoryTrackerBaseV1.items';
-const HISTORY_KEY='inventoryTrackerBaseV1.history';
-const ADMIN_PIN='1234'; // Change before deploying for a customer.
-
-let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-let isAdmin = false;
-let quickFilter = 'all';
-
-const $ = (id)=>document.getElementById(id);
-const inventoryList=$('inventoryList'), itemDialog=$('itemDialog'), itemForm=$('itemForm');
-
-function uid(){return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));}
-function now(){return new Date().toLocaleString();}
-function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(items));localStorage.setItem(HISTORY_KEY,JSON.stringify(history));}
-function log(action,item,detail=''){history.unshift({id:uid(),time:now(),action,itemName:item?.name||'Unknown item',detail});history=history.slice(0,500);save();}
-function esc(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+const STORAGE_KEY='resellerEstateTrackerV1.items';
+const HISTORY_KEY='resellerEstateTrackerV1.history';
+const ADMIN_PIN='1234';
+let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+let history=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
+let isAdmin=false,quickFilter='all';
+const $=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)||0);
+const uid=()=>crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+const now=()=>new Date().toLocaleString();
+const todayISO=()=>new Date().toISOString().slice(0,10);
+const esc=(s='')=>String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const save=()=>{localStorage.setItem(STORAGE_KEY,JSON.stringify(items));localStorage.setItem(HISTORY_KEY,JSON.stringify(history));};
+const log=(action,item,detail='')=>{history.unshift({id:uid(),time:now(),action,itemName:item?.name||'Unknown item',detail});history=history.slice(0,500);save();};
+const daysOld=i=>{const d=new Date((i.acquiredDate||todayISO())+'T12:00:00');return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));};
+const profit=i=>(Number(i.soldPrice)||0)-(Number(i.cost)||0)-(Number(i.fees)||0)-(Number(i.shipping)||0);
+const attention=i=>i.status==='Needs Attention'||!i.name||!i.location||(!i.askingPrice&&i.status!=='Sold'&&i.status!=='Donated')||((i.status==='Listed')&&!i.platform)||daysOld(i)>=90;
 
 function sampleData(){
- if(items.length) return;
+ if(items.length)return;
+ const dateDaysAgo=n=>{const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().slice(0,10)};
  items=[
-  {key:uid(),name:'DeWalt 20V Drill',itemId:'DW-001',category:'Tools',quantity:4,lowStockAt:1,location:'Shelf A3',status:'In Stock',notes:'Battery + charger included',photo:''},
-  {key:uid(),name:'Samsung 55-inch TV',itemId:'TV-014',category:'Electronics',quantity:1,lowStockAt:1,location:'Back Room B',status:'Needs Attention',notes:'Missing remote; needs testing',photo:''},
-  {key:uid(),name:'Extension Ladder 28 ft',itemId:'EQ-028',category:'Equipment',quantity:1,lowStockAt:0,location:'Assigned - Crew 2',status:'Checked Out',notes:'Return inspection required',photo:''}
+  {key:uid(),name:'DeWalt 20V MAX Drill',itemId:'RS-001',category:'Tools',quantity:1,location:'Garage Shelf A3',cost:20,askingPrice:70,platform:'Facebook Marketplace',status:'Listed',acquiredDate:dateDaysAgo(9),soldPrice:0,fees:0,shipping:0,notes:'Battery + charger included',photo:''},
+  {key:uid(),name:'Vintage Brass Table Lamp',itemId:'RS-002',category:'Home Decor',quantity:1,location:'Storage Rack B1',cost:8,askingPrice:65,platform:'',status:'Unlisted',acquiredDate:dateDaysAgo(18),soldPrice:0,fees:0,shipping:0,notes:'Needs shade measurements',photo:''},
+  {key:uid(),name:'Samsung 55-inch Frame TV',itemId:'RS-003',category:'Electronics',quantity:1,location:'Garage Floor TV Area',cost:0,askingPrice:180,platform:'Facebook Marketplace',status:'Listed',acquiredDate:dateDaysAgo(67),soldPrice:0,fees:0,shipping:0,notes:'Missing One Connect box',photo:''},
+  {key:uid(),name:'Commercial Pressure Fryer',itemId:'RS-004',category:'Restaurant Equipment',quantity:1,location:'Storage Unit',cost:40,askingPrice:325,platform:'Local',status:'Sold',acquiredDate:dateDaysAgo(31),soldPrice:275,fees:0,shipping:0,notes:'Local pickup',photo:''}
  ];
- log('Demo data created',{name:'Inventory Tracker Base'},'3 starter records added');
- save();
+ log('Demo data created',{name:'Reseller Tracker'},'4 starter records added');save();
 }
 
-function updateCategories(){
- const current=$('categoryFilter').value;
+function updateFilters(){
+ const cur=$('categoryFilter').value;
  const cats=[...new Set(items.map(i=>i.category).filter(Boolean))].sort();
  $('categoryFilter').innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join('');
- $('categoryFilter').value=cats.includes(current)?current:'';
+ $('categoryFilter').value=cats.includes(cur)?cur:'';
 }
-
 function matchesQuick(i){
- if(quickFilter==='all') return true;
- if(quickFilter==='checked-out') return i.status==='Checked Out';
- if(quickFilter==='low-stock') return Number(i.quantity)<=Number(i.lowStockAt||0);
- if(quickFilter==='attention') return i.status==='Needs Attention' || Number(i.quantity)<=Number(i.lowStockAt||0);
+ if(quickFilter==='all')return true;
+ if(quickFilter==='unlisted')return i.status==='Unlisted';
+ if(quickFilter==='aged')return daysOld(i)>=60&& !['Sold','Donated'].includes(i.status);
+ if(quickFilter==='attention')return attention(i);
  return true;
 }
-
 function render(){
- updateCategories();
- const q=$('searchInput').value.trim().toLowerCase();
- const cat=$('categoryFilter').value, status=$('statusFilter').value;
+ updateFilters();
+ const q=$('searchInput').value.trim().toLowerCase(),cat=$('categoryFilter').value,status=$('statusFilter').value,platform=$('platformFilter').value;
  const filtered=items.filter(i=>{
-  const hay=[i.name,i.itemId,i.category,i.location,i.status,i.notes].join(' ').toLowerCase();
-  return (!q||hay.includes(q)) && (!cat||i.category===cat) && (!status||i.status===status) && matchesQuick(i);
+  const hay=[i.name,i.itemId,i.category,i.location,i.status,i.platform,i.notes].join(' ').toLowerCase();
+  return(!q||hay.includes(q))&&(!cat||i.category===cat)&&(!status||i.status===status)&&(!platform||i.platform===platform)&&matchesQuick(i);
  });
- inventoryList.innerHTML='';
- $('emptyState').classList.toggle('hidden',filtered.length!==0);
- const tpl=$('itemTemplate');
+ $('inventoryList').innerHTML='';$('emptyState').classList.toggle('hidden',!!filtered.length);
  filtered.forEach(i=>{
-  const node=tpl.content.cloneNode(true);
-  const card=node.querySelector('.item-card');
+  const node=$('itemTemplate').content.cloneNode(true),card=node.querySelector('.item-card');
   node.querySelector('.item-name').textContent=i.name;
   node.querySelector('.item-meta').textContent=[i.itemId&&`ID: ${i.itemId}`,i.category].filter(Boolean).join(' • ');
-  node.querySelector('.item-notes').textContent=i.notes||'';
   node.querySelector('.status-pill').textContent=i.status;
-  node.querySelector('.qty-chip').textContent=`Qty ${i.quantity}`;
+  node.querySelector('.asking').textContent=i.status==='Sold'?`Sold ${money(i.soldPrice)}`:`Ask ${money(i.askingPrice)}`;
+  node.querySelector('.cost').textContent=`Paid ${money(i.cost)}`;
+  const p=node.querySelector('.profit');
+  if(i.status==='Sold'){p.textContent=`Profit ${money(profit(i))}`;p.classList.add(profit(i)>=0?'positive':'negative');}else p.textContent='';
+  node.querySelector('.item-notes').textContent=i.notes||'';
+  const age=daysOld(i);node.querySelector('.age-chip').textContent=`${age} day${age===1?'':'s'} old`;if(age>=60)node.querySelector('.age-chip').classList.add('aged');
+  node.querySelector('.platform-chip').textContent=i.platform||'Not listed';
   node.querySelector('.location-chip').textContent=i.location||'No location';
-  const img=node.querySelector('.item-thumb'), ph=node.querySelector('.placeholder-thumb');
-  if(i.photo){img.src=i.photo;img.style.display='block';ph.style.display='none';img.onerror=()=>{img.style.display='none';ph.style.display='grid';};}
-  const edit=node.querySelector('.edit-btn');
-  edit.classList.toggle('hidden',!isAdmin); edit.addEventListener('click',()=>openEdit(i.key));
-  card.addEventListener('dblclick',()=>{if(isAdmin)openEdit(i.key)});
-  inventoryList.appendChild(node);
+  const img=node.querySelector('.item-thumb'),ph=node.querySelector('.placeholder-thumb');if(i.photo){img.src=i.photo;img.style.display='block';ph.style.display='none';}
+  const edit=node.querySelector('.edit-btn');edit.classList.toggle('hidden',!isAdmin);edit.addEventListener('click',()=>openEdit(i.key));
+  card.addEventListener('dblclick',()=>{if(isAdmin)openEdit(i.key)});$('inventoryList').appendChild(node);
  });
- $('statInStock').textContent=items.filter(i=>i.status==='In Stock').length;
- $('statCheckedOut').textContent=items.filter(i=>i.status==='Checked Out').length;
- $('statLowStock').textContent=items.filter(i=>Number(i.quantity)<=Number(i.lowStockAt||0)).length;
- $('statAttention').textContent=items.filter(i=>i.status==='Needs Attention'||Number(i.quantity)<=Number(i.lowStockAt||0)).length;
+ const active=items.filter(i=>!['Sold','Donated'].includes(i.status));
+ $('statActive').textContent=active.length;$('statCost').textContent=`${money(active.reduce((s,i)=>s+(Number(i.cost)||0),0))} invested`;
+ $('statUnlisted').textContent=active.filter(i=>i.status==='Unlisted').length;
+ $('statAged').textContent=active.filter(i=>daysOld(i)>=60).length;
+ $('statAttention').textContent=active.filter(attention).length;
+ $('potentialRevenue').textContent=money(active.reduce((s,i)=>s+(Number(i.askingPrice)||0),0));
+ const sold=items.filter(i=>i.status==='Sold');$('soldRevenue').textContent=money(sold.reduce((s,i)=>s+(Number(i.soldPrice)||0),0));$('netProfit').textContent=money(sold.reduce((s,i)=>s+profit(i),0));
  renderHistory();
 }
+function renderHistory(){$('historyList').innerHTML=history.length?history.map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(h.detail||'')}</div><small>${esc(h.time)}</small></div>`).join(''):'<div class="empty-state">No history yet.</div>';}
+function setPhotoPreview(src=''){ $('photo').value=src; $('photoPreview').src=src; $('photoPreview').style.display=src?'block':'none'; $('photoPlaceholder').style.display=src?'none':'grid'; }
+function openAdd(){if(!isAdmin){openAdmin();return;}$('itemForm').reset();$('itemKey').value='';$('quantity').value=1;$('status').value='Unlisted';$('acquiredDate').value=todayISO();$('dialogTitle').textContent='Fast Intake';$('deleteItemBtn').classList.add('hidden');setPhotoPreview('');toggleSaleFields();$('itemDialog').showModal();setTimeout(()=>$('name').focus(),80);}
+function openEdit(key){if(!isAdmin)return;const i=items.find(x=>x.key===key);if(!i)return;for(const id of ['name','itemId','category','location','cost','askingPrice','platform','status','acquiredDate','quantity','soldPrice','fees','shipping','notes'])$(id).value=i[id]??'';$('itemKey').value=i.key;$('dialogTitle').textContent='Edit Item';$('deleteItemBtn').classList.remove('hidden');setPhotoPreview(i.photo||'');toggleSaleFields();$('itemDialog').showModal();}
+function openAdmin(){$('adminPin').value='';$('adminDialog').showModal();setTimeout(()=>$('adminPin').focus(),50);}
+function toggleSaleFields(){const sold=$('status').value==='Sold';document.querySelectorAll('.sale-only').forEach(el=>el.classList.toggle('hidden',!sold));updateProfitPreview();}
+function updateProfitPreview(){if($('status').value!=='Sold'){$('profitPreview').classList.add('hidden');return;}const p=(Number($('soldPrice').value)||0)-(Number($('cost').value)||0)-(Number($('fees').value)||0)-(Number($('shipping').value)||0);$('profitPreview').textContent=`Estimated net profit: ${money(p)}`;$('profitPreview').classList.remove('hidden');}
 
-function renderHistory(){
- $('historyList').innerHTML=history.length?history.map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(h.detail||'')}</div><small>${esc(h.time)}</small></div>`).join(''):'<div class="empty-state">No history yet.</div>';
-}
-
-function openAdd(){
- if(!isAdmin){openAdmin();return;}
- itemForm.reset(); $('itemKey').value=''; $('quantity').value=1; $('lowStockAt').value=1; $('status').value='In Stock'; $('dialogTitle').textContent='Add Item'; $('deleteItemBtn').classList.add('hidden'); itemDialog.showModal();
-}
-function openEdit(key){
- if(!isAdmin) return;
- const i=items.find(x=>x.key===key); if(!i)return;
- $('itemKey').value=i.key; $('photo').value=i.photo||''; $('name').value=i.name||''; $('itemId').value=i.itemId||''; $('category').value=i.category||''; $('quantity').value=i.quantity??1; $('lowStockAt').value=i.lowStockAt??1; $('location').value=i.location||''; $('status').value=i.status||'In Stock'; $('notes').value=i.notes||''; $('dialogTitle').textContent='Edit Item'; $('deleteItemBtn').classList.remove('hidden'); itemDialog.showModal();
-}
-function openAdmin(){ $('adminPin').value=''; $('adminDialog').showModal(); setTimeout(()=>$('adminPin').focus(),50); }
-function toggleAdmin(){ if(isAdmin){isAdmin=false;$('adminToggle').textContent='🔒 Admin Mode';render();} else openAdmin(); }
-
-itemForm.addEventListener('submit',(e)=>{
- e.preventDefault(); if(!isAdmin)return;
- const key=$('itemKey').value;
- const record={key:key||uid(),photo:$('photo').value.trim(),name:$('name').value.trim(),itemId:$('itemId').value.trim(),category:$('category').value.trim(),quantity:Number($('quantity').value),lowStockAt:Number($('lowStockAt').value||0),location:$('location').value.trim(),status:$('status').value,notes:$('notes').value.trim()};
- if(key){const old=items.find(i=>i.key===key);items=items.map(i=>i.key===key?record:i);log('Updated',record,`Qty ${old.quantity} → ${record.quantity}; Status ${old.status} → ${record.status}; Location ${old.location||'—'} → ${record.location||'—'}`);} else {items.unshift(record);log('Added',record,`Qty ${record.quantity}; ${record.location||'No location'}`);} save();itemDialog.close();render();
-});
-
-$('deleteItemBtn').addEventListener('click',()=>{const key=$('itemKey').value;const i=items.find(x=>x.key===key);if(!i||!confirm(`Delete ${i.name}?`))return;items=items.filter(x=>x.key!==key);log('Deleted',i,`Removed from inventory`);save();itemDialog.close();render();});
-$('adminForm').addEventListener('submit',(e)=>{e.preventDefault();if($('adminPin').value===ADMIN_PIN){isAdmin=true;$('adminToggle').textContent='🔓 Admin On';$('adminDialog').close();render();}else{alert('Incorrect PIN');}});
-['searchInput','categoryFilter','statusFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',()=>{quickFilter='all';render();}));
+$('photoFile').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>setPhotoPreview(r.result);r.readAsDataURL(f);});
+$('status').addEventListener('change',toggleSaleFields);['soldPrice','cost','fees','shipping'].forEach(id=>$(id).addEventListener('input',updateProfitPreview));
+$('itemForm').addEventListener('submit',e=>{e.preventDefault();if(!isAdmin)return;const key=$('itemKey').value;const record={key:key||uid(),photo:$('photo').value,name:$('name').value.trim(),itemId:$('itemId').value.trim(),category:$('category').value.trim(),quantity:Number($('quantity').value||1),location:$('location').value.trim(),cost:Number($('cost').value||0),askingPrice:Number($('askingPrice').value||0),platform:$('platform').value,status:$('status').value,acquiredDate:$('acquiredDate').value||todayISO(),soldPrice:Number($('soldPrice').value||0),fees:Number($('fees').value||0),shipping:Number($('shipping').value||0),notes:$('notes').value.trim()};if(key){const old=items.find(i=>i.key===key);items=items.map(i=>i.key===key?record:i);log('Updated',record,`${old.status} → ${record.status}; ${old.location||'No location'} → ${record.location||'No location'}`);}else{items.unshift(record);log('Added',record,`${money(record.cost)} paid • ${record.location||'No location'} • ${record.status}`);}save();$('itemDialog').close();render();});
+$('deleteItemBtn').addEventListener('click',()=>{const key=$('itemKey').value,i=items.find(x=>x.key===key);if(!i||!confirm(`Delete ${i.name}?`))return;items=items.filter(x=>x.key!==key);log('Deleted',i,'Removed from inventory');save();$('itemDialog').close();render();});
+$('adminForm').addEventListener('submit',e=>{e.preventDefault();if($('adminPin').value===ADMIN_PIN){isAdmin=true;$('adminToggle').textContent='🔓 Admin On';$('adminDialog').close();render();}else alert('Incorrect PIN');});
+$('adminToggle').addEventListener('click',()=>{if(isAdmin){isAdmin=false;$('adminToggle').textContent='🔒 Admin Mode';render();}else openAdmin();});
+['searchInput','categoryFilter','statusFilter','platformFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',()=>{quickFilter='all';render();}));
 document.querySelectorAll('.stat-card').forEach(btn=>btn.addEventListener('click',()=>{quickFilter=btn.dataset.filter;render();$('inventorySection').scrollIntoView({behavior:'smooth'});}));
-$('addItemBtn').addEventListener('click',openAdd);$('adminToggle').addEventListener('click',toggleAdmin);$('closeDialog').addEventListener('click',()=>itemDialog.close());$('cancelDialog').addEventListener('click',()=>itemDialog.close());$('closeAdminDialog').addEventListener('click',()=> $('adminDialog').close());
-$('showHistoryBtn').addEventListener('click',()=>{$('historySection').classList.remove('hidden');$('inventorySection').classList.add('hidden');renderHistory();});
-$('showInventoryBtn').addEventListener('click',()=>{$('historySection').classList.add('hidden');$('inventorySection').classList.remove('hidden');});
+$('addItemBtn').addEventListener('click',openAdd);$('closeDialog').addEventListener('click',()=>$('itemDialog').close());$('cancelDialog').addEventListener('click',()=>$('itemDialog').close());$('closeAdminDialog').addEventListener('click',()=>$('adminDialog').close());
+$('showHistoryBtn').addEventListener('click',()=>{$('historySection').classList.remove('hidden');$('inventorySection').classList.add('hidden');renderHistory();});$('showInventoryBtn').addEventListener('click',()=>{$('historySection').classList.add('hidden');$('inventorySection').classList.remove('hidden');});
+$('exportBtn').addEventListener('click',()=>{const headers=['Item','ID','Category','Location','Cost','Asking Price','Platform','Status','Date Acquired','Days Held','Sold Price','Fees','Shipping','Net Profit','Notes'];const rows=items.map(i=>[i.name,i.itemId,i.category,i.location,i.cost,i.askingPrice,i.platform,i.status,i.acquiredDate,daysOld(i),i.soldPrice,i.fees,i.shipping,i.status==='Sold'?profit(i):'',i.notes]);const csv=[headers,...rows].map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`reseller-inventory-${todayISO()}.csv`;a.click();URL.revokeObjectURL(a.href);});
 
 sampleData();render();
