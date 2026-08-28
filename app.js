@@ -608,6 +608,7 @@ function render(){
  $('netProfit').textContent=money(sold.reduce((s,i)=>s+profit(i),0));
  renderHistory();
  if($('reportsSection')&&!$('reportsSection').classList.contains('hidden')) renderReports();
+ setTimeout(updateNavScrollHint,30);
 }
 function renderHistory(){
  const sold=modeItems().filter(i=>i.status==='Sold');
@@ -1178,11 +1179,25 @@ $('signupForm').addEventListener('submit',async e=>{
 
 
 
+
+function updateNavScrollHint(){
+ const nav=$('navInner');
+ const hint=$('navScrollHint');
+ if(!nav || !hint) return;
+
+ const mobile=window.innerWidth<=760;
+ const overflow=nav.scrollWidth-nav.clientWidth>18;
+ const nearEnd=nav.scrollLeft >= (nav.scrollWidth-nav.clientWidth-18);
+
+ hint.classList.toggle('hidden', !(mobile && overflow && !nearEnd));
+}
+
 let deferredInstallPrompt=null;
 
 function setInstallButtonVisible(show){
  const btn=$('installAppBtn');
  if(btn)btn.classList.toggle('hidden',!show);
+ setTimeout(updateNavScrollHint,50);
 }
 
 window.addEventListener('beforeinstallprompt',event=>{
@@ -1207,6 +1222,11 @@ $('installAppBtn')?.addEventListener('click',async()=>{
  if(choice.outcome==='accepted')setInstallButtonVisible(false);
  deferredInstallPrompt=null;
 });
+
+
+window.addEventListener('resize',updateNavScrollHint);
+$('navInner')?.addEventListener('scroll',updateNavScrollHint);
+window.addEventListener('load',()=>setTimeout(updateNavScrollHint,120));
 
 if('serviceWorker' in navigator){
  window.addEventListener('load',()=>{

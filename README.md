@@ -1,30 +1,13 @@
-# SimpleStock v19.1 — Android PWA Fix
+# SimpleStock v20 — Mobile Menu Hint
 
-This version fixes Android installation / icon recognition.
+Adds a subtle mobile hint so users know the top navigation can scroll horizontally.
 
-## Changes
-- Replaced SVG PWA icons with PNG icons.
-- Added 192×192 PNG.
-- Added 512×512 PNG.
-- Added a separate 512×512 maskable Android icon.
-- Updated the web manifest.
-- Added a stable app `id`.
-- Bumped the service-worker cache version so Chrome fetches the new files.
-- Updated favicon / Apple touch icon references.
+## What changed
+- Right-edge fade on mobile nav
+- Small right arrow / chevron
+- Hint only shows when the nav actually overflows
+- Hint disappears once the user scrolls to the end
+- Re-checks on resize, page load, render changes, and install button visibility changes
 
-## GitHub icon folder
-Upload these files inside `icons/`:
-- `icon-192.png`
-- `icon-512.png`
-- `icon-maskable-512.png`
-
-## After deploying
-On Android Chrome:
-1. Remove any old SimpleStock shortcut that was created.
-2. Chrome → Settings → Site settings → All sites → your Netlify site → Clear & reset, OR clear the site's cached data.
-3. Reopen the live Netlify URL.
-4. Wait a few seconds / refresh once.
-5. Chrome menu should recognize the installable app more reliably.
-6. Choose **Install app** if offered.
-
-The installed icon should now use the SimpleStock navy inventory icon instead of the gray N.
+## Result
+Mobile users can tell there are more menu options without making the header feel cluttered.

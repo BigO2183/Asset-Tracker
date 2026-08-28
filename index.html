@@ -78,7 +78,7 @@
   </header>
 
   <nav class="main-nav" aria-label="Main menu">
-    <div class="nav-inner">
+    <div id="navInner" class="nav-inner">
       <button id="showInventoryBtn" class="nav-btn active-tab">Inventory</button>
       <button id="addItemBtn" class="nav-btn nav-primary">＋ Add Item</button>
       <button id="showHistoryBtn" class="nav-btn">Sales & History</button>
@@ -87,6 +87,10 @@
       <div class="nav-spacer"></div>
       <button id="installAppBtn" class="nav-btn install-btn hidden">Install App</button>
       <button id="adminToggle" class="nav-btn nav-admin">Sign out</button>
+    </div>
+    <div id="navScrollHint" class="nav-scroll-hint hidden" aria-hidden="true">
+      <span class="nav-scroll-hint-fade"></span>
+      <span class="nav-scroll-hint-arrow">›</span>
     </div>
   </nav>
 
