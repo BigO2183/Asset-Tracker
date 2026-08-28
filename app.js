@@ -121,9 +121,29 @@ function saveCurrentItem({addAnother=false}={}){
    $('location').value=lastLocation;
    setTimeout(()=>$('photoFile').click(),120);
  }else{
+   // Mobile-first return flow:
+   // hide the keyboard, close intake, switch to inventory,
+   // then move the viewport back to the inventory workspace.
+   if(document.activeElement && typeof document.activeElement.blur==='function'){
+     document.activeElement.blur();
+   }
+
    $('itemDialog').close();
    setView('inventory');
-   setTimeout(()=>$('inventorySection').scrollIntoView({behavior:'smooth',block:'start'}),80);
+
+   requestAnimationFrame(()=>{
+     requestAnimationFrame(()=>{
+       const inventory=$('inventorySection');
+       const topbar=document.querySelector('.topbar');
+       const offset=(topbar?.offsetHeight||0)+12;
+       const top=inventory.getBoundingClientRect().top+window.scrollY-offset;
+
+       window.scrollTo({
+         top:Math.max(0,top),
+         behavior:'auto'
+       });
+     });
+   });
  }
  return true;
 }
@@ -355,7 +375,11 @@ $('photoFile').addEventListener('change',e=>{
 $('status').addEventListener('change',toggleSaleFields);
 ['soldPrice','cost','fees','shipping'].forEach(id=>$(id).addEventListener('input',updateProfitPreview));
 $('itemForm').addEventListener('submit',e=>e.preventDefault());
-$('saveItemBtn').addEventListener('click',()=>saveCurrentItem({addAnother:false}));
+$('saveItemBtn').addEventListener('click',e=>{
+ e.preventDefault();
+ e.stopPropagation();
+ saveCurrentItem({addAnother:false});
+});
 $('saveNextBtn').addEventListener('click',()=>saveCurrentItem({addAnother:true}));
 $('deleteItemBtn').addEventListener('click',()=>{
  const key=$('itemKey').value,i=items.find(x=>x.key===key);

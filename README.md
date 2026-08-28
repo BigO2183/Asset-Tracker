@@ -1,10 +1,14 @@
-# SimpleStock v9.2
+# SimpleStock v9.3
 
-Save button fix.
+Mobile Save Item fix.
 
-## Behavior
-- **Save Item** now uses a direct click handler instead of relying on form submission.
-- It saves the item, closes Fast Intake, switches to Inventory, and scrolls back to the inventory workspace.
-- **Save + Add Another** still saves and keeps batch intake open.
+## Mobile behavior
+- Tap **Save Item**
+- Mobile keyboard dismisses
+- Fast Intake closes
+- App switches to **Inventory**
+- Screen jumps directly back to the inventory workspace
+
+**Save + Add Another** still remains in Fast Intake for batch entry.
 
 Demo Admin PIN: `1234`

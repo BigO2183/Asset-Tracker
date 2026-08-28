@@ -826,3 +826,15 @@ body{background:#f6f8fb}
     flex:0 0 auto;
   }
 }
+
+
+/* v9.3 mobile save behavior */
+#saveItemBtn,#saveNextBtn{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+@media(max-width:760px){
+  #saveItemBtn,#saveNextBtn{
+    min-height:48px;
+  }
+}
