@@ -1,25 +1,26 @@
-# SimpleStock v15 — Inline Item Corrections
+# SimpleStock v16 — Quick Sell
 
-The Item Details popup is now editable directly.
+Adds a direct sales workflow from Item Details.
 
-## New workflow
-Tap item → Item Details → **Edit**
+## Workflow
+Tap item → **Mark Sold**
 
-You can correct:
-- Item name
-- Status
-- Location / room
-- Platform
-- Category
-- Item ID
-- Quantity
-- Asking / tag price
-- Paid price
-- Estate sale discount stage / final price
-- Notes
+Enter:
+- Sold price
+- Fees
+- Shipping
+- Date sold
 
-Tap **Save Changes** and the item updates immediately and syncs to the cloud.
+Then SimpleStock:
+- Marks the item Sold
+- Calculates net profit
+- Removes it from active inventory
+- Adds it to Sales
+- Records the sale in History
+- Syncs the update to phone + desktop cloud storage
 
-The full Fast Intake / Edit Item screen still exists for the normal workflow, but quick corrections no longer require leaving the details screen.
+Sold items no longer show the Mark Sold button.
+
+All existing reseller, estate sale, inline editing, fast intake, branding, and cloud sync functionality remains intact.
 
 Demo Admin PIN: `1234`

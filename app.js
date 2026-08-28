@@ -530,7 +530,7 @@ function renderHistory(){
     <button class="sold-row" type="button" data-key="${esc(i.key)}">
       <div>
         <strong>${esc(i.name)}</strong>
-        <span>${esc(i.platform||'No platform')} · ${daysOld(i)} days held</span>
+        <span>${esc(i.platform||'No platform')}${i.soldDate?` · Sold ${esc(i.soldDate)}`:` · ${daysOld(i)} days held`}</span>
       </div>
       <div class="sold-money">
         <strong>${money(i.soldPrice)}</strong>
@@ -559,7 +559,8 @@ function openDetails(key){
  $('detailsBody').classList.remove('hidden');
  $('detailsSaveBtn').classList.add('hidden');
  $('detailsCancelBtn').classList.add('hidden');
- $('detailsEditBtn').classList.toggle('hidden',!isAdmin);
+ $('detailsEditBtn').classList.remove('hidden');
+ $('quickSellBtn').classList.toggle('hidden',i.status==='Sold');
 
  const age=daysOld(i);
  const estate=(i.recordType||'reseller')==='estate';
@@ -581,6 +582,7 @@ function openDetails(key){
      <div><span>Item ID</span><strong>${esc(i.itemId||'—')}</strong></div>
      <div><span>Age</span><strong>${age} day${age===1?'':'s'}</strong></div>
      <div><span>Quantity</span><strong>${Number(i.quantity)||1}</strong></div>
+     ${i.status==='Sold'&&i.soldDate?`<div><span>Date Sold</span><strong>${esc(i.soldDate)}</strong></div>`:''}
    </div>
    ${i.notes?`<div class="detail-note"><span>Notes</span><p>${esc(i.notes)}</p></div>`:''}
  `;
@@ -675,6 +677,82 @@ async function saveInlineEdit(){
  render();
  showToast(`${i.name} updated ✓`);
  openDetails(i.key);
+}
+
+
+function openQuickSell(){
+ const i=items.find(x=>x.key===activeDetailKey);
+ if(!i)return;
+
+ if(!isAdmin){
+   openAdmin();
+   return;
+ }
+
+ $('quickSellName').textContent=`Sell ${i.name}`;
+ $('quickSoldPrice').value=Number(i.soldPrice)||Number(i.askingPrice)||0;
+ $('quickFees').value=Number(i.fees)||0;
+ $('quickShipping').value=Number(i.shipping)||0;
+ $('quickSoldDate').value=i.soldDate||todayISO();
+ updateQuickProfitPreview();
+ $('quickSellDialog').showModal();
+ setTimeout(()=>$('quickSoldPrice').focus(),60);
+}
+
+function updateQuickProfitPreview(){
+ const i=items.find(x=>x.key===activeDetailKey);
+ if(!i)return;
+ const sold=Number($('quickSoldPrice').value)||0;
+ const fees=Number($('quickFees').value)||0;
+ const shipping=Number($('quickShipping').value)||0;
+ const p=sold-(Number(i.cost)||0)-fees-shipping;
+ $('quickProfitPreview').textContent=`Estimated net profit: ${money(p)}`;
+ $('quickProfitPreview').classList.toggle('negative',p<0);
+}
+
+async function completeQuickSell(){
+ const i=items.find(x=>x.key===activeDetailKey);
+ if(!i||!isAdmin)return;
+
+ const soldPrice=Number($('quickSoldPrice').value)||0;
+ const fees=Number($('quickFees').value)||0;
+ const shipping=Number($('quickShipping').value)||0;
+ const soldDate=$('quickSoldDate').value||todayISO();
+
+ if(soldPrice<=0){
+   $('quickSoldPrice').focus();
+   showToast('Enter the sold price');
+   return;
+ }
+
+ const oldStatus=i.status;
+ i.status='Sold';
+ i.soldPrice=soldPrice;
+ i.fees=fees;
+ i.shipping=shipping;
+ i.soldDate=soldDate;
+
+ history.unshift({
+   id:uid(),
+   time:now(),
+   action:'Sold',
+   itemName:i.name,
+   detail:`${oldStatus} → Sold • ${money(soldPrice)} sale • ${money(profit(i))} profit`
+ });
+ history=history.slice(0,500);
+
+ if(!save()){
+   showToast('Could not save sale');
+   return;
+ }
+
+ queueCloudSync();
+ render();
+ renderHistory();
+ $('quickSellDialog').close();
+ $('detailsDialog').close();
+ setView('history');
+ showToast(`${i.name} sold ✓`);
 }
 
 function setPhotoPreview(src=''){
@@ -819,6 +897,14 @@ $('moreDetailsBtn').addEventListener('click',()=>{
  $('moreDetailsBtn').textContent=opening?'− Less Details':'＋ More Details';
 });
 $('closeDetailsDialog').addEventListener('click',()=>$('detailsDialog').close());
+$('quickSellBtn').addEventListener('click',openQuickSell);
+$('closeQuickSellDialog').addEventListener('click',()=>$('quickSellDialog').close());
+$('cancelQuickSellBtn').addEventListener('click',()=>$('quickSellDialog').close());
+['quickSoldPrice','quickFees','quickShipping'].forEach(id=>$(id).addEventListener('input',updateQuickProfitPreview));
+$('quickSellForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ completeQuickSell();
+});
 $('detailsEditBtn').addEventListener('click',beginInlineEdit);
 $('detailsCancelBtn').addEventListener('click',cancelInlineEdit);
 $('detailsSaveBtn').addEventListener('click',saveInlineEdit);

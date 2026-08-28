@@ -303,13 +303,42 @@
       <div class="form-actions details-actions">
         <button id="detailsCancelBtn" type="button" class="secondary-btn hidden">Cancel</button>
         <div class="spacer"></div>
-        <button id="detailsEditBtn" type="button" class="secondary-btn hidden">Edit</button>
+        <button id="quickSellBtn" type="button" class="secondary-btn">Mark Sold</button>
+        <button id="detailsEditBtn" type="button" class="secondary-btn">Edit</button>
         <button id="detailsSaveBtn" type="button" class="primary-btn hidden">Save Changes</button>
       </div>
     </div>
   </dialog>
 
-  <footer class="brand-footer">SimpleStock · Inventory made simple.</footer>
+    <dialog id="quickSellDialog" class="dialog small quick-sell-dialog">
+    <form id="quickSellForm" method="dialog" class="form-card">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">QUICK SELL</p>
+          <h2 id="quickSellName">Mark Item Sold</h2>
+          <p class="muted compact">Enter the sale details and SimpleStock will calculate profit automatically.</p>
+        </div>
+        <button type="button" id="closeQuickSellDialog" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+
+      <div class="quick-sell-grid">
+        <label>Sold Price ($)<input id="quickSoldPrice" type="number" min="0" step="0.01" required placeholder="0.00" /></label>
+        <label>Fees ($)<input id="quickFees" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+        <label>Shipping ($)<input id="quickShipping" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+        <label>Date Sold<input id="quickSoldDate" type="date" /></label>
+      </div>
+
+      <div id="quickProfitPreview" class="profit-preview"></div>
+
+      <div class="form-actions">
+        <button type="button" id="cancelQuickSellBtn" class="secondary-btn">Cancel</button>
+        <div class="spacer"></div>
+        <button type="submit" class="primary-btn">Complete Sale</button>
+      </div>
+    </form>
+  </dialog>
+
+<footer class="brand-footer">SimpleStock · Inventory made simple.</footer>
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 

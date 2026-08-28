@@ -1569,3 +1569,37 @@ button{
     padding-bottom:6px;
   }
 }
+
+
+/* v16 — Quick Sell */
+.quick-sell-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+}
+.quick-sell-grid label{
+  font-size:.8rem;
+  color:var(--muted);
+}
+#quickSellBtn{
+  color:var(--good);
+  background:var(--good-soft);
+  border-color:#d5eadf;
+}
+.quick-sell-dialog .profit-preview{
+  display:block;
+  margin-top:14px;
+}
+.quick-sell-dialog .profit-preview.negative{
+  background:var(--danger-soft);
+  color:var(--danger);
+  border-color:#efd4cf;
+}
+@media(max-width:760px){
+  .quick-sell-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .quick-sell-dialog .form-actions{
+    display:flex;
+  }
+}
