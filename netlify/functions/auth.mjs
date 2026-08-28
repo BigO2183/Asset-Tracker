@@ -99,6 +99,14 @@ export default async (request) => {
     const url = new URL(request.url);
     const action = url.searchParams.get('action') || '';
 
+    if (request.method === 'GET' && action === 'health') {
+      return json({
+        ok: true,
+        service: 'simplestock-auth',
+        version: '22.1'
+      });
+    }
+
     if (request.method === 'GET' && action === 'me') {
       const active = await getSession(store, request);
       if (!active) return json({ ok: false, error: 'Not signed in.' }, 401);
@@ -224,6 +232,17 @@ export default async (request) => {
 
       if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
         return json({ ok: false, error: 'Incorrect email or password.' }, 401);
+      }
+
+      // Migrate older SimpleStock account records forward safely.
+      let changed = false;
+      if (!user.role) { user.role = 'owner'; changed = true; }
+      if (user.role === 'owner' && user.canEdit !== true) { user.canEdit = true; changed = true; }
+      if (!user.defaultMode) { user.defaultMode = 'reseller'; changed = true; }
+      if (!user.workspaceName) { user.workspaceName = 'SimpleStock Workspace'; changed = true; }
+
+      if (changed) {
+        await store.setJSON(userKey(user.email), user);
       }
 
       const token = await issueSession(store, user);
