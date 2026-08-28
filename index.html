@@ -96,12 +96,23 @@
     </section>
 
     <section id="historySection" class="panel workspace-panel hidden">
-      <div class="panel-head workspace-head">
+      <div class="panel-head workspace-head sales-head">
         <div>
-          <h2>Sales & History</h2>
-          <p class="muted panel-subcopy">Sold items and recent activity.</p>
+          <h2>Sales</h2>
+          <p class="muted panel-subcopy">Sold items, revenue, profit, and recent activity.</p>
         </div>
       </div>
+
+      <div class="sales-summary">
+        <div><span>Sold</span><strong id="salesCount">0</strong></div>
+        <div><span>Revenue</span><strong id="salesRevenue">$0.00</strong></div>
+        <div><span>Profit</span><strong id="salesProfit">$0.00</strong></div>
+      </div>
+
+      <div class="sales-section-title">Sold Items</div>
+      <div id="soldList" class="sold-list"></div>
+
+      <div class="sales-section-title activity-title">Recent Activity</div>
       <div id="historyList" class="history-list"></div>
     </section>
   </main>
@@ -132,22 +143,29 @@
         <input type="hidden" id="photo" />
       </div>
 
-      <div class="section-label">Item Details</div>
-      <div class="form-grid">
-        <label>Item Name*<input id="name" required placeholder="Vintage lamp, DeWalt drill…" /></label>
-        <label>Item ID / SKU<input id="itemId" placeholder="Optional" /></label>
-        <label>Category<input id="category" placeholder="Tools, Furniture, Electronics…" /></label>
-        <label>Location<input id="location" placeholder="Garage A3, Bedroom 2…" /></label>
+      <div class="section-label">Quick Intake</div>
+      <div class="form-grid quick-intake-grid">
+        <label class="full">Item Name*<input id="name" required placeholder="Vintage lamp, DeWalt drill…" /></label>
         <label>What You Paid ($)<input id="cost" type="number" min="0" step="0.01" placeholder="0.00" /></label>
         <label>Asking Price ($)<input id="askingPrice" type="number" min="0" step="0.01" placeholder="0.00" /></label>
-        <label>Platform<select id="platform"><option value="">Not chosen</option><option>eBay</option><option>Facebook Marketplace</option><option>Local</option><option>Estate Sale</option><option>Other</option></select></label>
-        <label>Status<select id="status"><option>Unlisted</option><option>Listed</option><option>Hold</option><option>Sold</option><option>Donate / Bulk</option><option>Needs Attention</option></select></label>
-        <label>Date Acquired<input id="acquiredDate" type="date" /></label>
-        <label>Quantity<input id="quantity" type="number" min="1" step="1" value="1" /></label>
-        <label class="sale-only">Sold Price ($)<input id="soldPrice" type="number" min="0" step="0.01" placeholder="0.00" /></label>
-        <label class="sale-only">Fees ($)<input id="fees" type="number" min="0" step="0.01" placeholder="0.00" /></label>
-        <label class="sale-only">Shipping Cost ($)<input id="shipping" type="number" min="0" step="0.01" placeholder="0.00" /></label>
-        <label class="full">Notes<textarea id="notes" rows="3" placeholder="Condition, missing parts, pickup details, listing notes…"></textarea></label>
+        <label class="full">Location<input id="location" placeholder="Garage A3, Bedroom 2…" /></label>
+      </div>
+
+      <button id="moreDetailsBtn" type="button" class="more-details-btn" aria-expanded="false">＋ More Details</button>
+
+      <div id="moreDetailsPanel" class="more-details-panel hidden">
+        <div class="form-grid">
+          <label>Item ID / SKU<input id="itemId" placeholder="Optional" /></label>
+          <label>Category<input id="category" placeholder="Tools, Furniture, Electronics…" /></label>
+          <label>Platform<select id="platform"><option value="">Not chosen</option><option>eBay</option><option>Facebook Marketplace</option><option>Local</option><option>Estate Sale</option><option>Other</option></select></label>
+          <label>Status<select id="status"><option>Unlisted</option><option>Listed</option><option>Hold</option><option>Sold</option><option>Donate / Bulk</option><option>Needs Attention</option></select></label>
+          <label>Date Acquired<input id="acquiredDate" type="date" /></label>
+          <label>Quantity<input id="quantity" type="number" min="1" step="1" value="1" /></label>
+          <label class="sale-only">Sold Price ($)<input id="soldPrice" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+          <label class="sale-only">Fees ($)<input id="fees" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+          <label class="sale-only">Shipping Cost ($)<input id="shipping" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+          <label class="full">Notes<textarea id="notes" rows="3" placeholder="Condition, missing parts, pickup details, listing notes…"></textarea></label>
+        </div>
       </div>
 
       <div id="profitPreview" class="profit-preview hidden"></div>
@@ -178,14 +196,21 @@
   </dialog>
 
   <template id="itemTemplate">
-    <article class="item-card">
+    <article class="item-card" tabindex="0" role="button" aria-label="Open item details">
       <div class="item-card-accent"></div>
       <div class="thumb-wrap"><img class="item-thumb" alt="" /><div class="placeholder-thumb">📦</div></div>
 
       <div class="item-main">
         <div class="item-title-row">
           <h3 class="item-name"></h3>
-          <span class="status-pill"></span>
+          <select class="quick-status" aria-label="Quick status">
+            <option>Unlisted</option>
+            <option>Listed</option>
+            <option>Hold</option>
+            <option>Sold</option>
+            <option>Donate / Bulk</option>
+            <option>Needs Attention</option>
+          </select>
         </div>
 
         <div class="price-row">
@@ -199,31 +224,26 @@
           <span class="core-dot">·</span>
           <span class="location-text"></span>
         </div>
-
-        <div class="card-actions">
-          <button type="button" class="details-btn">Details</button>
-          <button class="edit-btn hidden" type="button">Edit</button>
-        </div>
-
-        <div class="item-details hidden">
-          <div class="details-grid">
-            <div>
-              <span class="detail-label">Item info</span>
-              <p class="item-meta"></p>
-            </div>
-            <div>
-              <span class="detail-label">Age</span>
-              <p class="age-text"></p>
-            </div>
-          </div>
-          <div class="detail-notes-wrap">
-            <span class="detail-label">Notes</span>
-            <p class="item-notes"></p>
-          </div>
-        </div>
       </div>
     </article>
   </template>
+
+  <dialog id="detailsDialog" class="dialog small details-dialog">
+    <div class="form-card">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">ITEM DETAILS</p>
+          <h2 id="detailsName">Item</h2>
+        </div>
+        <button type="button" id="closeDetailsDialog" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <div id="detailsBody" class="details-body"></div>
+      <div class="form-actions">
+        <div class="spacer"></div>
+        <button id="detailsEditBtn" type="button" class="primary-btn hidden">Edit Item</button>
+      </div>
+    </div>
+  </dialog>
 
   <script src="app.js"></script>
 </body>

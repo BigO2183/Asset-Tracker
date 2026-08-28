@@ -539,3 +539,195 @@ body{background:#f6f8fb}
     gap:7px;
   }
 }
+
+
+/* v8 — workflow-first cards, quick status, fast intake, useful sales */
+.item-card{
+  cursor:pointer;
+}
+.item-card:focus-visible{
+  outline:3px solid rgba(34,81,230,.18);
+  outline-offset:2px;
+}
+.quick-status{
+  width:auto;
+  max-width:128px;
+  border:0;
+  border-radius:999px;
+  padding:6px 24px 6px 10px;
+  font-size:.72rem;
+  font-weight:800;
+  cursor:pointer;
+  background-color:#eff3f8;
+  color:#405365;
+  box-shadow:none;
+}
+.quick-status:focus{
+  box-shadow:0 0 0 3px rgba(34,81,230,.10);
+}
+.quick-status.status-unlisted{background:#eef4ff;color:#214f9f}
+.quick-status.status-listed,.quick-status.status-sold{background:#ebf7f0;color:#157347}
+.quick-status.status-hold,.quick-status.status-donate-/-bulk,.quick-status.status-needs-attention{background:#fff6df;color:#946200}
+
+.more-details-btn{
+  width:100%;
+  margin-top:14px;
+  padding:10px 12px;
+  border:0;
+  border-radius:12px;
+  background:#f5f7fa;
+  color:#506072;
+  font-weight:700;
+  cursor:pointer;
+}
+.more-details-panel{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+}
+.quick-intake-grid{
+  margin-bottom:0;
+}
+
+.sales-summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:20px;
+}
+.sales-summary>div{
+  padding:14px 15px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fafcff;
+}
+.sales-summary span{
+  display:block;
+  color:var(--muted);
+  font-size:.78rem;
+  font-weight:700;
+  margin-bottom:5px;
+}
+.sales-summary strong{
+  font-size:1.2rem;
+}
+.sales-section-title{
+  font-size:.78rem;
+  font-weight:800;
+  color:var(--muted);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin:4px 0 10px;
+}
+.activity-title{
+  margin-top:24px;
+}
+.sold-list{
+  display:grid;
+  gap:8px;
+}
+.sold-row{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:12px 13px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#fff;
+  text-align:left;
+  cursor:pointer;
+}
+.sold-row>div:first-child{
+  min-width:0;
+}
+.sold-row strong,.sold-row span{
+  display:block;
+}
+.sold-row>div:first-child span{
+  color:var(--muted);
+  font-size:.82rem;
+  margin-top:3px;
+}
+.sold-money{
+  flex:0 0 auto;
+  text-align:right;
+}
+.sold-money span{
+  font-size:.78rem;
+  margin-top:3px;
+}
+.compact-empty{
+  padding:18px 10px;
+}
+.details-body{
+  display:grid;
+  gap:14px;
+}
+.detail-hero{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 12px;
+  align-items:baseline;
+  padding:12px 13px;
+  border-radius:14px;
+  background:#f6f9fc;
+}
+.detail-hero strong{
+  font-size:1.1rem;
+}
+.detail-hero span{
+  color:var(--muted);
+  font-size:.86rem;
+}
+.detail-list{
+  display:grid;
+}
+.detail-list>div{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  padding:10px 0;
+  border-bottom:1px solid var(--line);
+}
+.detail-list span,.detail-note>span{
+  color:var(--muted);
+  font-size:.82rem;
+}
+.detail-list strong{
+  text-align:right;
+  font-size:.88rem;
+}
+.detail-note{
+  padding:12px 13px;
+  border-radius:12px;
+  background:#fafbfd;
+}
+.detail-note p{
+  margin:5px 0 0;
+  line-height:1.45;
+}
+.positive{color:var(--good)!important}
+.negative{color:var(--danger)!important}
+
+@media(max-width:760px){
+  .quick-status{
+    max-width:100px;
+    padding:5px 20px 5px 8px;
+    font-size:.65rem;
+  }
+  .sales-summary{
+    grid-template-columns:1fr 1fr 1fr;
+    gap:7px;
+  }
+  .sales-summary>div{
+    padding:11px 9px;
+  }
+  .sales-summary strong{
+    font-size:1rem;
+  }
+  .sold-row{
+    padding:11px;
+  }
+}

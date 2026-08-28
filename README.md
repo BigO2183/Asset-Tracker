@@ -1,23 +1,22 @@
-# SimpleStock v7
+# SimpleStock v8
 
-This version simplifies the inventory cards around the core at-a-glance information.
+Workflow-focused UX update.
 
-## Visible on each card
-- Photo
-- Item name
-- Status
-- Asking / sold price
-- What you paid
-- Platform
-- Location
-
-## Tucked under Details
-- Item ID / SKU
-- Category
-- Quantity
-- Age
-- Notes
-
-The goal is to fit more inventory on screen while keeping the interface calm and easy to scan.
+## Changes
+- Tap an inventory card to open item details
+- Quick status control directly on each card
+- Sold status opens the edit flow so sale price / fees can be entered
+- Add Item now starts with only the core intake fields:
+  - Name
+  - Paid
+  - Asking price
+  - Location
+- Secondary fields are tucked under More Details
+- Sales & History now has a real sales view with:
+  - Sold count
+  - Revenue
+  - Profit
+  - Sold items
+  - Recent activity
 
 Demo Admin PIN: `1234`

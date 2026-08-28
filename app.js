@@ -61,11 +61,6 @@ function render(){
  filtered.forEach(i=>{
   const node=$('itemTemplate').content.cloneNode(true),card=node.querySelector('.item-card');
   node.querySelector('.item-name').textContent=i.name;
-  node.querySelector('.item-meta').textContent=[i.itemId&&`ID: ${i.itemId}`,i.category, i.quantity>1?`Qty ${i.quantity}`:''].filter(Boolean).join(' • ') || 'No extra item details';
-  const statusEl=node.querySelector('.status-pill');
-  statusEl.textContent=i.status;
-  statusEl.classList.add(statusClass(i.status));
-
   node.querySelector('.asking').textContent=i.status==='Sold'?`Sold ${money(i.soldPrice)}`:`Ask ${money(i.askingPrice)}`;
   node.querySelector('.cost').textContent=`Paid ${money(i.cost)}`;
 
@@ -78,24 +73,39 @@ function render(){
   node.querySelector('.platform-text').textContent=i.platform||'Not listed';
   node.querySelector('.location-text').textContent=i.location||'No location';
 
-  const age=daysOld(i);
-  node.querySelector('.age-text').textContent=`${age} day${age===1?'':'s'} old`;
-  node.querySelector('.item-notes').textContent=i.notes||'No notes yet.';
-
   const img=node.querySelector('.item-thumb'),ph=node.querySelector('.placeholder-thumb');
   if(i.photo){img.src=i.photo;img.style.display='block';ph.style.display='none';}
 
-  const details=node.querySelector('.item-details');
-  const detailsBtn=node.querySelector('.details-btn');
-  detailsBtn.addEventListener('click',()=>{
-    const opening=details.classList.contains('hidden');
-    details.classList.toggle('hidden',!opening);
-    detailsBtn.textContent=opening?'Hide':'Details';
+  const statusSelect=node.querySelector('.quick-status');
+  statusSelect.value=i.status;
+  statusSelect.classList.add(statusClass(i.status));
+  statusSelect.addEventListener('click',e=>e.stopPropagation());
+  statusSelect.addEventListener('change',e=>{
+    e.stopPropagation();
+    if(!isAdmin){
+      statusSelect.value=i.status;
+      openAdmin();
+      return;
+    }
+    const newStatus=e.target.value;
+    if(newStatus==='Sold'){
+      openEdit(i.key);
+      $('status').value='Sold';
+      toggleSaleFields();
+      return;
+    }
+    const oldStatus=i.status;
+    i.status=newStatus;
+    log('Status changed',i,`${oldStatus} → ${newStatus}`);
+    save();
+    render();
   });
 
-  const edit=node.querySelector('.edit-btn');
-  edit.classList.toggle('hidden',!isAdmin);
-  edit.addEventListener('click',()=>openEdit(i.key));
+  const openCard=()=>openDetails(i.key);
+  card.addEventListener('click',openCard);
+  card.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();openCard();}
+  });
 
   $('inventoryList').appendChild(node);
  });
@@ -114,10 +124,60 @@ function render(){
  renderHistory();
 }
 function renderHistory(){
+ const sold=items.filter(i=>i.status==='Sold');
+ if($('salesCount')) $('salesCount').textContent=sold.length;
+ if($('salesRevenue')) $('salesRevenue').textContent=money(sold.reduce((s,i)=>s+(Number(i.soldPrice)||0),0));
+ if($('salesProfit')) $('salesProfit').textContent=money(sold.reduce((s,i)=>s+profit(i),0));
+
+ if($('soldList')){
+   $('soldList').innerHTML=sold.length?sold.map(i=>`
+    <button class="sold-row" type="button" data-key="${esc(i.key)}">
+      <div>
+        <strong>${esc(i.name)}</strong>
+        <span>${esc(i.platform||'No platform')} · ${daysOld(i)} days held</span>
+      </div>
+      <div class="sold-money">
+        <strong>${money(i.soldPrice)}</strong>
+        <span class="${profit(i)>=0?'positive':'negative'}">${money(profit(i))} profit</span>
+      </div>
+    </button>`).join(''):'<div class="empty-state compact-empty">No sold items yet.</div>';
+
+   $('soldList').querySelectorAll('.sold-row').forEach(row=>{
+     row.addEventListener('click',()=>openDetails(row.dataset.key));
+   });
+ }
+
  $('historyList').innerHTML=history.length
-  ?history.map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(h.detail||'')}</div><small>${esc(h.time)}</small></div>`).join('')
-  :'<div class="empty-state"><div class="empty-illustration">🕘</div><h3>No history yet</h3><p>Once you start adding or editing items, your activity log will show up here.</p></div>';
+  ?history.slice(0,20).map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(h.detail||'')}</div><small>${esc(h.time)}</small></div>`).join('')
+  :'<div class="empty-state compact-empty">No activity yet.</div>';
 }
+function openDetails(key){
+ const i=items.find(x=>x.key===key);
+ if(!i)return;
+ $('detailsName').textContent=i.name;
+ const age=daysOld(i);
+ $('detailsBody').innerHTML=`
+   <div class="detail-hero">
+     <strong>${i.status==='Sold'?`Sold ${money(i.soldPrice)}`:`Ask ${money(i.askingPrice)}`}</strong>
+     <span>Paid ${money(i.cost)}</span>
+     ${i.status==='Sold'?`<span class="${profit(i)>=0?'positive':'negative'}">${money(profit(i))} profit</span>`:''}
+   </div>
+   <div class="detail-list">
+     <div><span>Status</span><strong>${esc(i.status)}</strong></div>
+     <div><span>Location</span><strong>${esc(i.location||'No location')}</strong></div>
+     <div><span>Platform</span><strong>${esc(i.platform||'Not listed')}</strong></div>
+     <div><span>Category</span><strong>${esc(i.category||'—')}</strong></div>
+     <div><span>Item ID</span><strong>${esc(i.itemId||'—')}</strong></div>
+     <div><span>Age</span><strong>${age} day${age===1?'':'s'}</strong></div>
+     <div><span>Quantity</span><strong>${Number(i.quantity)||1}</strong></div>
+   </div>
+   ${i.notes?`<div class="detail-note"><span>Notes</span><p>${esc(i.notes)}</p></div>`:''}
+ `;
+ $('detailsEditBtn').classList.toggle('hidden',!isAdmin);
+ $('detailsEditBtn').dataset.key=i.key;
+ $('detailsDialog').showModal();
+}
+
 function setPhotoPreview(src=''){
  $('photo').value=src;
  $('photoPreview').src=src;
@@ -130,7 +190,7 @@ function setView(view){
  $('historySection').classList.toggle('hidden',inventory);
  $('showInventoryBtn').classList.toggle('active-tab',inventory);
  $('showHistoryBtn').classList.toggle('active-tab',!inventory);
- $('viewLabel').textContent=inventory?'Inventory':'History';
+ $('viewLabel').textContent=inventory?'Inventory':'Sales';
  if(!inventory) renderHistory();
 }
 function openAdd(){
@@ -142,6 +202,9 @@ function openAdd(){
  $('acquiredDate').value=todayISO();
  $('dialogTitle').textContent='Fast Intake';
  $('deleteItemBtn').classList.add('hidden');
+ $('moreDetailsPanel').classList.add('hidden');
+ $('moreDetailsBtn').setAttribute('aria-expanded','false');
+ $('moreDetailsBtn').textContent='＋ More Details';
  setPhotoPreview('');
  toggleSaleFields();
  $('itemDialog').showModal();
@@ -155,6 +218,9 @@ function openEdit(key){
  $('itemKey').value=i.key;
  $('dialogTitle').textContent='Edit Item';
  $('deleteItemBtn').classList.remove('hidden');
+ $('moreDetailsPanel').classList.remove('hidden');
+ $('moreDetailsBtn').setAttribute('aria-expanded','true');
+ $('moreDetailsBtn').textContent='− Less Details';
  setPhotoPreview(i.photo||'');
  toggleSaleFields();
  $('itemDialog').showModal();
@@ -266,6 +332,19 @@ $('addItemBtn').addEventListener('click',openAdd);
 $('closeDialog').addEventListener('click',()=>$('itemDialog').close());
 $('cancelDialog').addEventListener('click',()=>$('itemDialog').close());
 $('closeAdminDialog').addEventListener('click',()=>$('adminDialog').close());
+$('moreDetailsBtn').addEventListener('click',()=>{
+ const panel=$('moreDetailsPanel');
+ const opening=panel.classList.contains('hidden');
+ panel.classList.toggle('hidden',!opening);
+ $('moreDetailsBtn').setAttribute('aria-expanded',opening?'true':'false');
+ $('moreDetailsBtn').textContent=opening?'− Less Details':'＋ More Details';
+});
+$('closeDetailsDialog').addEventListener('click',()=>$('detailsDialog').close());
+$('detailsEditBtn').addEventListener('click',()=>{
+ const key=$('detailsEditBtn').dataset.key;
+ $('detailsDialog').close();
+ openEdit(key);
+});
 $('showHistoryBtn').addEventListener('click',()=>setView('history'));
 $('showInventoryBtn').addEventListener('click',()=>setView('inventory'));
 $('exportBtn').addEventListener('click',()=>{
