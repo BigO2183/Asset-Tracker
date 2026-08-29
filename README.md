@@ -1,14 +1,35 @@
-# SimpleStock v26.1 — Responsive Card Layout Fix
+# SimpleStock v27 — Premium Modern Layout
 
-Fixes the visual overlap seen after the v26 redesign.
+Fresh visual/layout rebuild focused on making SimpleStock feel:
+- modern
+- professional
+- friendly
+- simple
+- easy to scan
+- easy to use on phone and desktop
 
-## Fixed
-- Item photo no longer overlaps item name or price
-- Stable photo + content columns
-- Long item names wrap correctly
-- Prices and metadata wrap cleanly
-- Status/filter controls stay aligned
-- Better tablet/mobile responsiveness
-- PWA cache bumped so installed apps receive the fix
+## Major visual upgrades
+- cleaner sticky header
+- premium navigation
+- clear page-title hierarchy
+- balanced Reseller / Estate Sale switch
+- larger search field
+- cleaner filter controls
+- two-column inventory cards on desktop
+- one-column cards on tablet/mobile
+- consistent product photos
+- clearer item names, pricing, status, and metadata
+- softer panels and status chips
+- cleaner forms and dialogs
+- more organized Settings
+- stronger responsive behavior
 
-No workflow or backend changes.
+## Colors
+Keeps the existing SimpleStock identity:
+- deep navy
+- soft gray/off-white
+- muted green
+- warm amber
+
+## Functionality
+No workflow or backend behavior was intentionally changed.

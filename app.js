@@ -1807,6 +1807,8 @@ function setView(view){
  $('showSettingsBtn')?.classList.toggle('active-tab',settings);
 
  if($('viewLabel')) $('viewLabel').textContent=inventory?'Inventory':sales?'Sales':reports?'Reports':'Settings';
+ const pageTitle=$('workspacePageTitle');
+ if(pageTitle)pageTitle.textContent=inventory?'Inventory':sales?'Sales':reports?'Reports':'Settings';
 
  if(sales) renderHistory();
  if(reports) renderReports();

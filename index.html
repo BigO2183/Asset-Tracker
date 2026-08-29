@@ -120,6 +120,16 @@
   <button id="adminToggle" type="button" class="hidden" aria-hidden="true">Sign out</button>
 
   <main class="shell workspace-shell">
+    <div class="workspace-intro">
+      <div>
+        <p class="workspace-kicker">Inventory Workspace</p>
+        <h2 id="workspacePageTitle">Inventory</h2>
+      </div>
+      <div class="workspace-intro-actions" aria-label="Workspace sync status">
+        <span class="workspace-sync-dot" aria-hidden="true"></span>
+        <span class="workspace-sync-label">Synced</span>
+      </div>
+    </div>
 
     <section id="onboardingBanner" class="onboarding-banner hidden simplified-hidden" aria-hidden="true">
       <div>
@@ -136,7 +146,7 @@
         <button id="estateModeBtn" type="button" class="mode-btn">Estate Sale</button>
       </div>
 
-      <div class="search-wrap compact-search">
+      <div class="search-wrap compact-search modern-search">
         <span class="search-icon">⌕</span>
         <input id="searchInput" type="search" placeholder="Search items…" autocomplete="off" />
       </div>
@@ -230,7 +240,7 @@
     </section>
 
     <section id="reportsSection" class="panel workspace-panel hidden">
-      <div class="panel-head workspace-head">
+      <div class="panel-head workspace-head modern-panel-head">
         <div>
           <h2>Reports</h2>
           <p class="muted panel-subcopy">A simple snapshot of inventory, sales, profit, and aging.</p>
