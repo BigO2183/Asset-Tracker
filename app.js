@@ -617,8 +617,7 @@ function saveCurrentItem({addAnother=false}={}){
    const lastLocation=record.location;
    prepareFreshIntake({keepContext:true});
    $('location').value=lastLocation;
-   setTimeout(()=>$('photoFile').click(),120);
- }else{
+   }else{
    if(document.activeElement && typeof document.activeElement.blur==='function'){
      document.activeElement.blur();
    }
@@ -1020,6 +1019,17 @@ function render(){
  updateOnboarding();
  setTimeout(updateNavScrollHint,30);
 }
+
+function cleanHistoryDetail(detail=''){
+ const parts=String(detail).split(';').map(s=>s.trim()).filter(Boolean);
+ const useful=parts.filter(part=>{
+   const m=part.match(/^(.+?)\s*→\s*(.+)$/);
+   if(!m)return true;
+   return m[1].trim()!==m[2].trim();
+ });
+ return useful.join('; ') || 'Updated details';
+}
+
 function renderHistory(){
  const sold=modeItems().filter(i=>i.status==='Sold');
  if($('salesCount')) $('salesCount').textContent=sold.length;
@@ -1045,7 +1055,7 @@ function renderHistory(){
  }
 
  $('historyList').innerHTML=history.length
-  ?history.slice(0,30).map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(h.detail||'')}</div><small>${esc(h.actor||'Unknown user')} · ${esc(h.time)}</small></div>`).join('')
+  ?history.slice(0,30).map(h=>`<div class="history-entry"><strong>${esc(h.action)} — ${esc(h.itemName)}</strong><div>${esc(cleanHistoryDetail(h.detail||''))}</div><small>${esc(h.actor||'Unknown user')} · ${esc(h.time)}</small></div>`).join('')
   :'<div class="empty-state compact-empty">No activity yet.</div>';
 }
 
@@ -1817,7 +1827,6 @@ function openAdd(){
  if(!isAdmin){showToast('This account is view-only');return;}
  prepareFreshIntake({keepContext:false});
  $('itemDialog').showModal();
- setTimeout(()=>$('photoFile').click(),120);
 }
 function openEdit(key){
  if(!isAdmin)return;
@@ -1867,7 +1876,7 @@ function updateProfitPreview(){
  $('profitPreview').classList.remove('hidden');
 }
 
-$('photoFile').addEventListener('change',async e=>{
+async function handlePhotoInput(e){
  const f=e.target.files?.[0];
  if(!f)return;
 
@@ -1880,7 +1889,10 @@ $('photoFile').addEventListener('change',async e=>{
    console.error(err);
    alert('That photo could not be prepared. Please try another photo.');
  }
-});
+}
+
+$('photoFile')?.addEventListener('change',handlePhotoInput);
+$('cameraPhotoFile')?.addEventListener('change',handlePhotoInput);
 $('status').addEventListener('change',toggleSaleFields);
 ['soldPrice','cost','fees','shipping'].forEach(id=>$(id).addEventListener('input',updateProfitPreview));
 $('itemForm').addEventListener('submit',e=>e.preventDefault());

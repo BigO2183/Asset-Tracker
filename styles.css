@@ -2906,3 +2906,428 @@ button{
     font-size:.52rem;
   }
 }
+
+
+/* v25.1 — user chooses how to add a photo */
+.photo-choice-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  width:100%;
+}
+.photo-choice-btn{
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  margin:0!important;
+  cursor:pointer;
+  text-align:center;
+}
+.photo-choice-btn input{
+  display:none!important;
+}
+@media(max-width:520px){
+  .photo-choice-row{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* =========================================================
+   v25.2 — CORE SCREEN POLISH
+   Keep v25 look, improve usability and hierarchy.
+   ========================================================= */
+
+/* ---------- GLOBAL MOBILE RHYTHM ---------- */
+@media(max-width:760px){
+  .shell.workspace-shell{
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
+
+  .workspace-toolbar{
+    gap:9px!important;
+  }
+
+  .mode-switch{
+    margin-bottom:1px!important;
+  }
+}
+
+/* ---------- INVENTORY ---------- */
+
+/* Main filter area: calm and simple */
+@media(max-width:760px){
+  .core-filter-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:7px!important;
+    align-items:center!important;
+  }
+
+  #statusFilter{
+    grid-column:1!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  #moreFiltersBtn{
+    grid-column:2!important;
+    min-width:84px!important;
+  }
+
+  /* Secondary actions are still available, but visually de-emphasized */
+  #scanBtn,
+  #bulkSelectBtn{
+    grid-column:auto!important;
+    min-height:36px!important;
+    padding:0 10px!important;
+    font-size:.7rem!important;
+    opacity:.82;
+  }
+
+  /* Put Scan + Select on a subtle secondary row */
+  #scanBtn{
+    justify-self:start!important;
+  }
+
+  #bulkSelectBtn{
+    justify-self:start!important;
+  }
+}
+
+/* Cleaner inventory count */
+.simple-summary{
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+.simple-summary strong,
+#summaryInventory{
+  color:#7c8795!important;
+  font-size:.74rem!important;
+  font-weight:700!important;
+}
+
+/* Inventory card: clearer hierarchy, less boxiness */
+.item-card{
+  border:1px solid #e2e7ec!important;
+  border-radius:15px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+
+.item-card:hover{
+  border-color:#d5dce4!important;
+  box-shadow:0 5px 16px rgba(31,45,61,.055)!important;
+}
+
+.item-title-row{
+  gap:8px!important;
+}
+
+.item-name{
+  color:#202c3c!important;
+  font-weight:800!important;
+  letter-spacing:-.02em!important;
+}
+
+.asking{
+  color:#25364a!important;
+  font-weight:820!important;
+}
+
+.cost{
+  color:#8993a0!important;
+}
+
+.core-info-row{
+  color:#7d8895!important;
+}
+
+/* Status is visible but not oversized */
+.quick-status{
+  min-height:32px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  font-size:.68rem!important;
+}
+
+/* ---------- SALES ---------- */
+
+#historyPanel,
+.sales-panel{
+  border-radius:18px!important;
+}
+
+/* Compact KPI row */
+.sales-stats,
+.sales-summary,
+.sales-metrics{
+  gap:8px!important;
+}
+
+.sales-stats > *,
+.sales-summary > *,
+.sales-metrics > *{
+  padding:12px!important;
+  border-radius:13px!important;
+}
+
+/* Reduce giant empty sold-items area */
+.sold-items-empty,
+.sales-empty,
+.empty-sold-state{
+  min-height:0!important;
+  padding:22px 12px!important;
+}
+
+@media(max-width:760px){
+  .sales-stats,
+  .sales-summary,
+  .sales-metrics{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+
+  .sales-stats strong,
+  .sales-summary strong,
+  .sales-metrics strong{
+    font-size:1.02rem!important;
+  }
+
+  .sales-stats span,
+  .sales-summary span,
+  .sales-metrics span{
+    font-size:.68rem!important;
+  }
+}
+
+/* Recent activity: lighter and shorter */
+.history-entry{
+  padding:12px 0!important;
+  border-bottom:1px solid #edf0f3!important;
+}
+
+.history-entry strong{
+  display:block;
+  color:#263548!important;
+  font-size:.9rem!important;
+  font-weight:780!important;
+}
+
+.history-entry p,
+.history-entry .history-detail{
+  margin:3px 0!important;
+  color:#667487!important;
+  font-size:.78rem!important;
+  line-height:1.35!important;
+}
+
+.history-entry small{
+  color:#909aa6!important;
+  font-size:.67rem!important;
+}
+
+/* ---------- REPORTS ---------- */
+
+.reports-actions-label,
+.reports-section-label{
+  margin:6px 0 8px!important;
+  color:#8a95a2!important;
+  font-size:.68rem!important;
+  font-weight:800!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+
+.report-actions,
+.export-actions{
+  gap:8px!important;
+}
+
+.report-actions button,
+.export-actions button,
+#exportInventoryBtn,
+#exportSalesBtn{
+  min-height:48px!important;
+  padding:0 14px!important;
+  border-radius:12px!important;
+  font-size:.82rem!important;
+  font-weight:780!important;
+}
+
+.report-cards{
+  gap:9px!important;
+}
+
+.report-card{
+  padding:13px!important;
+  border-radius:13px!important;
+  background:#f9fafb!important;
+  border:1px solid #e5e9ee!important;
+  box-shadow:none!important;
+}
+
+.report-card .label,
+.report-card h4{
+  color:#74808f!important;
+  font-size:.7rem!important;
+  font-weight:760!important;
+}
+
+.report-card .value,
+.report-card strong{
+  color:#202c3b!important;
+  font-size:1.15rem!important;
+  font-weight:820!important;
+}
+
+.aging-card,
+.inventory-aging{
+  border-radius:14px!important;
+  box-shadow:none!important;
+}
+
+.aging-row{
+  min-height:44px!important;
+}
+
+/* ---------- ADD / EDIT ITEM ---------- */
+
+/* Mobile uses the whole screen instead of a cramped centered modal */
+@media(max-width:760px){
+  #itemDialog{
+    width:100vw!important;
+    max-width:none!important;
+    height:100dvh!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#f6f7f9!important;
+  }
+
+  #itemDialog[open]{
+    display:block!important;
+  }
+
+  #itemDialog .form-card{
+    width:100%!important;
+    max-width:none!important;
+    min-height:100dvh!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:16px 14px 92px!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    background:#fff!important;
+    overflow:auto!important;
+  }
+
+  #itemDialog .dialog-head{
+    position:sticky!important;
+    top:0!important;
+    z-index:5!important;
+    margin:-16px -14px 14px!important;
+    padding:14px!important;
+    background:rgba(255,255,255,.97)!important;
+    border-bottom:1px solid #e8ebef!important;
+    backdrop-filter:blur(10px);
+  }
+
+  #itemDialog .dialog-head h2{
+    font-size:1.12rem!important;
+  }
+
+  .editor-section-title{
+    margin:18px 0 7px!important;
+    color:#8a95a2!important;
+    font-size:.68rem!important;
+    font-weight:800!important;
+    letter-spacing:.08em!important;
+    text-transform:uppercase!important;
+  }
+
+  #itemDialog label{
+    margin-bottom:10px!important;
+  }
+
+  #itemDialog input,
+  #itemDialog select,
+  #itemDialog textarea{
+    min-height:46px!important;
+    border-radius:11px!important;
+  }
+
+  #itemDialog textarea{
+    min-height:110px!important;
+  }
+
+  .photo-choice-row{
+    grid-template-columns:1fr 1fr!important;
+  }
+
+  /* Sticky action bar */
+  #itemDialog .form-actions,
+  #itemDialog .dialog-actions{
+    position:fixed!important;
+    left:0!important;
+    right:0!important;
+    bottom:0!important;
+    z-index:20!important;
+    display:grid!important;
+    grid-template-columns:auto auto 1fr!important;
+    gap:8px!important;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom))!important;
+    background:rgba(255,255,255,.97)!important;
+    border-top:1px solid #e4e8ed!important;
+    backdrop-filter:blur(12px);
+  }
+
+  #duplicateItemBtn,
+  #markSoldBtn,
+  #saveItemBtn,
+  #saveChangesBtn{
+    min-height:48px!important;
+    border-radius:12px!important;
+  }
+
+  #duplicateItemBtn{
+    min-width:92px!important;
+  }
+
+  #markSoldBtn{
+    min-width:96px!important;
+  }
+
+  #saveItemBtn,
+  #saveChangesBtn{
+    width:100%!important;
+    min-width:0!important;
+  }
+}
+
+/* Desktop editor stays modal but more organized */
+@media(min-width:761px){
+  .editor-section-title{
+    margin:16px 0 7px!important;
+    color:#8a95a2!important;
+    font-size:.67rem!important;
+    font-weight:800!important;
+    letter-spacing:.08em!important;
+    text-transform:uppercase!important;
+  }
+}
+
+/* ---------- FOOTER / SUPPORT ---------- */
+@media(max-width:760px){
+  .brand-footer{
+    margin-top:18px!important;
+    padding-top:0!important;
+    font-size:.68rem!important;
+    opacity:.75;
+  }
+}

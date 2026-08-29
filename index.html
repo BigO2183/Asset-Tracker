@@ -249,7 +249,7 @@
         </div>
 
         <div class="report-card">
-          <span>Potential Sales Value</span>
+          <span>Inventory Value</span>
           <strong id="reportPotential">$0.00</strong>
           <small>Current asking / tag value</small>
         </div>
@@ -444,9 +444,20 @@
       <input type="hidden" id="itemKey" />
 
       <div class="photo-intake">
-        <label class="photo-picker">📷 Add Photo<input id="photoFile" type="file" accept="image/*" capture="environment" /></label>
+        <div class="photo-choice-row">
+          <label class="photo-picker photo-choice-btn">
+            📷 Take Photo
+            <input id="cameraPhotoFile" type="file" accept="image/*" capture="environment" />
+          </label>
+
+          <label class="secondary-btn photo-choice-btn">
+            🖼 Choose from Device
+            <input id="photoFile" type="file" accept="image/*" />
+          </label>
+        </div>
+
         <div id="photoPreviewWrap" class="photo-preview-wrap">
-          <div id="photoPlaceholder">No photo yet</div>
+          <div id="photoPlaceholder">Photo optional</div>
           <img id="photoPreview" alt="Item preview" />
         </div>
         <div class="photo-help">
@@ -576,9 +587,11 @@
 
       <div id="inlineEditPanel" class="inline-edit-panel hidden">
         <div class="inline-edit-grid">
-          <label>Item Name<input id="detailEditName" /></label>
+          <div class="editor-section-title">Basic Info</div>
+        <label>Item Name<input id="detailEditName" /></label>
           <label>Status<select id="detailEditStatus"></select></label>
-          <label>Location<input id="detailEditLocation" /></label>
+          <div class="editor-section-title">Listing & Storage</div>
+        <label>Location<input id="detailEditLocation" /></label>
           <label class="detail-reseller-only">Platform
             <select id="detailEditPlatform">
               <option value="">Not listed</option>
@@ -593,7 +606,8 @@
           <label>Item ID<input id="detailEditItemId" /></label>
           <label>Quantity<input id="detailEditQuantity" type="number" min="1" step="1" /></label>
           <label>Price ($)<input id="detailEditAsking" type="number" min="0" step="0.01" /></label>
-          <label>Paid ($)<input id="detailEditCost" type="number" min="0" step="0.01" /></label>
+          <div class="editor-section-title">Pricing</div>
+        <label>Paid ($)<input id="detailEditCost" type="number" min="0" step="0.01" /></label>
           <label class="detail-estate-only hidden">Sale Stage
             <select id="detailEditDiscountStage">
               <option value="full">Full Price</option>
