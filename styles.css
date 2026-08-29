@@ -2797,3 +2797,18 @@ button{
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   font-size:.7rem!important;
 }
+
+
+/* v24.1 — signup backfill */
+.signup-inbox-actions{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.signup-inbox-actions .secondary-btn{
+  margin-top:0;
+}
+.signup-entry .feedback-entry-head span::after{
+  content:'';
+}

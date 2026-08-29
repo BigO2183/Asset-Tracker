@@ -1,48 +1,27 @@
-# SimpleStock v24 — Signup Monitor
+# SimpleStock v24.1 — Signup Backfill
 
-Every new workspace registration is now recorded.
+Adds a one-time import for existing SimpleStock workspaces.
 
 ## Signup Inbox
-Platform admin can open:
-
 Settings → Signup Inbox
 
-It shows:
-- total signups
-- workspace name
-- account email
-- Reseller / Estate Sale mode
-- signup date/time
-- workspace ID
+New button:
+**Import Existing**
 
-## Platform Admin Setup
-In Netlify environment variables, set:
+When the platform admin clicks it, SimpleStock:
+- scans existing auth users
+- identifies unique workspace IDs
+- reads workspace metadata
+- backfills one signup record per workspace
+- avoids duplicates
+- keeps all future signup logging active
 
-`SIMPLESTOCK_ADMIN_EMAIL`
+## After deploying
+1. Sign in with the email configured in `SIMPLESTOCK_ADMIN_EMAIL`.
+2. Open Settings.
+3. Open Signup Inbox.
+4. Click **Import Existing** once.
+5. Existing workspaces should appear.
+6. Future signups continue appearing automatically.
 
-to the email address of the SimpleStock account that should be allowed to see all signups.
-
-Only that signed-in account can access the Signup Inbox.
-
-## Optional Email Alerts
-To receive an email whenever someone creates a workspace, also set:
-
-`SIGNUP_NOTIFY_EMAIL`
-- email address that should receive signup alerts
-
-`RESEND_API_KEY`
-- API key from Resend
-
-`RESEND_FROM_EMAIL`
-- verified sender address in Resend, such as:
-  `SimpleStock <notifications@yourdomain.com>`
-
-If the email variables are not configured, signup logging still works normally. Email alerts are simply skipped.
-
-## New storage
-Signups are stored privately in Netlify Blobs:
-
-`simplestock-signups`
-
-## Backend change
-`netlify/functions/auth.mjs` changed, so deploy the whole project.
+Backfilled records are marked internally as `backfilled: true`.

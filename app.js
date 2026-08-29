@@ -1118,6 +1118,37 @@ function stopScanner(){
 
 
 
+
+async function backfillSignups(){
+ try{
+   showLoading('Importing existing accounts…');
+
+   const res=await fetch(`${AUTH_ENDPOINT}?action=backfill_signups`,{
+     method:'POST',
+     headers:authHeaders({'Content-Type':'application/json'}),
+     body:'{}'
+   });
+
+   const payload=await res.json().catch(()=>({}));
+
+   if(!res.ok){
+     throw new Error(payload.error||'Could not import existing signups.');
+   }
+
+   showToast(
+     payload.created
+       ? `${payload.created} existing workspace${payload.created===1?'':'s'} imported ✓`
+       : 'Existing workspaces are already imported ✓'
+   );
+
+   await loadSignupInbox();
+ }catch(err){
+   showToast(friendlyError(err,'Could not import existing signups.'));
+ }finally{
+   hideLoading();
+ }
+}
+
 async function loadSignupInbox(){
  const card=$('signupInboxCard');
  const inbox=$('signupInbox');
@@ -1935,6 +1966,7 @@ $('addStaffBtn')?.addEventListener('click',async()=>{
  }catch(err){showToast(err.message);}
 });
 
+$('backfillSignupsBtn')?.addEventListener('click',backfillSignups);
 $('refreshSignupsBtn')?.addEventListener('click',loadSignupInbox);
 $('refreshFeedbackBtn')?.addEventListener('click',loadFeedbackInbox);
 $('downloadBackupBtn')?.addEventListener('click',downloadBackup);
