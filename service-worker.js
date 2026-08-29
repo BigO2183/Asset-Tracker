@@ -1,4 +1,4 @@
-const CACHE_NAME = 'simplestock-v25-2-core-polish';
+const CACHE_NAME = 'simplestock-v25-4-profit-shipping-returns';
 const APP_SHELL = [
   '/',
   '/index.html',

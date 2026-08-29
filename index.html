@@ -104,6 +104,7 @@
       <button id="showInventoryBtn" class="nav-btn active-tab">Inventory</button>
       <button id="addItemBtn" class="nav-btn nav-primary">＋ Add Item</button>
       <button id="showHistoryBtn" class="nav-btn">Sales</button>
+      <button id="showReturnsBtn" class="nav-btn">Returns</button>
       <button id="showReportsBtn" class="nav-btn">Reports</button>
       <button id="showSettingsBtn" class="nav-btn">Settings</button>
       <button id="feedbackBtn" class="nav-btn feedback-nav">Feedback</button>
@@ -151,6 +152,8 @@
           <option>Listed</option>
           <option>Hold</option>
           <option>Sold</option>
+          <option>Shipped</option>
+          <option>Returned</option>
           <option>Donate / Bulk</option>
           <option>Needs Attention</option>
         </select>
@@ -231,6 +234,24 @@
 
       <div class="sales-section-title activity-title">Recent Activity</div>
       <div id="historyList" class="history-list"></div>
+    </section>
+
+
+    <section id="returnsSection" class="panel workspace-panel hidden">
+      <div class="panel-head workspace-head returns-head">
+        <div>
+          <h2>Returns</h2>
+          <p class="muted panel-subcopy">Track customer returns, refunds, condition, and follow-up.</p>
+        </div>
+      </div>
+
+      <div class="returns-summary">
+        <div><span>Returns</span><strong id="returnsCount">0</strong></div>
+        <div><span>Refunded</span><strong id="returnsRefunded">$0.00</strong></div>
+        <div><span>Needs Review</span><strong id="returnsReviewCount">0</strong></div>
+      </div>
+
+      <div id="returnsList" class="returns-list"></div>
     </section>
 
     <section id="reportsSection" class="panel workspace-panel hidden">
@@ -494,7 +515,7 @@
           <label>Item ID / SKU<input id="itemId" placeholder="Optional" /></label>
           <label>Category<input id="category" placeholder="Tools, Furniture, Electronics…" /></label>
           <label>Platform<select id="platform"><option value="">Not chosen</option><option>eBay</option><option>Facebook Marketplace</option><option>Local</option><option>Estate Sale</option><option>Other</option></select></label>
-          <label>Status<select id="status"><option>Unlisted</option><option>Listed</option><option>Hold</option><option>Sold</option><option>Donate / Bulk</option><option>Needs Attention</option></select></label>
+          <label>Status<select id="status"><option>Unlisted</option><option>Listed</option><option>Hold</option><option>Sold</option><option>Shipped</option><option>Returned</option><option>Donate / Bulk</option><option>Needs Attention</option></select></label>
           <label>Date Acquired<input id="acquiredDate" type="date" /></label>
           <label>Quantity<input id="quantity" type="number" min="1" step="1" value="1" /></label>
           <label class="estate-only hidden">Sale Stage
@@ -557,6 +578,8 @@
             <option>Listed</option>
             <option>Hold</option>
             <option>Sold</option>
+            <option>Shipped</option>
+            <option>Returned</option>
             <option>Donate / Bulk</option>
             <option>Needs Attention</option>
           </select>
@@ -632,6 +655,7 @@
         <div class="spacer"></div>
         <button id="duplicateItemBtn" type="button" class="secondary-btn">Duplicate</button>
         <button id="quickSellBtn" type="button" class="secondary-btn">Mark Sold</button>
+        <button id="markReturnedBtn" type="button" class="secondary-btn return-btn hidden">Mark Returned</button>
         <button id="detailsEditBtn" type="button" class="secondary-btn">Edit</button>
         <button id="detailsSaveBtn" type="button" class="primary-btn hidden">Save Changes</button>
       </div>
@@ -666,6 +690,52 @@
     </form>
   </dialog>
 
+
+
+  <dialog id="returnDialog" class="dialog small return-dialog">
+    <form id="returnForm" class="form-card">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">RETURN</p>
+          <h2 id="returnItemName">Mark Item Returned</h2>
+          <p class="muted compact">Record the refund and condition so the return is documented.</p>
+        </div>
+        <button id="closeReturnDialog" type="button" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+
+      <div class="return-grid">
+        <label>Return Date<input id="returnDate" type="date" required /></label>
+        <label>Refund Amount ($)<input id="refundAmount" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+        <label>Reason
+          <select id="returnReason">
+            <option value="">Choose reason</option>
+            <option>Changed mind</option>
+            <option>Item not as described</option>
+            <option>Damaged in shipping</option>
+            <option>Defective / not working</option>
+            <option>Wrong item</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>Condition on Return
+          <select id="returnCondition">
+            <option>Same condition</option>
+            <option>Opened / used</option>
+            <option>Damaged</option>
+            <option>Missing parts</option>
+            <option>Needs inspection</option>
+          </select>
+        </label>
+        <label class="full">Return Notes<textarea id="returnNotes" rows="3" placeholder="Package condition, missing parts, buyer comments, next steps…"></textarea></label>
+      </div>
+
+      <div class="form-actions">
+        <button id="cancelReturnBtn" type="button" class="secondary-btn">Cancel</button>
+        <div class="spacer"></div>
+        <button type="submit" class="primary-btn">Save Return</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog id="recoveryDialog" class="dialog small">
     <form id="recoveryForm" class="form-card">

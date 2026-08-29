@@ -3460,3 +3460,162 @@ button{
     width:100%;
   }
 }
+
+
+/* =========================================================
+   v25.4 — POTENTIAL PROFIT / SHIPPED / RETURNS
+   ========================================================= */
+
+.potential-profit{
+  font-weight:700;
+}
+
+.quick-status.status-shipped,
+.status-pill.status-shipped{
+  background:#edf3fa!important;
+  color:#315f89!important;
+  border-color:#d8e4ef!important;
+}
+
+.quick-status.status-returned,
+.status-pill.status-returned{
+  background:#fff1e8!important;
+  color:#9a5c31!important;
+  border-color:#f0ddcf!important;
+}
+
+.returns-summary{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  padding:0 18px 16px;
+}
+
+.returns-summary>div{
+  padding:13px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#f9fafb;
+}
+
+.returns-summary span,
+.returns-summary strong{
+  display:block;
+}
+
+.returns-summary span{
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:750;
+}
+
+.returns-summary strong{
+  margin-top:4px;
+  color:var(--text);
+  font-size:1.15rem;
+}
+
+.returns-list{
+  padding:0 18px 18px;
+}
+
+.return-row{
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:13px 0;
+  border:0;
+  border-bottom:1px solid var(--line);
+  background:transparent;
+  color:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+
+.return-row-main strong,
+.return-row-main span,
+.return-row-main small,
+.return-money strong,
+.return-money span{
+  display:block;
+}
+
+.return-row-main strong{
+  color:var(--text);
+  font-size:.9rem;
+}
+
+.return-row-main span{
+  margin-top:3px;
+  color:#687688;
+  font-size:.76rem;
+}
+
+.return-row-main small{
+  margin-top:3px;
+  color:#929ba6;
+  font-size:.67rem;
+}
+
+.return-money{
+  text-align:right;
+  flex:none;
+}
+
+.return-money strong{
+  color:#9a5c31;
+  font-size:.9rem;
+}
+
+.return-money span{
+  color:var(--muted);
+  font-size:.66rem;
+}
+
+.return-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.return-grid .full{
+  grid-column:1/-1;
+}
+
+.return-btn{
+  color:#8f5b36!important;
+  border-color:#ead9cb!important;
+  background:#fff8f3!important;
+}
+
+@media(max-width:760px){
+  .returns-summary{
+    gap:7px;
+    padding:0 12px 12px;
+  }
+
+  .returns-summary>div{
+    padding:10px;
+  }
+
+  .returns-summary span{
+    font-size:.62rem;
+  }
+
+  .returns-summary strong{
+    font-size:.98rem;
+  }
+
+  .returns-list{
+    padding:0 12px 14px;
+  }
+
+  .return-grid{
+    grid-template-columns:1fr;
+  }
+
+  .return-grid .full{
+    grid-column:auto;
+  }
+}

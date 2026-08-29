@@ -386,6 +386,8 @@ async function loadCloud(){
 const log=(action,item,detail='')=>{history.unshift({id:uid(),time:now(),actor:authState?.user?.email||'Unknown',action,itemName:item?.name||'Unknown item',detail});history=history.slice(0,500);save();queueCloudSync();};
 const daysOld=i=>{const d=new Date((i.acquiredDate||todayISO())+'T12:00:00');return Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));};
 const profit=i=>(Number(i.soldPrice)||0)-(Number(i.cost)||0)-(Number(i.fees)||0)-(Number(i.shipping)||0);
+const potentialProfit=i=>(Number(i.askingPrice)||0)-(Number(i.cost)||0);
+const isCompletedSale=i=>['Sold','Shipped'].includes(i.status);
 const attention=i=>i.status==='Needs Attention'||!i.name||!i.location||(!i.askingPrice&&i.status!=='Sold'&&i.status!=='Donated')||((i.status==='Listed')&&!i.platform)||daysOld(i)>=90;
 
 
@@ -420,7 +422,7 @@ function compressPhoto(file,{maxSize=1200,quality=.72}={}){
 }
 
 
-const RESELLER_STATUSES=['Unlisted','Listed','Hold','Sold','Donate / Bulk','Needs Attention'];
+const RESELLER_STATUSES=['Unlisted','Listed','Hold','Sold','Shipped','Returned','Donate / Bulk','Needs Attention'];
 const ESTATE_STATUSES=['For Sale','Hold','Sold','Family Keep','Donate','Bulk Buyer','Dispose'];
 
 function modeItems(){
@@ -528,6 +530,7 @@ function prepareFreshIntake({keepContext=true}={}){
  renderRecentLocations();
 }
 function buildRecord(){
+ const existing=items.find(i=>i.key===$('itemKey').value);
  return {
   key:$('itemKey').value||uid(),
   recordType:currentMode,
@@ -547,7 +550,12 @@ function buildRecord(){
   shipping:Number($('shipping').value||0),
   notes:$('notes').value.trim(),
   discountStage:currentMode==='estate'?$('discountStage').value:'',
-  finalPrice:currentMode==='estate'?Number($('finalPrice').value||0):0
+  finalPrice:currentMode==='estate'?Number($('finalPrice').value||0):0,
+  returnDate:existing?.returnDate||'',
+  refundAmount:Number(existing?.refundAmount||0),
+  returnReason:existing?.returnReason||'',
+  returnCondition:existing?.returnCondition||'',
+  returnNotes:existing?.returnNotes||''
  };
 }
 function saveCurrentItem({addAnother=false}={}){
@@ -918,17 +926,22 @@ function render(){
   });
   card.classList.toggle('bulk-mode',bulkMode);
   node.querySelector('.item-name').textContent=i.name;
-  node.querySelector('.asking').textContent=i.status==='Sold'
-    ?`Sold ${money(i.soldPrice)}`
+  node.querySelector('.asking').textContent=isCompletedSale(i)
+    ?`${i.status} ${money(i.soldPrice)}`
     :(currentMode==='estate'?`Price ${money(currentEstatePrice(i))}`:`Ask ${money(i.askingPrice)}`);
   node.querySelector('.cost').textContent=currentMode==='estate'
     ?(i.discountStage&&i.discountStage!=='full'?`Tag ${money(i.askingPrice)}`:'')
     :`Paid ${money(i.cost)}`;
 
   const p=node.querySelector('.profit');
-  if(i.status==='Sold'){
+  if(isCompletedSale(i)){
     p.textContent=`Profit ${money(profit(i))}`;
     p.classList.add(profit(i)>=0?'positive':'negative');
+  }else if(currentMode==='reseller' && i.status!=='Returned'){
+    const pp=potentialProfit(i);
+    p.textContent=`Potential ${money(pp)}`;
+    p.classList.add('potential-profit');
+    p.classList.add(pp>=0?'positive':'negative');
   }else p.textContent='';
 
   node.querySelector('.platform-text').textContent=currentMode==='estate'
@@ -962,6 +975,17 @@ function render(){
       toggleSaleFields();
       return;
     }
+    if(newStatus==='Shipped' && !i.soldDate && !(Number(i.soldPrice)>0)){
+      statusSelect.value=i.status;
+      showToast('Mark the item sold before changing it to Shipped');
+      return;
+    }
+    if(newStatus==='Returned'){
+      statusSelect.value=i.status;
+      activeDetailKey=i.key;
+      openReturnDialog();
+      return;
+    }
     const oldStatus=i.status;
     i.status=newStatus;
     log('Status changed',i,`${oldStatus} → ${newStatus}`);
@@ -988,7 +1012,7 @@ function render(){
  const scoped=modeItems();
  const active=currentMode==='estate'
    ?scoped.filter(i=>!['Sold','Family Keep','Donate','Bulk Buyer','Dispose'].includes(i.status))
-   :scoped.filter(i=>!['Sold','Donate / Bulk','Donated','Bulk Sale'].includes(i.status));
+   :scoped.filter(i=>!['Sold','Shipped','Returned','Donate / Bulk','Donated','Bulk Sale'].includes(i.status));
  $('statActive').textContent=active.length;
  $('statCost').textContent=`${money(active.reduce((s,i)=>s+(Number(i.cost)||0),0))} invested`;
  $('statUnlisted').textContent=active.filter(i=>i.status==='Unlisted').length;
@@ -1010,7 +1034,7 @@ function render(){
      :`<strong id="summaryAged">${active.filter(i=>daysOld(i)>=60).length}</strong> over 60 days`;
  }
  $('potentialRevenue').textContent=money(active.reduce((s,i)=>s+(Number(i.askingPrice)||0),0));
- const sold=modeItems().filter(i=>i.status==='Sold');
+ const sold=modeItems().filter(isCompletedSale);
  $('soldRevenue').textContent=money(sold.reduce((s,i)=>s+(Number(i.soldPrice)||0),0));
  $('netProfit').textContent=money(sold.reduce((s,i)=>s+profit(i),0));
  renderHistory();
@@ -1031,7 +1055,7 @@ function cleanHistoryDetail(detail=''){
 }
 
 function renderHistory(){
- const sold=modeItems().filter(i=>i.status==='Sold');
+ const sold=modeItems().filter(isCompletedSale);
  if($('salesCount')) $('salesCount').textContent=sold.length;
  if($('salesRevenue')) $('salesRevenue').textContent=money(sold.reduce((s,i)=>s+(Number(i.soldPrice)||0),0));
  if($('salesProfit')) $('salesProfit').textContent=money(sold.reduce((s,i)=>s+profit(i),0));
@@ -1041,7 +1065,7 @@ function renderHistory(){
     <button class="sold-row" type="button" data-key="${esc(i.key)}">
       <div>
         <strong>${esc(i.name)}</strong>
-        <span>${esc(i.platform||'No platform')}${i.soldDate?` · Sold ${esc(i.soldDate)}`:` · ${daysOld(i)} days held`}</span>
+        <span>${esc(i.platform||'No platform')} · ${esc(i.status)}${i.soldDate?` ${esc(i.soldDate)}`:` · ${daysOld(i)} days held`}</span>
       </div>
       <div class="sold-money">
         <strong>${money(i.soldPrice)}</strong>
@@ -1459,10 +1483,10 @@ function renderReports(){
  const scoped=reportScopedItems();
  const estate=currentMode==='estate';
 
- const sold=scoped.filter(i=>i.status==='Sold');
+ const sold=scoped.filter(isCompletedSale);
  const active=estate
    ?scoped.filter(i=>!['Sold','Family Keep','Donate','Bulk Buyer','Dispose'].includes(i.status))
-   :scoped.filter(i=>!['Sold','Donate / Bulk','Donated','Bulk Sale'].includes(i.status));
+   :scoped.filter(i=>!['Sold','Shipped','Returned','Donate / Bulk','Donated','Bulk Sale'].includes(i.status));
 
  const activeCost=active.reduce((s,i)=>s+(Number(i.cost)||0),0);
  const potential=active.reduce((s,i)=>s+(estate?currentEstatePrice(i):(Number(i.askingPrice)||0)),0);
@@ -1539,7 +1563,7 @@ function exportInventoryReport(){
 }
 
 function exportSalesReport(){
- const scoped=modeItems().filter(i=>i.status==='Sold');
+ const scoped=modeItems().filter(isCompletedSale);
  const headers=['Mode','Item','ID','Category','Sold Price','Cost','Fees','Shipping','Net Profit','Date Sold','Platform','Location'];
  const rows=scoped.map(i=>[
    (i.recordType||'reseller')==='estate'?'Estate Sale':'Reseller',
@@ -1572,16 +1596,17 @@ function openDetails(key){
  $('detailsCancelBtn').classList.add('hidden');
  $('detailsEditBtn').classList.toggle('hidden',!isAdmin);
  $('duplicateItemBtn').classList.toggle('hidden',!isAdmin);
- $('quickSellBtn').classList.toggle('hidden',i.status==='Sold'||!isAdmin);
+ $('quickSellBtn').classList.toggle('hidden',isCompletedSale(i)||i.status==='Returned'||!isAdmin);
+ $('markReturnedBtn').classList.toggle('hidden',!isAdmin || (i.recordType||'reseller')!=='reseller' || !isCompletedSale(i));
 
  const age=daysOld(i);
  const estate=(i.recordType||'reseller')==='estate';
 
  $('detailsBody').innerHTML=`
    <div class="detail-hero">
-     <strong>${i.status==='Sold'?`Sold ${money(i.soldPrice)}`:(estate?`Price ${money(currentEstatePrice(i))}`:`Ask ${money(i.askingPrice)}`)}</strong>
+     <strong>${isCompletedSale(i)?`${esc(i.status)} ${money(i.soldPrice)}`:(estate?`Price ${money(currentEstatePrice(i))}`:`Ask ${money(i.askingPrice)}`)}</strong>
      ${estate?'':`<span>Paid ${money(i.cost)}</span>`}
-     ${i.status==='Sold'?`<span class="${profit(i)>=0?'positive':'negative'}">${money(profit(i))} profit</span>`:''}
+     ${isCompletedSale(i)?`<span class="${profit(i)>=0?'positive':'negative'}">${money(profit(i))} profit</span>`:(!estate&&i.status!=='Returned'?`<span class="${potentialProfit(i)>=0?'positive':'negative'}">${money(potentialProfit(i))} potential profit</span>`:'')}
    </div>
    <div class="detail-list">
      <div><span>Status</span><strong>${esc(i.status)}</strong></div>
@@ -1594,7 +1619,9 @@ function openDetails(key){
      <div><span>Item ID</span><strong>${esc(i.itemId||'—')}</strong></div>
      <div><span>Age</span><strong>${age} day${age===1?'':'s'}</strong></div>
      <div><span>Quantity</span><strong>${Number(i.quantity)||1}</strong></div>
-     ${i.status==='Sold'&&i.soldDate?`<div><span>Date Sold</span><strong>${esc(i.soldDate)}</strong></div>`:''}
+     ${isCompletedSale(i)&&i.soldDate?`<div><span>Date Sold</span><strong>${esc(i.soldDate)}</strong></div>`:''}
+     ${i.returnDate?`<div><span>Return Date</span><strong>${esc(i.returnDate)}</strong></div>`:''}
+     ${i.returnDate?`<div><span>Refund</span><strong>${money(i.refundAmount)}</strong></div>`:''}
    </div>
    ${i.notes?`<div class="detail-note"><span>Notes</span><p>${esc(i.notes)}</p></div>`:''}
  `;
@@ -1708,7 +1735,12 @@ function duplicateActiveItem(){
    soldPrice:0,
    fees:0,
    shipping:0,
-   soldDate:''
+   soldDate:'',
+   returnDate:'',
+   refundAmount:0,
+   returnReason:'',
+   returnCondition:'',
+   returnNotes:''
  };
 
  items.unshift(copy);
@@ -1795,6 +1827,73 @@ async function completeQuickSell(){
  showToast(`${i.name} sold ✓`);
 }
 
+function openReturnDialog(){
+ const i=items.find(x=>x.key===activeDetailKey);
+ if(!i||!isAdmin)return;
+ if((i.recordType||'reseller')!=='reseller'){
+   showToast('Returns are available in Reseller mode');
+   return;
+ }
+ if(!isCompletedSale(i) && i.status!=='Returned'){
+   showToast('Mark the item sold before recording a return');
+   return;
+ }
+ $('returnItemName').textContent=`Return — ${i.name}`;
+ $('returnDate').value=i.returnDate||todayISO();
+ $('refundAmount').value=Number(i.refundAmount)||Number(i.soldPrice)||0;
+ $('returnReason').value=i.returnReason||'';
+ $('returnCondition').value=i.returnCondition||'Same condition';
+ $('returnNotes').value=i.returnNotes||'';
+ $('returnDialog').showModal();
+}
+
+function saveReturn(e){
+ e?.preventDefault();
+ const i=items.find(x=>x.key===activeDetailKey);
+ if(!i||!isAdmin)return;
+ const oldStatus=i.status;
+ i.status='Returned';
+ i.returnDate=$('returnDate').value||todayISO();
+ i.refundAmount=Math.max(0,Number($('refundAmount').value)||0);
+ i.returnReason=$('returnReason').value;
+ i.returnCondition=$('returnCondition').value;
+ i.returnNotes=$('returnNotes').value.trim();
+ history.unshift({
+   id:uid(),time:now(),actor:authState?.user?.email||'Unknown',
+   action:'Returned',itemName:i.name,
+   detail:`${oldStatus} → Returned • ${money(i.refundAmount)} refund${i.returnReason?` • ${i.returnReason}`:''}`
+ });
+ history=history.slice(0,500);
+ save();queueCloudSync();
+ $('returnDialog').close();
+ $('detailsDialog').close();
+ render();
+ renderReturns();
+ setView('returns');
+ showToast(`${i.name} return recorded ✓`);
+}
+
+function renderReturns(){
+ if(!$('returnsList'))return;
+ const returned=modeItems().filter(i=>i.status==='Returned'||i.returnDate);
+ $('returnsCount').textContent=returned.length;
+ $('returnsRefunded').textContent=money(returned.reduce((s,i)=>s+(Number(i.refundAmount)||0),0));
+ $('returnsReviewCount').textContent=returned.filter(i=>['Damaged','Missing parts','Needs inspection'].includes(i.returnCondition)).length;
+ $('returnsList').innerHTML=returned.length?returned.map(i=>`
+   <button class="return-row" type="button" data-key="${esc(i.key)}">
+     <div class="return-row-main">
+       <strong>${esc(i.name)}</strong>
+       <span>${esc(i.returnReason||'No reason recorded')} · ${esc(i.returnCondition||'Condition not recorded')}</span>
+       <small>${i.returnDate?`Returned ${esc(i.returnDate)}`:'Return date not recorded'}</small>
+     </div>
+     <div class="return-money">
+       <strong>${money(i.refundAmount)}</strong>
+       <span>refund</span>
+     </div>
+   </button>`).join(''):'<div class="empty-state compact-empty">No returns recorded yet.</div>';
+ $('returnsList').querySelectorAll('.return-row').forEach(row=>row.addEventListener('click',()=>openDetails(row.dataset.key)));
+}
+
 function setPhotoPreview(src=''){
  $('photo').value=src;
  $('photoPreview').src=src;
@@ -1804,22 +1903,26 @@ function setPhotoPreview(src=''){
 function setView(view){
  const inventory=view==='inventory';
  const sales=view==='history';
+ const returns=view==='returns';
  const reports=view==='reports';
  const settings=view==='settings';
 
  $('inventorySection').classList.toggle('hidden',!inventory);
  $('historySection').classList.toggle('hidden',!sales);
+ $('returnsSection').classList.toggle('hidden',!returns);
  $('reportsSection').classList.toggle('hidden',!reports);
  $('settingsSection').classList.toggle('hidden',!settings);
 
  $('showInventoryBtn')?.classList.toggle('active-tab',inventory);
  $('showHistoryBtn')?.classList.toggle('active-tab',sales);
+ $('showReturnsBtn')?.classList.toggle('active-tab',returns);
  $('showReportsBtn')?.classList.toggle('active-tab',reports);
  $('showSettingsBtn')?.classList.toggle('active-tab',settings);
 
- if($('viewLabel')) $('viewLabel').textContent=inventory?'Inventory':sales?'Sales':reports?'Reports':'Settings';
+ if($('viewLabel')) $('viewLabel').textContent=inventory?'Inventory':sales?'Sales':returns?'Returns':reports?'Reports':'Settings';
 
  if(sales) renderHistory();
+ if(returns) renderReturns();
  if(reports) renderReports();
  if(settings) renderSettings();
 }
@@ -1943,7 +2046,11 @@ $('moreDetailsBtn').addEventListener('click',()=>{
  $('moreDetailsBtn').textContent=opening?'− Less Details':'＋ More Details';
 });
 $('closeDetailsDialog').addEventListener('click',()=>$('detailsDialog').close());
-$('quickSellBtn').addEventListener('click',openQuickSell);
+$('quickSellBtn')?.addEventListener('click',openQuickSell);
+$('markReturnedBtn')?.addEventListener('click',openReturnDialog);
+$('returnForm')?.addEventListener('submit',saveReturn);
+$('closeReturnDialog')?.addEventListener('click',()=>$('returnDialog').close());
+$('cancelReturnBtn')?.addEventListener('click',()=>$('returnDialog').close());
 $('closeQuickSellDialog').addEventListener('click',()=>$('quickSellDialog').close());
 $('cancelQuickSellBtn').addEventListener('click',()=>$('quickSellDialog').close());
 ['quickSoldPrice','quickFees','quickShipping'].forEach(id=>$(id).addEventListener('input',updateQuickProfitPreview));
@@ -1973,10 +2080,11 @@ $('showReportsBtn')?.addEventListener('click',()=>setView('reports'));
 $('exportInventoryReportBtn')?.addEventListener('click',exportInventoryReport);
 $('exportSalesReportBtn')?.addEventListener('click',exportSalesReport);
 $('showHistoryBtn')?.addEventListener('click',()=>setView('history'));
+$('showReturnsBtn')?.addEventListener('click',()=>setView('returns'));
 $('showInventoryBtn')?.addEventListener('click',()=>setView('inventory'));
 $('exportBtn').addEventListener('click',()=>{
  const headers=['Item','ID','Category','Location','Cost','Asking Price','Platform','Status','Date Acquired','Days Held','Sold Price','Fees','Shipping','Net Profit','Notes'];
- const rows=items.map(i=>[i.name,i.itemId,i.category,i.location,i.cost,i.askingPrice,i.platform,i.status,i.acquiredDate,daysOld(i),i.soldPrice,i.fees,i.shipping,i.status==='Sold'?profit(i):'',i.notes]);
+ const rows=items.map(i=>[i.name,i.itemId,i.category,i.location,i.cost,i.askingPrice,i.platform,i.status,i.acquiredDate,daysOld(i),i.soldPrice,i.fees,i.shipping,isCompletedSale(i)?profit(i):'',i.notes]);
  const csv=[headers,...rows].map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
  const a=document.createElement('a');
  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
