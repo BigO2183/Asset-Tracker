@@ -1,3 +1,5 @@
+SimpleStock v25.3 — Search + Scan Layout Cleanup
+
 # SimpleStock v25.2 — Core Screen Polish
 
 Keeps the v25 design and improves the four most important screens.

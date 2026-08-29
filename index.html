@@ -136,9 +136,12 @@
         <button id="estateModeBtn" type="button" class="mode-btn">Estate Sale</button>
       </div>
 
-      <div class="search-wrap compact-search">
-        <span class="search-icon">⌕</span>
-        <input id="searchInput" type="search" placeholder="Search items…" autocomplete="off" />
+      <div class="search-action-row">
+        <div class="search-wrap compact-search">
+          <span class="search-icon">⌕</span>
+          <input id="searchInput" type="search" placeholder="Search items…" autocomplete="off" />
+        </div>
+        <button id="scanBtn" type="button" class="filter-toggle scan-btn">Scan</button>
       </div>
 
       <div class="core-filter-row">
@@ -151,12 +154,14 @@
           <option>Donate / Bulk</option>
           <option>Needs Attention</option>
         </select>
-        <button id="scanBtn" type="button" class="filter-toggle scan-btn">Scan</button>
-        <button id="bulkSelectBtn" type="button" class="filter-toggle">Select</button>
         <button id="moreFiltersBtn" type="button" class="filter-toggle" aria-expanded="false">Filters</button>
       </div>
 
       <div id="advancedFilters" class="advanced-filters hidden">
+        <div class="advanced-filter-actions">
+          <button id="bulkSelectBtn" type="button" class="filter-toggle subtle-toggle">Select Items</button>
+          <button id="clearFiltersBtn" type="button" class="clear-filter-btn">Clear</button>
+        </div>
         <select id="categoryFilter" aria-label="Filter by category"><option value="">All Categories</option></select>
         <select id="platformFilter" aria-label="Filter by platform">
           <option value="">All Platforms</option>
@@ -166,7 +171,6 @@
           <option>Estate Sale</option>
           <option>Other</option>
         </select>
-        <button id="clearFiltersBtn" type="button" class="clear-filter-btn">Clear</button>
       </div>
 
       

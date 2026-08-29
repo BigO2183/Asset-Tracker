@@ -3331,3 +3331,132 @@ button{
     opacity:.75;
   }
 }
+
+
+/* =========================================================
+   v25.3 — SEARCH + SCAN LAYOUT CLEANUP
+   Put search and scan together, simplify filter row,
+   and move Select into the Filters panel.
+   ========================================================= */
+
+.search-action-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+}
+
+.search-action-row .search-wrap{
+  margin:0;
+}
+
+.search-action-row #scanBtn{
+  min-width:88px;
+  min-height:48px;
+  padding:0 16px;
+  align-self:stretch;
+}
+
+.core-filter-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+}
+
+.core-filter-row #statusFilter{
+  width:100%;
+  min-width:0;
+}
+
+.core-filter-row #moreFiltersBtn{
+  min-width:96px;
+  min-height:48px;
+  padding:0 16px;
+}
+
+.advanced-filters{
+  display:grid;
+  gap:8px;
+}
+
+.advanced-filter-actions{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:center;
+}
+
+.advanced-filter-actions #bulkSelectBtn{
+  min-height:44px;
+  justify-self:start;
+}
+
+.subtle-toggle{
+  background:#fff;
+  color:#5c6978;
+  border:1px solid var(--line);
+  font-weight:700;
+}
+
+@media(max-width:760px){
+  .search-action-row{
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8px;
+  }
+
+  .search-action-row .search-wrap{
+    min-width:0;
+  }
+
+  .search-action-row #scanBtn{
+    min-width:84px!important;
+    min-height:44px!important;
+    padding:0 14px!important;
+    font-size:.82rem!important;
+    opacity:1!important;
+  }
+
+  .core-filter-row{
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:8px!important;
+  }
+
+  .core-filter-row #moreFiltersBtn{
+    min-width:90px!important;
+    min-height:44px!important;
+    font-size:.82rem!important;
+  }
+
+  .advanced-filter-actions{
+    grid-template-columns:1fr auto;
+  }
+
+  .advanced-filter-actions #bulkSelectBtn,
+  .advanced-filter-actions #clearFiltersBtn{
+    min-height:42px;
+  }
+}
+
+@media(max-width:390px){
+  .search-action-row #scanBtn{
+    min-width:78px!important;
+    padding:0 12px!important;
+    font-size:.78rem!important;
+  }
+
+  .core-filter-row #moreFiltersBtn{
+    min-width:84px!important;
+    padding:0 12px!important;
+    font-size:.78rem!important;
+  }
+
+  .advanced-filter-actions{
+    grid-template-columns:1fr;
+  }
+
+  .advanced-filter-actions #bulkSelectBtn,
+  .advanced-filter-actions #clearFiltersBtn{
+    width:100%;
+  }
+}
