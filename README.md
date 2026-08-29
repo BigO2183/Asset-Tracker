@@ -1,47 +1,26 @@
-# SimpleStock v22.4 — Realistic Demo Inventory
+# SimpleStock v22.5 — Demo Photos Added
 
-The Try Demo workspace now contains realistic reseller and estate-sale inventory instead of generic placeholder data.
+This version adds real-looking demo photos to the sample inventory.
 
-## Reseller examples
-- DeWalt cordless drill
-- KitchenAid stand mixer
-- Samsung 55-inch TV
-- Ring cameras
-- Craftsman tool chest
-- Vintage brass lamp
-- Dyson vacuum
-- Sonos speaker
-- Honda pressure washer
-- Wood nightstands
-- Commercial pressure fryer
-- Milwaukee organizer
+## Added
+- local `demo-images/` folder
+- optimized `.webp` images for faster loading
+- sample inventory items now show realistic demo photos
 
-Includes realistic:
-- purchase costs
-- asking prices
-- storage locations
-- listing platforms
-- statuses
-- notes
-- sold prices
-- fees
-- shipping
-- profit examples
+## Photo coverage
+Demo photos were added for key reseller and estate-sale items including:
+- drill kit
+- stand mixer
+- TV
+- security cameras
+- tool chest
+- brass lamp
+- vacuum
+- speaker
+- pressure washer
+- dresser / furniture
 
-## Estate Sale examples
-- Walnut dresser
-- Lenox china
-- Brass floor lamp
-- Framed artwork
-- Patio furniture
-- Tool lot
-- Leather recliner
-- Holiday decor lot
-
-Includes:
-- rooms
-- tag prices
-- discount stages
-- sold / hold / donate / bulk-buyer dispositions
-
-Real customer workspaces still start empty. The realistic inventory only appears in **Try Demo** mode.
+## Notes
+- Real customer workspaces still start empty.
+- Demo images are local files, so they work inside the app without needing outside image links.
+- A few related demo items reuse category-appropriate photos to keep the app lightweight.
