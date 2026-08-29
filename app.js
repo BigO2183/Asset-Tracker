@@ -654,70 +654,70 @@ function sampleData(){
    itemId:'RS-001',category:'Tools',quantity:1,location:'Garage Shelf A2',
    cost:25,askingPrice:75,platform:'Facebook Marketplace',status:'Listed',
    acquiredDate:dateDaysAgo(6),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Drill, battery, charger and soft bag. Tested and working.',photo:'demo-images/drill-kit.webp'
+   notes:'Drill, battery, charger and soft bag. Tested and working.',photo:'/demo-images/drill-kit.webp'
   },
   {
    key:uid(),recordType:'reseller',name:'KitchenAid Artisan 5-Qt Stand Mixer',
    itemId:'RS-002',category:'Small Appliances',quantity:1,location:'Kitchen Rack B1',
    cost:40,askingPrice:140,platform:'Facebook Marketplace',status:'Listed',
    acquiredDate:dateDaysAgo(11),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Includes bowl and paddle. Light cosmetic wear.',photo:'demo-images/stand-mixer.webp'
+   notes:'Includes bowl and paddle. Light cosmetic wear.',photo:'/demo-images/stand-mixer.webp'
   },
   {
    key:uid(),recordType:'reseller',name:'Samsung 55-Inch 4K Smart TV',
    itemId:'RS-003',category:'Electronics',quantity:1,location:'Garage TV Area',
    cost:0,askingPrice:160,platform:'Facebook Marketplace',status:'Needs Attention',
    acquiredDate:dateDaysAgo(22),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Powers on. Missing original remote. Needs model number added to listing.',photo:'demo-images/smart-tv.webp'
+   notes:'Powers on. Missing original remote. Needs model number added to listing.',photo:'/demo-images/smart-tv.webp'
   },
   {
    key:uid(),recordType:'reseller',name:'Ring Stick Up Cam Battery',
    itemId:'RS-004',category:'Electronics',quantity:2,location:'Bin E-4',
    cost:18,askingPrice:45,platform:'eBay',status:'Listed',
    acquiredDate:dateDaysAgo(9),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Two cameras. One sealed, one open-box.',photo:'demo-images/security-cameras.webp'
+   notes:'Two cameras. One sealed, one open-box.',photo:'/demo-images/security-cameras.webp'
   },
   {
    key:uid(),recordType:'reseller',name:'Craftsman Rolling Tool Chest',
    itemId:'RS-005',category:'Tools',quantity:1,location:'Garage Floor C1',
    cost:35,askingPrice:110,platform:'Local',status:'Unlisted',
    acquiredDate:dateDaysAgo(3),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Drawer slides work. Needs wipe-down before photos.',photo:'demo-images/tool-chest.webp'
+   notes:'Drawer slides work. Needs wipe-down before photos.',photo:'/demo-images/tool-chest.webp'
   },
   {
    key:uid(),recordType:'reseller',name:'Vintage Brass Table Lamp',
    itemId:'RS-006',category:'Home Decor',quantity:1,location:'Shelf D-2',
    cost:8,askingPrice:55,platform:'',status:'Unlisted',
    acquiredDate:dateDaysAgo(18),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Working. Shade not included.',photo:'demo-images/brass-lamp.webp'
+   notes:'Working. Shade not included.',photo:'/demo-images/brass-lamp.webp'
   },
   {
    key:uid(),recordType:'reseller',name:'Dyson V8 Cordless Vacuum',
    itemId:'RS-007',category:'Home Appliances',quantity:1,location:'Closet Rack A',
    cost:30,askingPrice:95,platform:'Facebook Marketplace',status:'Hold',
    acquiredDate:dateDaysAgo(15),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Battery holds charge. Buyer scheduled for pickup Saturday.',photo:'demo-images/vacuum.webp'
+   notes:'Battery holds charge. Buyer scheduled for pickup Saturday.',photo:'/demo-images/vacuum.webp'
   },
   {
    key:uid(),recordType:'reseller',name:'Sonos Play:5 Wireless Speaker',
    itemId:'RS-008',category:'Audio',quantity:1,location:'Shelf E-1',
    cost:35,askingPrice:90,platform:'eBay',status:'Sold',
    acquiredDate:dateDaysAgo(29),soldPrice:82,fees:11.50,shipping:14.25,soldDate:dateDaysAgo(2),
-   notes:'Tested before shipping. Packed with foam corners.',photo:'demo-images/speaker.webp'
+   notes:'Tested before shipping. Packed with foam corners.',photo:'/demo-images/speaker.webp'
   },
   {
    key:uid(),recordType:'reseller',name:'Honda 2800 PSI Pressure Washer',
    itemId:'RS-009',category:'Outdoor Equipment',quantity:1,location:'Garage Bay 2',
    cost:60,askingPrice:185,platform:'Facebook Marketplace',status:'Listed',
    acquiredDate:dateDaysAgo(41),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Starts and runs. Includes hose and wand.',photo:'demo-images/pressure-washer.webp'
+   notes:'Starts and runs. Includes hose and wand.',photo:'/demo-images/pressure-washer.webp'
   },
   {
    key:uid(),recordType:'reseller',name:'Solid Wood Nightstand Pair',
    itemId:'RS-010',category:'Furniture',quantity:2,location:'Storage Unit Wall B',
    cost:20,askingPrice:95,platform:'Facebook Marketplace',status:'Listed',
    acquiredDate:dateDaysAgo(67),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Pair sold together. Minor scratches on tops.',photo:'demo-images/dresser.webp'
+   notes:'Pair sold together. Minor scratches on tops.',photo:'/demo-images/dresser.webp'
   },
   {
    key:uid(),recordType:'reseller',name:'Commercial Pressure Fryer',
@@ -731,7 +731,7 @@ function sampleData(){
    itemId:'RS-012',category:'Tools',quantity:1,location:'Garage Shelf A4',
    cost:12,askingPrice:40,platform:'',status:'Unlisted',
    acquiredDate:dateDaysAgo(2),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Good condition. No cracked latches.',photo:'demo-images/tool-chest.webp'
+   notes:'Good condition. No cracked latches.',photo:'/demo-images/tool-chest.webp'
   },
 
   // ---------------- ESTATE SALE INVENTORY ----------------
@@ -740,7 +740,7 @@ function sampleData(){
    itemId:'ES-013',category:'Furniture',quantity:1,location:'Primary Bedroom',
    cost:0,askingPrice:225,platform:'Estate Sale',status:'For Sale',
    acquiredDate:dateDaysAgo(4),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Six drawers. Minor wear consistent with age.',photo:'demo-images/dresser.webp',
+   notes:'Six drawers. Minor wear consistent with age.',photo:'/demo-images/dresser.webp',
    discountStage:'full',finalPrice:0
   },
   {
@@ -756,7 +756,7 @@ function sampleData(){
    itemId:'ES-015',category:'Home Decor',quantity:1,location:'Living Room',
    cost:0,askingPrice:60,platform:'Estate Sale',status:'For Sale',
    acquiredDate:dateDaysAgo(4),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Tested and working.',photo:'demo-images/brass-lamp.webp',
+   notes:'Tested and working.',photo:'/demo-images/brass-lamp.webp',
    discountStage:'full',finalPrice:0
   },
   {
@@ -780,7 +780,7 @@ function sampleData(){
    itemId:'ES-018',category:'Tools',quantity:1,location:'Garage Workbench',
    cost:0,askingPrice:75,platform:'Estate Sale',status:'For Sale',
    acquiredDate:dateDaysAgo(4),soldPrice:0,fees:0,shipping:0,soldDate:'',
-   notes:'Mixed sockets, wrenches and screwdrivers sold as one lot.',photo:'demo-images/drill-kit.webp',
+   notes:'Mixed sockets, wrenches and screwdrivers sold as one lot.',photo:'/demo-images/drill-kit.webp',
    discountStage:'50',finalPrice:0
   },
   {

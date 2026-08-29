@@ -1,26 +1,16 @@
-# SimpleStock v22.5 — Demo Photos Added
+# SimpleStock v22.6 — Demo Photo Cache Fix
 
-This version adds real-looking demo photos to the sample inventory.
+Fixes demo photos not appearing in the installed Android PWA.
 
-## Added
-- local `demo-images/` folder
-- optimized `.webp` images for faster loading
-- sample inventory items now show realistic demo photos
+## Changes
+- Demo photo paths changed to absolute `/demo-images/...`
+- Service-worker cache bumped to `simplestock-v22-6-shell`
+- Demo images explicitly added to the app-shell cache
+- Android installed app will fetch the new demo assets after redeploy
 
-## Photo coverage
-Demo photos were added for key reseller and estate-sale items including:
-- drill kit
-- stand mixer
-- TV
-- security cameras
-- tool chest
-- brass lamp
-- vacuum
-- speaker
-- pressure washer
-- dresser / furniture
-
-## Notes
-- Real customer workspaces still start empty.
-- Demo images are local files, so they work inside the app without needing outside image links.
-- A few related demo items reuse category-appropriate photos to keep the app lightweight.
+## After deploying
+1. Wait for Netlify to say Published.
+2. On Android, fully close SimpleStock.
+3. Reopen it.
+4. If photos still do not update, Chrome → Site settings → your Netlify site → Clear & reset.
+5. Reopen the live site once in Chrome, then reopen the installed app.
