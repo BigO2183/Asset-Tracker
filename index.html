@@ -37,6 +37,7 @@
           <span>✓ Fast intake</span><span>✓ Phone + desktop</span><span>✓ Sales & profit</span>
         </div>
         <button id="tryDemoBtn" type="button" class="secondary-btn demo-btn">Try Demo</button>
+        <small class="demo-note">Demo uses sample inventory. Changes are temporary.</small>
       </div>
 
       <div class="auth-tabs">
@@ -101,6 +102,7 @@
       <button id="showHistoryBtn" class="nav-btn">Sales</button>
       <button id="showReportsBtn" class="nav-btn">Reports</button>
       <button id="showSettingsBtn" class="nav-btn">Settings</button>
+      <button id="feedbackBtn" class="nav-btn feedback-nav">Feedback</button>
       <button id="exportBtn" class="nav-btn hidden" aria-hidden="true" tabindex="-1">Export</button>
       <div class="nav-spacer"></div>
       <button id="installAppBtn" class="nav-btn install-btn hidden">Install App</button>
@@ -603,6 +605,63 @@
         <button id="stopScannerBtn" type="button" class="secondary-btn">Close</button>
       </div>
     </div>
+  </dialog>
+
+
+  <dialog id="feedbackDialog" class="dialog feedback-dialog">
+    <form id="feedbackForm" class="form-card">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">TESTER FEEDBACK</p>
+          <h2>Help improve SimpleStock</h2>
+          <p class="muted compact">Short, honest feedback is more useful than being nice.</p>
+        </div>
+        <button id="closeFeedbackBtn" type="button" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+
+      <label>You are a
+        <select id="feedbackTesterType">
+          <option value="Reseller">Reseller</option>
+          <option value="Estate Sale">Estate sale operator</option>
+          <option value="Both">Both</option>
+          <option value="Other">Other</option>
+        </select>
+      </label>
+
+      <label>What felt useful?
+        <textarea id="feedbackUseful" rows="2" placeholder="What would actually help you day to day?"></textarea>
+      </label>
+
+      <label>What was confusing or annoying?
+        <textarea id="feedbackConfusing" rows="2" placeholder="Anything you had to think about too much?"></textarea>
+      </label>
+
+      <label>What would you remove?
+        <textarea id="feedbackRemove" rows="2" placeholder="Anything unnecessary or cluttered?"></textarea>
+      </label>
+
+      <label>What is missing?
+        <textarea id="feedbackMissing" rows="2" placeholder="What would stop you from using it?"></textarea>
+      </label>
+
+      <label>Would you actually use SimpleStock?
+        <select id="feedbackWouldUse">
+          <option value="">Choose one</option>
+          <option>Yes</option>
+          <option>Maybe</option>
+          <option>No</option>
+        </select>
+      </label>
+
+      <label>Contact (optional)
+        <input id="feedbackContact" placeholder="Email, Facebook name, etc." />
+      </label>
+
+      <div class="form-actions">
+        <div class="spacer"></div>
+        <button type="submit" class="primary-btn">Send Feedback</button>
+      </div>
+    </form>
   </dialog>
 
 <footer class="brand-footer">SimpleStock · Inventory made simple. · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></footer>

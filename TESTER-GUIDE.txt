@@ -1,0 +1,28 @@
+SIMPLESTOCK — TESTER GUIDE
+
+Thanks for testing SimpleStock.
+
+Please use it like you normally manage resale or estate-sale inventory.
+
+Try these things:
+1. Tap Try Demo.
+2. Search for an item.
+3. Change a status.
+4. Open Item Details.
+5. Edit/correct an item.
+6. Mark an item sold.
+7. Try Scan or manual code lookup.
+8. Look at Sales and Reports.
+9. Switch between Reseller and Estate Sale.
+10. Tap Feedback and tell me what felt useful, confusing, unnecessary, or missing.
+
+Please do NOT worry about being polite. Honest feedback is what helps.
+
+The main questions:
+- What felt useful?
+- What confused or annoyed you?
+- What would you remove?
+- What is missing?
+- Would you actually use this?
+
+Demo changes are temporary and do not affect another tester's real workspace.

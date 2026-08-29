@@ -1,0 +1,9 @@
+Hey everyone — I’ve been building a simple inventory tracker for resellers and I’m looking for a few people to try it out.
+
+Nothing complicated — it tracks inventory, what you paid, asking price, where it’s stored, listing status, sold price/profit, photos, and basic reports from phone or computer.
+
+I’m not selling anything right now. I mainly want real feedback from resellers on what works, what’s annoying, what feels unnecessary, and what’s missing.
+
+There’s a demo with sample inventory, so you don’t have to enter your own stuff just to look around.
+
+If you want to test it, comment or message me and I’ll send the link.

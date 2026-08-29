@@ -2672,3 +2672,35 @@ button{
     padding:22px 13px;
   }
 }
+
+
+/* v23 — tester-ready */
+.feedback-nav{
+  color:var(--brand);
+}
+.demo-note{
+  display:block;
+  margin-top:7px;
+  color:#8a96a4;
+  text-align:center;
+  font-size:.68rem;
+}
+.feedback-dialog{
+  width:min(560px,94vw);
+}
+.feedback-dialog .form-card{
+  max-height:88vh;
+  overflow:auto;
+}
+.feedback-dialog textarea{
+  resize:vertical;
+  min-height:68px;
+}
+@media(max-width:760px){
+  .feedback-dialog{
+    width:96vw;
+  }
+  .feedback-dialog .form-card{
+    padding:15px;
+  }
+}

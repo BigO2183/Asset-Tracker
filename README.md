@@ -1,18 +1,27 @@
-# SimpleStock v22.7 — Embedded Demo Photos
+# SimpleStock v23 — Tester Ready
 
-This version removes the separate `demo-images/` dependency.
+Built for real-world validation.
 
-## Fix
-Demo photos are compressed and embedded directly inside `app.js`.
+## Tester experience
+- Realistic Try Demo inventory
+- Embedded demo photos
+- Built-in Feedback button
+- Feedback stored privately in Netlify Blobs
+- Simple tester instructions
 
-That means:
-- No `demo-images` GitHub folder is required
-- No broken image paths
-- No image-folder deployment mistakes
-- No separate PWA image-cache issue
-- Try Demo should show photos as soon as the new `app.js` is deployed
+## Feedback questions
+- What felt useful?
+- What was confusing or annoying?
+- What would you remove?
+- What is missing?
+- Would you actually use SimpleStock?
 
-## Important
-You can delete the `demo-images/` folder from GitHub after this version is working. It is no longer used.
+## New backend function
+`netlify/functions/feedback.mjs`
 
-The embedded demo photos are small thumbnails intended only for demo inventory cards.
+Deploy the entire project so the feedback function is included.
+
+## Included tester files
+- `TESTER-GUIDE.txt`
+- `TESTER-MESSAGE.txt`
+- `FACEBOOK-RESELLER-POST.txt`

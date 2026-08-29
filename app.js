@@ -4,6 +4,7 @@ const ADMIN_PIN='1234';
 const PREF_KEY='simpleStockV9.preferences';
 const CLOUD_ENDPOINT='/.netlify/functions/inventory';
 const AUTH_ENDPOINT='/.netlify/functions/auth';
+const FEEDBACK_ENDPOINT='/.netlify/functions/feedback';
 const AUTH_KEY='simpleStock.auth.v18';
 let authState=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');
 let cloudEnabled=false;
@@ -1847,6 +1848,12 @@ $('recoveryForm')?.addEventListener('submit',async e=>{
  }catch(err){showToast(err.message);}
 });
 
+$('feedbackBtn')?.addEventListener('click',openFeedback);
+$('closeFeedbackBtn')?.addEventListener('click',closeFeedback);
+$('feedbackForm')?.addEventListener('submit',e=>{
+ e.preventDefault();
+ submitFeedback();
+});
 $('tryDemoBtn')?.addEventListener('click',startDemo);
 
 $('loginTabBtn').addEventListener('click',()=>switchAuthTab('login'));
@@ -1968,6 +1975,44 @@ if('serviceWorker' in navigator){
 }
 
 
+
+function openFeedback(){
+ $('feedbackDialog').showModal();
+}
+function closeFeedback(){
+ $('feedbackDialog').close();
+}
+async function submitFeedback(){
+ const payload={
+   testerType:$('feedbackTesterType').value,
+   useful:$('feedbackUseful').value.trim(),
+   confusing:$('feedbackConfusing').value.trim(),
+   remove:$('feedbackRemove').value.trim(),
+   missing:$('feedbackMissing').value.trim(),
+   wouldUse:$('feedbackWouldUse').value,
+   contact:$('feedbackContact').value.trim()
+ };
+
+ try{
+   showLoading('Sending feedback…');
+   const res=await fetch(FEEDBACK_ENDPOINT,{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify(payload)
+   });
+   const data=await res.json().catch(()=>({}));
+   if(!res.ok)throw new Error(data.error||'Could not submit feedback.');
+
+   $('feedbackDialog').close();
+   $('feedbackForm').reset();
+   showToast('Thank you — feedback sent ✓');
+ }catch(err){
+   showToast(friendlyError(err,'Could not send feedback.'));
+ }finally{
+   hideLoading();
+ }
+}
+
 async function startDemo(){
  setAuthState({
    demo:true,
@@ -1990,6 +2035,7 @@ async function startDemo(){
  setView('inventory');
  applyModeUI();
  render();
+ $('feedbackBtn').textContent='Give Feedback';
  showToast('Demo mode — changes are not saved');
 }
 
