@@ -8,6 +8,7 @@ import {
 } from 'node:crypto';
 
 const AUTH_STORE = 'simplestock-auth';
+const SIGNUP_STORE = 'simplestock-signups';
 const SESSION_DAYS = 30;
 
 const json = (body, status = 200) =>
@@ -70,6 +71,64 @@ async function requireOwner(store, request) {
   const active = await getSession(store, request);
   if (!active || active.user.role !== 'owner') return null;
   return active;
+}
+
+async function requirePlatformAdmin(store, request) {
+  const active = await getSession(store, request);
+  if (!active) return null;
+
+  const adminEmail = String(process.env.SIMPLESTOCK_ADMIN_EMAIL || '')
+    .trim()
+    .toLowerCase();
+
+  if (!adminEmail || normalizeEmail(active.user.email) !== adminEmail) {
+    return null;
+  }
+
+  return active;
+}
+
+async function sendSignupEmail(entry) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const notifyEmail = process.env.SIGNUP_NOTIFY_EMAIL;
+  const fromEmail = process.env.RESEND_FROM_EMAIL;
+
+  if (!apiKey || !notifyEmail || !fromEmail) {
+    return { sent: false, reason: 'Email notification is not configured.' };
+  }
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [notifyEmail],
+        subject: `New SimpleStock signup — ${entry.workspaceName}`,
+        text:
+`New SimpleStock signup
+
+Workspace: ${entry.workspaceName}
+Email: ${entry.email}
+Mode: ${entry.defaultMode === 'estate' ? 'Estate Sale' : 'Reseller'}
+Time: ${entry.createdAt}`
+      })
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      console.error('Signup email failed:', res.status, body);
+      return { sent: false, reason: `Email provider returned ${res.status}.` };
+    }
+
+    return { sent: true };
+  } catch (error) {
+    console.error('Signup email error:', error);
+    return { sent: false, reason: error?.message || 'Email notification failed.' };
+  }
 }
 
 async function issueSession(store, user) {
@@ -149,6 +208,35 @@ export default async (request) => {
       });
     }
 
+    if (request.method === 'GET' && action === 'signups') {
+      const active = await requirePlatformAdmin(store, request);
+      if (!active) {
+        return json({ ok: false, error: 'Platform admin access required.' }, 403);
+      }
+
+      const signupStore = getStore(SIGNUP_STORE);
+      const entries = [];
+      const { blobs } = await signupStore.list({ prefix: 'signup:' });
+
+      for (const blob of blobs) {
+        const entry = await signupStore.get(blob.key, {
+          type: 'json',
+          consistency: 'strong'
+        });
+        if (entry) entries.push(entry);
+      }
+
+      entries.sort((a, b) =>
+        String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
+      );
+
+      return json({
+        ok: true,
+        signups: entries,
+        total: entries.length
+      });
+    }
+
     if (request.method !== 'POST') {
       return json({ ok: false, error: 'Method not allowed.' }, 405);
     }
@@ -209,6 +297,23 @@ export default async (request) => {
       await store.setJSON(userKey(email), user);
       await store.setJSON(workspaceKey(workspaceId), meta);
 
+      const signupEntry = {
+        id: randomUUID(),
+        workspaceId,
+        workspaceName,
+        email,
+        defaultMode,
+        createdAt: user.createdAt
+      };
+
+      const signupStore = getStore(SIGNUP_STORE);
+      await signupStore.setJSON(
+        `signup:${signupEntry.createdAt}:${signupEntry.id}`,
+        signupEntry
+      );
+
+      const emailNotification = await sendSignupEmail(signupEntry);
+
       const token = await issueSession(store, user);
 
       return json({
@@ -216,7 +321,8 @@ export default async (request) => {
         token,
         recoveryCode,
         user: safeUser(user),
-        workspace: { id: workspaceId, name: workspaceName, defaultMode }
+        workspace: { id: workspaceId, name: workspaceName, defaultMode },
+        signupNotification: emailNotification
       });
     }
 
