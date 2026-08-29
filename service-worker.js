@@ -1,4 +1,4 @@
-const CACHE_NAME = 'simplestock-v28-1-mobile-nav';
+const CACHE_NAME = 'simplestock-v25-shell';
 const APP_SHELL = [
   '/',
   '/index.html',

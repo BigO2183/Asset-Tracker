@@ -101,14 +101,13 @@
 
   <nav class="main-nav" aria-label="Main menu">
     <div id="navInner" class="nav-inner">
-      <div class="sidebar-label">Workspace</div>
-      <button id="showInventoryBtn" class="nav-btn active-tab"><span class="nav-icon">▦</span><span>Inventory</span></button>
-      <button id="addItemBtn" class="nav-btn nav-primary"><span class="nav-icon">＋</span><span>Add Item</span></button>
-      <button id="showHistoryBtn" class="nav-btn"><span class="nav-icon">↗</span><span>Sales</span></button>
-      <button id="showReportsBtn" class="nav-btn"><span class="nav-icon">▥</span><span>Reports</span></button>
-      <button id="showSettingsBtn" class="nav-btn"><span class="nav-icon">⚙</span><span>Settings</span></button>
-      <button id="feedbackBtn" class="nav-btn feedback-nav"><span class="nav-icon">✦</span><span>Feedback</span></button>
-      <button id="bugReportBtn" class="nav-btn bug-nav"><span class="nav-icon">!</span><span>Report Bug</span></button>
+      <button id="showInventoryBtn" class="nav-btn active-tab">Inventory</button>
+      <button id="addItemBtn" class="nav-btn nav-primary">＋ Add Item</button>
+      <button id="showHistoryBtn" class="nav-btn">Sales</button>
+      <button id="showReportsBtn" class="nav-btn">Reports</button>
+      <button id="showSettingsBtn" class="nav-btn">Settings</button>
+      <button id="feedbackBtn" class="nav-btn feedback-nav">Feedback</button>
+      <button id="bugReportBtn" class="nav-btn bug-nav">Report Bug</button>
       <button id="exportBtn" class="nav-btn hidden" aria-hidden="true" tabindex="-1">Export</button>
       <div class="nav-spacer"></div>
       <button id="installAppBtn" class="nav-btn install-btn hidden">Install App</button>
@@ -121,16 +120,6 @@
   <button id="adminToggle" type="button" class="hidden" aria-hidden="true">Sign out</button>
 
   <main class="shell workspace-shell">
-    <div class="workspace-intro">
-      <div>
-        <p class="workspace-kicker">Inventory Workspace</p>
-        <h2 id="workspacePageTitle">Inventory</h2>
-      </div>
-      <div class="workspace-intro-actions" aria-label="Workspace sync status">
-        <span class="workspace-sync-dot" aria-hidden="true"></span>
-        <span class="workspace-sync-label">Synced</span>
-      </div>
-    </div>
 
     <section id="onboardingBanner" class="onboarding-banner hidden simplified-hidden" aria-hidden="true">
       <div>
@@ -147,7 +136,7 @@
         <button id="estateModeBtn" type="button" class="mode-btn">Estate Sale</button>
       </div>
 
-      <div class="search-wrap compact-search modern-search">
+      <div class="search-wrap compact-search">
         <span class="search-icon">⌕</span>
         <input id="searchInput" type="search" placeholder="Search items…" autocomplete="off" />
       </div>
@@ -241,7 +230,7 @@
     </section>
 
     <section id="reportsSection" class="panel workspace-panel hidden">
-      <div class="panel-head workspace-head modern-panel-head">
+      <div class="panel-head workspace-head">
         <div>
           <h2>Reports</h2>
           <p class="muted panel-subcopy">A simple snapshot of inventory, sales, profit, and aging.</p>
@@ -428,16 +417,6 @@
           </div>
         </section>
 
-
-        <section class="settings-card support-card">
-          <h3>Support</h3>
-          <p class="muted compact">Tell us what could be better or report something that is not working.</p>
-          <div class="support-actions">
-            <button id="settingsFeedbackBtn" type="button" class="secondary-btn">Give Feedback</button>
-            <button id="settingsBugBtn" type="button" class="secondary-btn">Report a Bug</button>
-          </div>
-        </section>
-
         <section class="settings-card">
           <h3>Backup & Restore</h3>
           <p class="muted compact">Download a full JSON backup of this workspace or restore one later.</p>
@@ -465,20 +444,9 @@
       <input type="hidden" id="itemKey" />
 
       <div class="photo-intake">
-        <div class="photo-choice-row">
-          <label class="photo-picker photo-choice-btn">
-            📷 Take Photo
-            <input id="cameraPhotoFile" type="file" accept="image/*" capture="environment" />
-          </label>
-
-          <label class="secondary-btn photo-choice-btn">
-            🖼 Choose from Device
-            <input id="photoFile" type="file" accept="image/*" />
-          </label>
-        </div>
-
+        <label class="photo-picker">📷 Add Photo<input id="photoFile" type="file" accept="image/*" capture="environment" /></label>
         <div id="photoPreviewWrap" class="photo-preview-wrap">
-          <div id="photoPlaceholder">Photo optional</div>
+          <div id="photoPlaceholder">No photo yet</div>
           <img id="photoPreview" alt="Item preview" />
         </div>
         <div class="photo-help">
