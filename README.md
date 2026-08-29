@@ -1,35 +1,32 @@
-# SimpleStock v27 — Premium Modern Layout
+# SimpleStock v28 — App-Style Layout
 
-Fresh visual/layout rebuild focused on making SimpleStock feel:
-- modern
-- professional
-- friendly
-- simple
-- easy to scan
-- easy to use on phone and desktop
+This version follows the modern inventory-app direction shown in the reference designs.
 
-## Major visual upgrades
-- cleaner sticky header
-- premium navigation
-- clear page-title hierarchy
-- balanced Reseller / Estate Sale switch
-- larger search field
-- cleaner filter controls
-- two-column inventory cards on desktop
-- one-column cards on tablet/mobile
-- consistent product photos
-- clearer item names, pricing, status, and metadata
-- softer panels and status chips
-- cleaner forms and dialogs
-- more organized Settings
-- stronger responsive behavior
+## Desktop
+- dark navy left sidebar
+- SimpleStock branding in the sidebar
+- clean vertical navigation
+- Add Item emphasized
+- three-column product card grid on wide screens
+- large product photos
+- status shown directly on cards
+- clean white workspace
 
-## Colors
-Keeps the existing SimpleStock identity:
-- deep navy
-- soft gray/off-white
+## Mobile
+- compact top header
+- fixed bottom navigation
+- center floating Add Item action
+- Inventory / Sales / Reports / Settings always accessible
+- Feedback and Bug Report moved into Settings → Support
+- compact horizontal inventory rows
+- photo + item + status + pricing at a glance
+- simplified filter area
+
+## Design
+Keeps the existing SimpleStock colors:
+- navy
+- white / soft gray
 - muted green
 - warm amber
 
-## Functionality
-No workflow or backend behavior was intentionally changed.
+No backend or inventory workflow changes were intentionally made.

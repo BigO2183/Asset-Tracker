@@ -2088,6 +2088,8 @@ $('bugForm')?.addEventListener('submit',e=>{
  e.preventDefault();
  submitBugReport();
 });
+$('settingsFeedbackBtn')?.addEventListener('click',openFeedback);
+$('settingsBugBtn')?.addEventListener('click',openBugReport);
 $('feedbackBtn')?.addEventListener('click',openFeedback);
 $('closeFeedbackBtn')?.addEventListener('click',closeFeedback);
 $('feedbackForm')?.addEventListener('submit',e=>{
