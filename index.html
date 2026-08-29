@@ -66,6 +66,9 @@
         <label>Password
           <input id="signupPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="8+ characters" />
         </label>
+        <label id="inviteCodeLabel">Invite Code
+          <input id="signupInviteCode" autocomplete="one-time-code" placeholder="Early-access code" />
+        </label>
         <fieldset class="setup-mode">
           <legend>Start with</legend>
           <label><input type="radio" name="signupMode" value="reseller" checked /> Reseller</label>
@@ -86,6 +89,7 @@
         <p class="eyebrow">RESELLER + ESTATE INVENTORY</p>
         <h1>SimpleStock</h1><span class="brand-tagline">Inventory made simple.</span>
         <span id="workspaceNameLabel" class="workspace-name-label"></span>
+        <span class="early-access-badge">Early Access</span>
       </div>
     </div>
 
@@ -103,6 +107,7 @@
       <button id="showReportsBtn" class="nav-btn">Reports</button>
       <button id="showSettingsBtn" class="nav-btn">Settings</button>
       <button id="feedbackBtn" class="nav-btn feedback-nav">Feedback</button>
+      <button id="bugReportBtn" class="nav-btn bug-nav">Report Bug</button>
       <button id="exportBtn" class="nav-btn hidden" aria-hidden="true" tabindex="-1">Export</button>
       <div class="nav-spacer"></div>
       <button id="installAppBtn" class="nav-btn install-btn hidden">Install App</button>
@@ -345,6 +350,39 @@
         </section>
 
 
+
+
+        <section id="platformControlCard" class="settings-card hidden">
+          <h3>Early Access Control</h3>
+          <p class="muted compact">Control who can create new SimpleStock workspaces during testing.</p>
+
+          <label class="settings-toggle-row">
+            <span>
+              <strong>New Signups</strong>
+              <small>Allow new workspace creation</small>
+            </span>
+            <input id="signupEnabledToggle" type="checkbox" checked />
+          </label>
+
+          <label class="settings-toggle-row">
+            <span>
+              <strong>Require Invite Code</strong>
+              <small>Only people with your code can create a workspace</small>
+            </span>
+            <input id="inviteRequiredToggle" type="checkbox" />
+          </label>
+
+          <label>Set / Change Invite Code
+            <input id="platformInviteCode" placeholder="Example: RESELLER25" />
+          </label>
+
+          <div id="inviteConfigStatus" class="platform-status">Invite code status unknown.</div>
+
+          <div class="settings-actions">
+            <button id="savePlatformConfigBtn" type="button" class="primary-btn">Save Access Settings</button>
+            <button id="clearInviteCodeBtn" type="button" class="secondary-btn">Clear Invite Code</button>
+          </div>
+        </section>
 
         <section id="signupInboxCard" class="settings-card hidden">
           <div class="feedback-inbox-head">
@@ -643,7 +681,42 @@
   </dialog>
 
 
-  <dialog id="feedbackDialog" class="dialog feedback-dialog">
+  
+  <dialog id="bugDialog" class="dialog feedback-dialog">
+    <form id="bugForm" class="form-card">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">BUG REPORT</p>
+          <h2>Something not working?</h2>
+          <p class="muted compact">Tell me what happened and what you expected.</p>
+        </div>
+        <button id="closeBugBtn" type="button" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+
+      <label>What were you trying to do?
+        <textarea id="bugUseful" rows="2" placeholder="Example: Mark an item sold"></textarea>
+      </label>
+
+      <label>What happened?
+        <textarea id="bugConfusing" rows="3" required placeholder="Describe the problem"></textarea>
+      </label>
+
+      <label>What should have happened?
+        <textarea id="bugMissing" rows="2" placeholder="What did you expect?"></textarea>
+      </label>
+
+      <label>Contact (optional)
+        <input id="bugContact" placeholder="Email, Facebook name, etc." />
+      </label>
+
+      <div class="form-actions">
+        <div class="spacer"></div>
+        <button type="submit" class="primary-btn">Send Bug Report</button>
+      </div>
+    </form>
+  </dialog>
+
+<dialog id="feedbackDialog" class="dialog feedback-dialog">
     <form id="feedbackForm" class="form-card">
       <div class="dialog-head">
         <div>

@@ -20,6 +20,7 @@ let scannerStream=null;
 let scannerTimer=null;
 let currentWorkspaceLogo='';
 let saveInProgress=false;
+let platformConfigState=null;
 items=items.map(i=>({...i,status:i.status==='Reserved'?'Hold':(['Donated','Bulk Sale'].includes(i.status)?'Donate / Bulk':i.status)}));
 
 const $=id=>document.getElementById(id);
@@ -1119,6 +1120,71 @@ function stopScanner(){
 
 
 
+
+async function loadPlatformConfig(){
+ const card=$('platformControlCard');
+ if(!card)return;
+
+ try{
+   const res=await fetch(`${AUTH_ENDPOINT}?action=platform_config`,{
+     headers:authHeaders(),
+     cache:'no-store'
+   });
+   const payload=await res.json().catch(()=>({}));
+
+   if(res.status===403){
+     card.classList.add('hidden');
+     $('signupInboxCard')?.classList.add('hidden');
+     return false;
+   }
+
+   if(!res.ok)throw new Error(payload.error||'Could not load early-access settings.');
+
+   platformConfigState=payload.config;
+   card.classList.remove('hidden');
+   $('signupEnabledToggle').checked=payload.config.signupEnabled!==false;
+   $('inviteRequiredToggle').checked=Boolean(payload.config.inviteRequired);
+   $('platformInviteCode').value='';
+   $('inviteConfigStatus').textContent=payload.config.inviteConfigured
+     ?'Invite code is configured.'
+     :'No invite code is configured.';
+   $('inviteConfigStatus').classList.toggle('configured',Boolean(payload.config.inviteConfigured));
+
+   return true;
+ }catch(err){
+   card.classList.remove('hidden');
+   $('inviteConfigStatus').textContent=friendlyError(err,'Could not load access settings.');
+   return false;
+ }
+}
+
+async function savePlatformConfig({clearInviteCode=false}={}){
+ try{
+   showLoading('Saving access settings…');
+
+   const res=await fetch(`${AUTH_ENDPOINT}?action=update_platform_config`,{
+     method:'POST',
+     headers:authHeaders({'Content-Type':'application/json'}),
+     body:JSON.stringify({
+       signupEnabled:$('signupEnabledToggle').checked,
+       inviteRequired:$('inviteRequiredToggle').checked,
+       inviteCode:$('platformInviteCode').value.trim(),
+       clearInviteCode
+     })
+   });
+
+   const payload=await res.json().catch(()=>({}));
+   if(!res.ok)throw new Error(payload.error||'Could not save access settings.');
+
+   showToast('Early-access settings saved ✓');
+   await loadPlatformConfig();
+ }catch(err){
+   showToast(friendlyError(err,'Could not save access settings.'));
+ }finally{
+   hideLoading();
+ }
+}
+
 async function backfillSignups(){
  try{
    showLoading('Importing existing accounts…');
@@ -1179,25 +1245,38 @@ async function loadSignupInbox(){
      return;
    }
 
-   inbox.innerHTML=signups.map(entry=>`
+   inbox.innerHTML=signups.map(entry=>{
+     const lastSeen=entry.lastActivityAt||entry.lastLoginAt;
+     return `
      <article class="feedback-entry signup-entry">
        <div class="feedback-entry-head">
          <div>
            <strong>${esc(entry.workspaceName||'Unnamed workspace')}</strong>
            <span>${esc(entry.defaultMode==='estate'?'Estate Sale':'Reseller')}</span>
          </div>
-         <time>${esc(new Date(entry.createdAt).toLocaleString())}</time>
+         <time>Joined ${esc(new Date(entry.createdAt).toLocaleString())}</time>
        </div>
+
+       <div class="tester-metrics">
+         <div><strong>${Number(entry.itemCount)||0}</strong><span>items</span></div>
+         <div><strong>${Number(entry.soldCount)||0}</strong><span>sold</span></div>
+         <div><strong>${Number(entry.memberCount)||1}</strong><span>users</span></div>
+       </div>
+
        <div>
          <span class="feedback-label">Account Email</span>
          <p>${esc(entry.email||'')}</p>
        </div>
        <div>
-         <span class="feedback-label">Workspace ID</span>
-         <p class="workspace-id-text">${esc(entry.workspaceId||'')}</p>
+         <span class="feedback-label">Last Login</span>
+         <p>${entry.lastLoginAt?esc(new Date(entry.lastLoginAt).toLocaleString()):'Not recorded yet'}</p>
        </div>
-     </article>
-   `).join('');
+       <div>
+         <span class="feedback-label">Last Activity</span>
+         <p>${lastSeen?esc(new Date(lastSeen).toLocaleString()):'No activity recorded'}</p>
+       </div>
+     </article>`;
+   }).join('');
  }catch(err){
    card.classList.remove('hidden');
    inbox.innerHTML=`<div class="settings-empty">${esc(friendlyError(err,'Could not load signups.'))}</div>`;
@@ -1235,8 +1314,8 @@ async function loadFeedbackInbox(){
      <article class="feedback-entry">
        <div class="feedback-entry-head">
          <div>
-           <strong>${esc(entry.testerType||'Tester')}</strong>
-           <span>${entry.wouldUse?`Would use: ${esc(entry.wouldUse)}`:'No usage answer'}</span>
+           <strong>${entry.kind==='bug'?'🐞 Bug Report':esc(entry.testerType||'Tester')}</strong>
+           <span>${entry.kind==='bug'?'Technical issue':(entry.wouldUse?`Would use: ${esc(entry.wouldUse)}`:'No usage answer')}</span>
          </div>
          <time>${esc(new Date(entry.createdAt).toLocaleString())}</time>
        </div>
@@ -1267,8 +1346,10 @@ async function renderSettings(){
  if(user.role==='owner'){
    await loadStaff();
    await loadFeedbackInbox();
-   await loadSignupInbox();
+   const platformAdmin=await loadPlatformConfig();
+   if(platformAdmin)await loadSignupInbox();
  }else{
+   $('platformControlCard')?.classList.add('hidden');
    $('signupInboxCard')?.classList.add('hidden');
  }
 }
@@ -1966,6 +2047,10 @@ $('addStaffBtn')?.addEventListener('click',async()=>{
  }catch(err){showToast(err.message);}
 });
 
+$('savePlatformConfigBtn')?.addEventListener('click',()=>savePlatformConfig());
+$('clearInviteCodeBtn')?.addEventListener('click',()=>{
+ if(confirm('Clear the current invite code?'))savePlatformConfig({clearInviteCode:true});
+});
 $('backfillSignupsBtn')?.addEventListener('click',backfillSignups);
 $('refreshSignupsBtn')?.addEventListener('click',loadSignupInbox);
 $('refreshFeedbackBtn')?.addEventListener('click',loadFeedbackInbox);
@@ -1994,6 +2079,12 @@ $('recoveryForm')?.addEventListener('submit',async e=>{
  }catch(err){showToast(err.message);}
 });
 
+$('bugReportBtn')?.addEventListener('click',openBugReport);
+$('closeBugBtn')?.addEventListener('click',closeBugReport);
+$('bugForm')?.addEventListener('submit',e=>{
+ e.preventDefault();
+ submitBugReport();
+});
 $('feedbackBtn')?.addEventListener('click',openFeedback);
 $('closeFeedbackBtn')?.addEventListener('click',closeFeedback);
 $('feedbackForm')?.addEventListener('submit',e=>{
@@ -2042,6 +2133,7 @@ $('signupForm').addEventListener('submit',async e=>{
      workspaceName:$('signupWorkspace').value,
      email:$('signupEmail').value,
      password:$('signupPassword').value,
+     inviteCode:$('signupInviteCode').value,
      defaultMode:selected?.value||'reseller'
    });
    setAuthState({token:payload.token,user:payload.user});
@@ -2121,6 +2213,45 @@ if('serviceWorker' in navigator){
 }
 
 
+
+
+function openBugReport(){
+ $('bugDialog').showModal();
+}
+function closeBugReport(){
+ $('bugDialog').close();
+}
+async function submitBugReport(){
+ const payload={
+   kind:'bug',
+   testerType:authState?.user?.role==='owner'?'Owner/User':'Tester',
+   useful:$('bugUseful').value.trim(),
+   confusing:$('bugConfusing').value.trim(),
+   remove:'',
+   missing:$('bugMissing').value.trim(),
+   wouldUse:'',
+   contact:$('bugContact').value.trim()
+ };
+
+ try{
+   showLoading('Sending bug report…');
+   const res=await fetch(FEEDBACK_ENDPOINT,{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify(payload)
+   });
+   const data=await res.json().catch(()=>({}));
+   if(!res.ok)throw new Error(data.error||'Could not submit bug report.');
+
+   $('bugDialog').close();
+   $('bugForm').reset();
+   showToast('Bug report sent ✓');
+ }catch(err){
+   showToast(friendlyError(err,'Could not send bug report.'));
+ }finally{
+   hideLoading();
+ }
+}
 
 function openFeedback(){
  $('feedbackDialog').showModal();
