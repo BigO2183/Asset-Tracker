@@ -1,29 +1,48 @@
-# SimpleStock v23.1 — Owner Feedback Inbox
+# SimpleStock v24 — Signup Monitor
 
-Adds an owner-only feedback inbox inside Settings.
+Every new workspace registration is now recorded.
 
-## Where feedback goes
-Tester feedback is stored in Netlify Blobs under:
+## Signup Inbox
+Platform admin can open:
 
-`simplestock-feedback`
+Settings → Signup Inbox
 
-## Owner Inbox
-Settings → Feedback Inbox
+It shows:
+- total signups
+- workspace name
+- account email
+- Reseller / Estate Sale mode
+- signup date/time
+- workspace ID
 
-Owners can:
-- read tester type
-- see whether they would use SimpleStock
-- read what felt useful
-- read what was confusing / annoying
-- see what testers would remove
-- see what they say is missing
-- view optional contact info
-- refresh the inbox
+## Platform Admin Setup
+In Netlify environment variables, set:
 
-## Security
-Only signed-in workspace owners can load the feedback inbox.
+`SIMPLESTOCK_ADMIN_EMAIL`
+
+to the email address of the SimpleStock account that should be allowed to see all signups.
+
+Only that signed-in account can access the Signup Inbox.
+
+## Optional Email Alerts
+To receive an email whenever someone creates a workspace, also set:
+
+`SIGNUP_NOTIFY_EMAIL`
+- email address that should receive signup alerts
+
+`RESEND_API_KEY`
+- API key from Resend
+
+`RESEND_FROM_EMAIL`
+- verified sender address in Resend, such as:
+  `SimpleStock <notifications@yourdomain.com>`
+
+If the email variables are not configured, signup logging still works normally. Email alerts are simply skipped.
+
+## New storage
+Signups are stored privately in Netlify Blobs:
+
+`simplestock-signups`
 
 ## Backend change
-`netlify/functions/feedback.mjs` now supports:
-- POST for public tester submissions
-- GET for owner-only feedback retrieval
+`netlify/functions/auth.mjs` changed, so deploy the whole project.

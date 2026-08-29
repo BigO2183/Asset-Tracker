@@ -2770,3 +2770,30 @@ button{
   font-size:.78rem;
   line-height:1.4;
 }
+
+
+/* v24 — signup monitoring */
+.signup-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:12px;
+  padding:10px 11px;
+  border-radius:11px;
+  background:var(--brand-soft);
+}
+.signup-summary span{
+  color:var(--brand);
+  font-size:.76rem;
+  font-weight:800;
+}
+.signup-summary strong{
+  color:var(--brand-strong);
+  font-size:1.15rem;
+}
+.workspace-id-text{
+  overflow-wrap:anywhere;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.7rem!important;
+}

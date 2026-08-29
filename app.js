@@ -1117,6 +1117,62 @@ function stopScanner(){
 }
 
 
+
+async function loadSignupInbox(){
+ const card=$('signupInboxCard');
+ const inbox=$('signupInbox');
+ if(!card || !inbox)return;
+
+ try{
+   const res=await fetch(`${AUTH_ENDPOINT}?action=signups`,{
+     headers:authHeaders(),
+     cache:'no-store'
+   });
+
+   const payload=await res.json().catch(()=>({}));
+
+   if(res.status===403){
+     card.classList.add('hidden');
+     return;
+   }
+
+   if(!res.ok)throw new Error(payload.error||'Could not load signups.');
+
+   card.classList.remove('hidden');
+   $('signupTotal').textContent=payload.total||0;
+
+   const signups=payload.signups||[];
+
+   if(!signups.length){
+     inbox.innerHTML='<div class="settings-empty">No workspace signups yet.</div>';
+     return;
+   }
+
+   inbox.innerHTML=signups.map(entry=>`
+     <article class="feedback-entry signup-entry">
+       <div class="feedback-entry-head">
+         <div>
+           <strong>${esc(entry.workspaceName||'Unnamed workspace')}</strong>
+           <span>${esc(entry.defaultMode==='estate'?'Estate Sale':'Reseller')}</span>
+         </div>
+         <time>${esc(new Date(entry.createdAt).toLocaleString())}</time>
+       </div>
+       <div>
+         <span class="feedback-label">Account Email</span>
+         <p>${esc(entry.email||'')}</p>
+       </div>
+       <div>
+         <span class="feedback-label">Workspace ID</span>
+         <p class="workspace-id-text">${esc(entry.workspaceId||'')}</p>
+       </div>
+     </article>
+   `).join('');
+ }catch(err){
+   card.classList.remove('hidden');
+   inbox.innerHTML=`<div class="settings-empty">${esc(friendlyError(err,'Could not load signups.'))}</div>`;
+ }
+}
+
 async function loadFeedbackInbox(){
  const card=$('feedbackInboxCard');
  const inbox=$('feedbackInbox');
@@ -1180,6 +1236,9 @@ async function renderSettings(){
  if(user.role==='owner'){
    await loadStaff();
    await loadFeedbackInbox();
+   await loadSignupInbox();
+ }else{
+   $('signupInboxCard')?.classList.add('hidden');
  }
 }
 
@@ -1876,6 +1935,7 @@ $('addStaffBtn')?.addEventListener('click',async()=>{
  }catch(err){showToast(err.message);}
 });
 
+$('refreshSignupsBtn')?.addEventListener('click',loadSignupInbox);
 $('refreshFeedbackBtn')?.addEventListener('click',loadFeedbackInbox);
 $('downloadBackupBtn')?.addEventListener('click',downloadBackup);
 $('restoreBackupFile')?.addEventListener('change',e=>{
