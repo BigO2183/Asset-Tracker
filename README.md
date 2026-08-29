@@ -1,32 +1,21 @@
-# SimpleStock v28 — App-Style Layout
+# SimpleStock v28.1 — Mobile Navigation Fix
 
-This version follows the modern inventory-app direction shown in the reference designs.
+Fixes the mobile bottom navigation shown in v28.
 
-## Desktop
-- dark navy left sidebar
-- SimpleStock branding in the sidebar
-- clean vertical navigation
-- Add Item emphasized
-- three-column product card grid on wide screens
-- large product photos
-- status shown directly on cards
-- clean white workspace
+## Mobile bottom nav now shows only
+- Inventory
+- Sales
+- + Add Item
+- Reports
+- Settings
 
-## Mobile
-- compact top header
-- fixed bottom navigation
-- center floating Add Item action
-- Inventory / Sales / Reports / Settings always accessible
-- Feedback and Bug Report moved into Settings → Support
-- compact horizontal inventory rows
-- photo + item + status + pricing at a glance
-- simplified filter area
+## Removed from bottom nav
+- Feedback
+- Report Bug
+- Install App
 
-## Design
-Keeps the existing SimpleStock colors:
-- navy
-- white / soft gray
-- muted green
-- warm amber
+Feedback and Report Bug remain available inside Settings → Support.
 
-No backend or inventory workflow changes were intentionally made.
+The Add Item action is restored as the raised center button.
+
+No backend or inventory workflow changes.
