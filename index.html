@@ -444,9 +444,20 @@
       <input type="hidden" id="itemKey" />
 
       <div class="photo-intake">
-        <label class="photo-picker">📷 Add Photo<input id="photoFile" type="file" accept="image/*" capture="environment" /></label>
+        <div class="photo-choice-row">
+          <label class="photo-picker photo-choice-btn">
+            📷 Take Photo
+            <input id="cameraPhotoFile" type="file" accept="image/*" capture="environment" />
+          </label>
+
+          <label class="secondary-btn photo-choice-btn">
+            🖼 Choose from Device
+            <input id="photoFile" type="file" accept="image/*" />
+          </label>
+        </div>
+
         <div id="photoPreviewWrap" class="photo-preview-wrap">
-          <div id="photoPlaceholder">No photo yet</div>
+          <div id="photoPlaceholder">Photo optional</div>
           <img id="photoPreview" alt="Item preview" />
         </div>
         <div class="photo-help">

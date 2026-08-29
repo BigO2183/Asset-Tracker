@@ -2906,3 +2906,29 @@ button{
     font-size:.52rem;
   }
 }
+
+
+/* v25.1 — user chooses how to add a photo */
+.photo-choice-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  width:100%;
+}
+.photo-choice-btn{
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  margin:0!important;
+  cursor:pointer;
+  text-align:center;
+}
+.photo-choice-btn input{
+  display:none!important;
+}
+@media(max-width:520px){
+  .photo-choice-row{
+    grid-template-columns:1fr;
+  }
+}

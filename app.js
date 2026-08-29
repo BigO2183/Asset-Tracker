@@ -617,8 +617,7 @@ function saveCurrentItem({addAnother=false}={}){
    const lastLocation=record.location;
    prepareFreshIntake({keepContext:true});
    $('location').value=lastLocation;
-   setTimeout(()=>$('photoFile').click(),120);
- }else{
+   }else{
    if(document.activeElement && typeof document.activeElement.blur==='function'){
      document.activeElement.blur();
    }
@@ -1817,7 +1816,6 @@ function openAdd(){
  if(!isAdmin){showToast('This account is view-only');return;}
  prepareFreshIntake({keepContext:false});
  $('itemDialog').showModal();
- setTimeout(()=>$('photoFile').click(),120);
 }
 function openEdit(key){
  if(!isAdmin)return;
@@ -1867,7 +1865,7 @@ function updateProfitPreview(){
  $('profitPreview').classList.remove('hidden');
 }
 
-$('photoFile').addEventListener('change',async e=>{
+async function handlePhotoInput(e){
  const f=e.target.files?.[0];
  if(!f)return;
 
@@ -1880,7 +1878,10 @@ $('photoFile').addEventListener('change',async e=>{
    console.error(err);
    alert('That photo could not be prepared. Please try another photo.');
  }
-});
+}
+
+$('photoFile')?.addEventListener('change',handlePhotoInput);
+$('cameraPhotoFile')?.addEventListener('change',handlePhotoInput);
 $('status').addEventListener('change',toggleSaleFields);
 ['soldPrice','cost','fees','shipping'].forEach(id=>$(id).addEventListener('input',updateProfitPreview));
 $('itemForm').addEventListener('submit',e=>e.preventDefault());
