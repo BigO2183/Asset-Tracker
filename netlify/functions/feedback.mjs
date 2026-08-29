@@ -18,7 +18,7 @@ const userKey = (email) =>
     .update(String(email).trim().toLowerCase())
     .digest('hex')}`;
 
-async function requireOwner(request) {
+async function requirePlatformAdmin(request) {
   const header = request.headers.get('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (!token) return null;
@@ -38,7 +38,13 @@ async function requireOwner(request) {
     consistency: 'strong'
   });
 
-  if (!user || user.role !== 'owner') return null;
+  const adminEmail = String(process.env.SIMPLESTOCK_ADMIN_EMAIL || '')
+    .trim()
+    .toLowerCase();
+
+  if (!user || !adminEmail || String(user.email).toLowerCase() !== adminEmail) {
+    return null;
+  }
 
   return user;
 }
@@ -48,9 +54,9 @@ export default async (request) => {
     const store = getStore(STORE);
 
     if (request.method === 'GET') {
-      const owner = await requireOwner(request);
+      const owner = await requirePlatformAdmin(request);
       if (!owner) {
-        return json({ ok: false, error: 'Owner access required.' }, 403);
+        return json({ ok: false, error: 'Platform admin access required.' }, 403);
       }
 
       const entries = [];
@@ -87,6 +93,7 @@ export default async (request) => {
     const wouldUse = String(body.wouldUse || '').trim();
     const contact = String(body.contact || '').trim();
     const testerType = String(body.testerType || '').trim();
+    const kind = body.kind === 'bug' ? 'bug' : 'feedback';
 
     if (!useful && !confusing && !missing && !remove) {
       return json(
@@ -98,6 +105,7 @@ export default async (request) => {
     const entry = {
       id: randomUUID(),
       createdAt: new Date().toISOString(),
+      kind,
       testerType,
       useful,
       confusing,

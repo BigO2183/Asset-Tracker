@@ -12,6 +12,7 @@ const json = (body, status = 200) =>
 
 const sessionKey = (token) =>
   `session:${createHash('sha256').update(String(token)).digest('hex')}`;
+const workspaceKey = (workspaceId) => `workspace:${workspaceId}:meta`;
 const userKey = (email) =>
   `user:${createHash('sha256').update(String(email).trim().toLowerCase()).digest('hex')}`;
 
@@ -39,6 +40,23 @@ async function requireUser(request) {
   return { session, user };
 }
 
+
+async function touchWorkspaceActivity(workspaceId) {
+  try {
+    const authStore = getStore(AUTH_STORE);
+    const meta = await authStore.get(workspaceKey(workspaceId), {
+      type: 'json',
+      consistency: 'strong'
+    });
+    if (!meta) return;
+
+    meta.lastActivityAt = new Date().toISOString();
+    await authStore.setJSON(workspaceKey(workspaceId), meta);
+  } catch (error) {
+    console.warn('Could not update workspace activity:', error);
+  }
+}
+
 export default async (request) => {
   try {
     const active = await requireUser(request);
@@ -49,6 +67,7 @@ export default async (request) => {
     const recordKey = `workspace:${active.user.workspaceId}:inventory-state`;
 
     if (request.method === 'GET') {
+      await touchWorkspaceActivity(active.user.workspaceId);
       const data = await store.get(recordKey, {
         type: 'json',
         consistency: 'strong'
@@ -77,6 +96,7 @@ export default async (request) => {
         updatedAt: new Date().toISOString()
       };
       await store.setJSON(recordKey, data);
+      await touchWorkspaceActivity(active.user.workspaceId);
       return json({ ok: true, updatedAt: data.updatedAt });
     }
 

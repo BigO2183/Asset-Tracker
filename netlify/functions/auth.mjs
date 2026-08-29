@@ -9,6 +9,8 @@ import {
 
 const AUTH_STORE = 'simplestock-auth';
 const SIGNUP_STORE = 'simplestock-signups';
+const DATA_STORE = 'simplestock-workspaces';
+const PLATFORM_CONFIG_KEY = 'platform:early-access-config';
 const SESSION_DAYS = 30;
 
 const json = (body, status = 200) =>
@@ -28,6 +30,8 @@ const passwordHash = (password, salt) =>
   scryptSync(String(password), salt, 64).toString('hex');
 const recoveryHash = (code) =>
   createHash('sha256').update(String(code).trim().toLowerCase()).digest('hex');
+const inviteHash = (code) =>
+  createHash('sha256').update(String(code).trim().toLowerCase()).digest('hex');
 
 const safeUser = (user) => ({
   email: user.email,
@@ -35,7 +39,8 @@ const safeUser = (user) => ({
   canEdit: user.role === 'owner' || Boolean(user.canEdit),
   workspaceId: user.workspaceId,
   workspaceName: user.workspaceName,
-  defaultMode: user.defaultMode || 'reseller'
+  defaultMode: user.defaultMode || 'reseller',
+  lastLoginAt: user.lastLoginAt || null
 });
 
 async function loadUser(store, email) {
@@ -140,6 +145,32 @@ async function issueSession(store, user) {
     expiresAt: Date.now() + SESSION_DAYS * 86400000
   });
   return token;
+}
+
+
+async function getPlatformConfig(store) {
+  const saved = await store.get(PLATFORM_CONFIG_KEY, {
+    type: 'json',
+    consistency: 'strong'
+  });
+
+  return {
+    signupEnabled: saved?.signupEnabled !== false,
+    inviteRequired: Boolean(saved?.inviteRequired),
+    inviteHash: saved?.inviteHash || '',
+    updatedAt: saved?.updatedAt || null
+  };
+}
+
+async function savePlatformConfig(store, config) {
+  const next = {
+    signupEnabled: config.signupEnabled !== false,
+    inviteRequired: Boolean(config.inviteRequired),
+    inviteHash: config.inviteHash || '',
+    updatedAt: new Date().toISOString()
+  };
+  await store.setJSON(PLATFORM_CONFIG_KEY, next);
+  return next;
 }
 
 async function updateWorkspaceUsers(store, meta) {
@@ -282,6 +313,7 @@ export default async (request) => {
       }
 
       const signupStore = getStore(SIGNUP_STORE);
+      const dataStore = getStore(DATA_STORE);
       const entries = [];
       const { blobs } = await signupStore.list({ prefix: 'signup:' });
 
@@ -290,7 +322,29 @@ export default async (request) => {
           type: 'json',
           consistency: 'strong'
         });
-        if (entry) entries.push(entry);
+        if (!entry) continue;
+
+        const owner = await loadUser(store, entry.email);
+        const meta = await store.get(workspaceKey(entry.workspaceId), {
+          type: 'json',
+          consistency: 'strong'
+        });
+        const data = await dataStore.get(
+          `workspace:${entry.workspaceId}:inventory-state`,
+          { type: 'json', consistency: 'strong' }
+        );
+
+        const workspaceItems = Array.isArray(data?.items) ? data.items : [];
+        const soldCount = workspaceItems.filter(i => i?.status === 'Sold').length;
+
+        entries.push({
+          ...entry,
+          lastLoginAt: owner?.lastLoginAt || meta?.lastLoginAt || null,
+          lastActivityAt: meta?.lastActivityAt || data?.updatedAt || null,
+          itemCount: workspaceItems.length,
+          soldCount,
+          memberCount: Array.isArray(meta?.members) ? meta.members.length : 1
+        });
       }
 
       entries.sort((a, b) =>
@@ -301,6 +355,25 @@ export default async (request) => {
         ok: true,
         signups: entries,
         total: entries.length
+      });
+    }
+
+    if (request.method === 'GET' && action === 'platform_config') {
+      const active = await requirePlatformAdmin(store, request);
+      if (!active) {
+        return json({ ok: false, error: 'Platform admin access required.' }, 403);
+      }
+
+      const config = await getPlatformConfig(store);
+
+      return json({
+        ok: true,
+        config: {
+          signupEnabled: config.signupEnabled,
+          inviteRequired: config.inviteRequired,
+          inviteConfigured: Boolean(config.inviteHash),
+          updatedAt: config.updatedAt
+        }
       });
     }
 
@@ -324,7 +397,74 @@ export default async (request) => {
       });
     }
 
+    if (action === 'update_platform_config') {
+      const active = await requirePlatformAdmin(store, request);
+      if (!active) {
+        return json({ ok: false, error: 'Platform admin access required.' }, 403);
+      }
+
+      const current = await getPlatformConfig(store);
+      let nextInviteHash = current.inviteHash;
+
+      const newInviteCode = String(body.inviteCode || '').trim();
+      const clearInviteCode = Boolean(body.clearInviteCode);
+
+      if (clearInviteCode) {
+        nextInviteHash = '';
+      } else if (newInviteCode) {
+        if (newInviteCode.length < 4) {
+          return json({ ok: false, error: 'Invite code must be at least 4 characters.' }, 400);
+        }
+        nextInviteHash = inviteHash(newInviteCode);
+      }
+
+      const next = await savePlatformConfig(store, {
+        signupEnabled: body.signupEnabled !== false,
+        inviteRequired: Boolean(body.inviteRequired),
+        inviteHash: nextInviteHash
+      });
+
+      if (next.inviteRequired && !next.inviteHash) {
+        next.inviteRequired = false;
+        await savePlatformConfig(store, next);
+        return json({
+          ok: false,
+          error: 'Set an invite code before requiring invites.'
+        }, 400);
+      }
+
+      return json({
+        ok: true,
+        config: {
+          signupEnabled: next.signupEnabled,
+          inviteRequired: next.inviteRequired,
+          inviteConfigured: Boolean(next.inviteHash),
+          updatedAt: next.updatedAt
+        }
+      });
+    }
+
     if (action === 'signup') {
+      const platformConfig = await getPlatformConfig(store);
+
+      if (!platformConfig.signupEnabled) {
+        return json({
+          ok: false,
+          error: 'New workspace signup is temporarily closed.'
+        }, 403);
+      }
+
+      const inviteCode = String(body.inviteCode || '').trim();
+
+      if (platformConfig.inviteRequired) {
+        if (!platformConfig.inviteHash || inviteHash(inviteCode) !== platformConfig.inviteHash) {
+          return json({
+            ok: false,
+            error: 'A valid early-access invite code is required.'
+          }, 403);
+        }
+      }
+
       const workspaceName = String(body.workspaceName || '').trim();
       const email = normalizeEmail(body.email);
       const password = String(body.password || '');
@@ -428,8 +568,16 @@ export default async (request) => {
       if (!user.defaultMode) { user.defaultMode = 'reseller'; changed = true; }
       if (!user.workspaceName) { user.workspaceName = 'SimpleStock Workspace'; changed = true; }
 
-      if (changed) {
-        await store.setJSON(userKey(user.email), user);
+      user.lastLoginAt = new Date().toISOString();
+      await store.setJSON(userKey(user.email), user);
+
+      const meta = await store.get(workspaceKey(user.workspaceId), {
+        type: 'json',
+        consistency: 'strong'
+      });
+      if (meta) {
+        meta.lastLoginAt = user.lastLoginAt;
+        await store.setJSON(workspaceKey(meta.id), meta);
       }
 
       const token = await issueSession(store, user);
