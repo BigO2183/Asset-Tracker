@@ -1,4 +1,4 @@
-const CACHE_NAME = 'simplestock-v22-6-shell';
+const CACHE_NAME = 'simplestock-v22-7-shell';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -11,16 +11,6 @@ const APP_SHELL = [
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/icon-maskable-512.png',
-  '/demo-images/dresser.webp',
-  '/demo-images/pressure-washer.webp',
-  '/demo-images/speaker.webp',
-  '/demo-images/vacuum.webp',
-  '/demo-images/brass-lamp.webp',
-  '/demo-images/tool-chest.webp',
-  '/demo-images/security-cameras.webp',
-  '/demo-images/smart-tv.webp',
-  '/demo-images/stand-mixer.webp',
-  '/demo-images/drill-kit.webp'
 ];
 
 self.addEventListener('install', event => {

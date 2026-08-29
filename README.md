@@ -1,16 +1,18 @@
-# SimpleStock v22.6 — Demo Photo Cache Fix
+# SimpleStock v22.7 — Embedded Demo Photos
 
-Fixes demo photos not appearing in the installed Android PWA.
+This version removes the separate `demo-images/` dependency.
 
-## Changes
-- Demo photo paths changed to absolute `/demo-images/...`
-- Service-worker cache bumped to `simplestock-v22-6-shell`
-- Demo images explicitly added to the app-shell cache
-- Android installed app will fetch the new demo assets after redeploy
+## Fix
+Demo photos are compressed and embedded directly inside `app.js`.
 
-## After deploying
-1. Wait for Netlify to say Published.
-2. On Android, fully close SimpleStock.
-3. Reopen it.
-4. If photos still do not update, Chrome → Site settings → your Netlify site → Clear & reset.
-5. Reopen the live site once in Chrome, then reopen the installed app.
+That means:
+- No `demo-images` GitHub folder is required
+- No broken image paths
+- No image-folder deployment mistakes
+- No separate PWA image-cache issue
+- Try Demo should show photos as soon as the new `app.js` is deployed
+
+## Important
+You can delete the `demo-images/` folder from GitHub after this version is working. It is no longer used.
+
+The embedded demo photos are small thumbnails intended only for demo inventory cards.
