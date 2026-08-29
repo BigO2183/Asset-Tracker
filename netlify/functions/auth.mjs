@@ -152,6 +152,73 @@ async function updateWorkspaceUsers(store, meta) {
   }
 }
 
+
+async function backfillExistingSignups(authStore) {
+  const signupStore = getStore(SIGNUP_STORE);
+
+  const existing = await signupStore.list({ prefix: 'signup:' });
+  const knownWorkspaceIds = new Set();
+
+  for (const blob of existing.blobs || []) {
+    const entry = await signupStore.get(blob.key, {
+      type: 'json',
+      consistency: 'strong'
+    });
+    if (entry?.workspaceId) knownWorkspaceIds.add(entry.workspaceId);
+  }
+
+  let created = 0;
+  let scanned = 0;
+
+  // Scan all auth-store keys and use only user records.
+  const { blobs } = await authStore.list();
+
+  for (const blob of blobs || []) {
+    if (!blob.key.startsWith('user:')) continue;
+
+    const user = await authStore.get(blob.key, {
+      type: 'json',
+      consistency: 'strong'
+    });
+
+    if (!user?.workspaceId || !user?.email) continue;
+    scanned++;
+
+    // Only create one signup entry per workspace.
+    if (knownWorkspaceIds.has(user.workspaceId)) continue;
+
+    const meta = await authStore.get(workspaceKey(user.workspaceId), {
+      type: 'json',
+      consistency: 'strong'
+    });
+
+    // Prefer owner record if available. If this is staff and workspace has ownerEmail,
+    // use owner email for the backfilled signup.
+    let signupEmail = user.email;
+    if (meta?.ownerEmail) signupEmail = meta.ownerEmail;
+
+    const entry = {
+      id: randomUUID(),
+      workspaceId: user.workspaceId,
+      workspaceName: meta?.name || user.workspaceName || 'SimpleStock Workspace',
+      email: signupEmail,
+      defaultMode: meta?.defaultMode || user.defaultMode || 'reseller',
+      createdAt: meta?.createdAt || user.createdAt || new Date().toISOString(),
+      backfilled: true
+    };
+
+    await signupStore.setJSON(
+      `signup:${entry.createdAt}:${entry.id}`,
+      entry
+    );
+
+    knownWorkspaceIds.add(user.workspaceId);
+    created++;
+  }
+
+  return { created, scanned, totalKnown: knownWorkspaceIds.size };
+}
+
 export default async (request) => {
   try {
     const store = getStore(AUTH_STORE);
@@ -242,6 +309,20 @@ export default async (request) => {
     }
 
     const body = await request.json().catch(() => ({}));
+
+    if (action === 'backfill_signups') {
+      const active = await requirePlatformAdmin(store, request);
+      if (!active) {
+        return json({ ok: false, error: 'Platform admin access required.' }, 403);
+      }
+
+      const result = await backfillExistingSignups(store);
+
+      return json({
+        ok: true,
+        ...result
+      });
+    }
 
     if (action === 'signup') {
       const workspaceName = String(body.workspaceName || '').trim();
