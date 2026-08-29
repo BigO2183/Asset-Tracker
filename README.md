@@ -1,27 +1,29 @@
-# SimpleStock v23 — Tester Ready
+# SimpleStock v23.1 — Owner Feedback Inbox
 
-Built for real-world validation.
+Adds an owner-only feedback inbox inside Settings.
 
-## Tester experience
-- Realistic Try Demo inventory
-- Embedded demo photos
-- Built-in Feedback button
-- Feedback stored privately in Netlify Blobs
-- Simple tester instructions
+## Where feedback goes
+Tester feedback is stored in Netlify Blobs under:
 
-## Feedback questions
-- What felt useful?
-- What was confusing or annoying?
-- What would you remove?
-- What is missing?
-- Would you actually use SimpleStock?
+`simplestock-feedback`
 
-## New backend function
-`netlify/functions/feedback.mjs`
+## Owner Inbox
+Settings → Feedback Inbox
 
-Deploy the entire project so the feedback function is included.
+Owners can:
+- read tester type
+- see whether they would use SimpleStock
+- read what felt useful
+- read what was confusing / annoying
+- see what testers would remove
+- see what they say is missing
+- view optional contact info
+- refresh the inbox
 
-## Included tester files
-- `TESTER-GUIDE.txt`
-- `TESTER-MESSAGE.txt`
-- `FACEBOOK-RESELLER-POST.txt`
+## Security
+Only signed-in workspace owners can load the feedback inbox.
+
+## Backend change
+`netlify/functions/feedback.mjs` now supports:
+- POST for public tester submissions
+- GET for owner-only feedback retrieval

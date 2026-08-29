@@ -1116,6 +1116,56 @@ function stopScanner(){
  if($('scannerVideo'))$('scannerVideo').srcObject=null;
 }
 
+
+async function loadFeedbackInbox(){
+ const card=$('feedbackInboxCard');
+ const inbox=$('feedbackInbox');
+ if(!card || !inbox)return;
+
+ const isOwner=authState?.user?.role==='owner';
+ card.classList.toggle('hidden',!isOwner);
+ if(!isOwner)return;
+
+ inbox.innerHTML='<div class="settings-empty">Loading feedback…</div>';
+
+ try{
+   const res=await fetch(FEEDBACK_ENDPOINT,{
+     headers:authHeaders(),
+     cache:'no-store'
+   });
+
+   const payload=await res.json().catch(()=>({}));
+   if(!res.ok)throw new Error(payload.error||'Could not load feedback.');
+
+   const entries=payload.feedback||[];
+
+   if(!entries.length){
+     inbox.innerHTML='<div class="settings-empty">No tester feedback yet.</div>';
+     return;
+   }
+
+   inbox.innerHTML=entries.map(entry=>`
+     <article class="feedback-entry">
+       <div class="feedback-entry-head">
+         <div>
+           <strong>${esc(entry.testerType||'Tester')}</strong>
+           <span>${entry.wouldUse?`Would use: ${esc(entry.wouldUse)}`:'No usage answer'}</span>
+         </div>
+         <time>${esc(new Date(entry.createdAt).toLocaleString())}</time>
+       </div>
+
+       ${entry.useful?`<div><span class="feedback-label">Useful</span><p>${esc(entry.useful)}</p></div>`:''}
+       ${entry.confusing?`<div><span class="feedback-label">Confusing / annoying</span><p>${esc(entry.confusing)}</p></div>`:''}
+       ${entry.remove?`<div><span class="feedback-label">Would remove</span><p>${esc(entry.remove)}</p></div>`:''}
+       ${entry.missing?`<div><span class="feedback-label">Missing</span><p>${esc(entry.missing)}</p></div>`:''}
+       ${entry.contact?`<div><span class="feedback-label">Contact</span><p>${esc(entry.contact)}</p></div>`:''}
+     </article>
+   `).join('');
+ }catch(err){
+   inbox.innerHTML=`<div class="settings-empty">${esc(friendlyError(err,'Could not load feedback.'))}</div>`;
+ }
+}
+
 async function renderSettings(){
  const user=authState?.user;
  if(!user)return;
@@ -1127,7 +1177,10 @@ async function renderSettings(){
  $('settingsLogoPreview').classList.toggle('hidden',!logo);
  if(logo)$('settingsLogoPreview').innerHTML=`<img src="${logo}" alt="Workspace logo preview" />`;
  $('staffSettingsCard').classList.toggle('hidden',user.role!=='owner');
- if(user.role==='owner')await loadStaff();
+ if(user.role==='owner'){
+   await loadStaff();
+   await loadFeedbackInbox();
+ }
 }
 
 async function loadStaff(){
@@ -1823,6 +1876,7 @@ $('addStaffBtn')?.addEventListener('click',async()=>{
  }catch(err){showToast(err.message);}
 });
 
+$('refreshFeedbackBtn')?.addEventListener('click',loadFeedbackInbox);
 $('downloadBackupBtn')?.addEventListener('click',downloadBackup);
 $('restoreBackupFile')?.addEventListener('change',e=>{
  const file=e.target.files?.[0];
