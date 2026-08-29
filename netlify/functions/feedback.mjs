@@ -1,7 +1,8 @@
 import { getStore } from '@netlify/blobs';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 
 const STORE = 'simplestock-feedback';
+const AUTH_STORE = 'simplestock-auth';
 
 const json = (body, status = 200) =>
   Response.json(body, {
@@ -9,8 +10,70 @@ const json = (body, status = 200) =>
     headers: { 'Cache-Control': 'no-store' }
   });
 
+const sessionKey = (token) =>
+  `session:${createHash('sha256').update(String(token)).digest('hex')}`;
+
+const userKey = (email) =>
+  `user:${createHash('sha256')
+    .update(String(email).trim().toLowerCase())
+    .digest('hex')}`;
+
+async function requireOwner(request) {
+  const header = request.headers.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+  if (!token) return null;
+
+  const authStore = getStore(AUTH_STORE);
+  const session = await authStore.get(sessionKey(token), {
+    type: 'json',
+    consistency: 'strong'
+  });
+
+  if (!session || !session.expiresAt || Date.now() > Number(session.expiresAt)) {
+    return null;
+  }
+
+  const user = await authStore.get(userKey(session.email), {
+    type: 'json',
+    consistency: 'strong'
+  });
+
+  if (!user || user.role !== 'owner') return null;
+
+  return user;
+}
+
 export default async (request) => {
   try {
+    const store = getStore(STORE);
+
+    if (request.method === 'GET') {
+      const owner = await requireOwner(request);
+      if (!owner) {
+        return json({ ok: false, error: 'Owner access required.' }, 403);
+      }
+
+      const entries = [];
+      const { blobs } = await store.list({ prefix: 'feedback:' });
+
+      for (const blob of blobs) {
+        const entry = await store.get(blob.key, {
+          type: 'json',
+          consistency: 'strong'
+        });
+        if (entry) entries.push(entry);
+      }
+
+      entries.sort((a, b) =>
+        String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
+      );
+
+      return json({
+        ok: true,
+        feedback: entries
+      });
+    }
+
     if (request.method !== 'POST') {
       return json({ ok: false, error: 'Method not allowed.' }, 405);
     }
@@ -26,7 +89,10 @@ export default async (request) => {
     const testerType = String(body.testerType || '').trim();
 
     if (!useful && !confusing && !missing && !remove) {
-      return json({ ok: false, error: 'Please share at least one piece of feedback.' }, 400);
+      return json(
+        { ok: false, error: 'Please share at least one piece of feedback.' },
+        400
+      );
     }
 
     const entry = {
@@ -41,12 +107,14 @@ export default async (request) => {
       contact
     };
 
-    const store = getStore(STORE);
     await store.setJSON(`feedback:${entry.createdAt}:${entry.id}`, entry);
 
     return json({ ok: true });
   } catch (error) {
     console.error('SimpleStock feedback error:', error);
-    return json({ ok: false, error: 'Could not submit feedback.' }, 500);
+    return json(
+      { ok: false, error: error?.message || 'Could not handle feedback.' },
+      500
+    );
   }
 };
