@@ -1,4 +1,4 @@
-const CACHE_NAME = 'simplestock-v26-modern-ui';
+const CACHE_NAME = 'simplestock-v26-1-layout-fix';
 const APP_SHELL = [
   '/',
   '/index.html',

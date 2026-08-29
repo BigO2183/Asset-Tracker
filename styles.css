@@ -3572,3 +3572,169 @@ body{
     height:66px;
   }
 }
+
+
+/* =========================================================
+   v26.1 — responsive inventory card + filter layout fix
+   ========================================================= */
+
+/* Inventory card: force a stable photo + content grid */
+.item-card{
+  display:grid!important;
+  grid-template-columns:88px minmax(0,1fr)!important;
+  align-items:start!important;
+  column-gap:14px!important;
+  row-gap:0!important;
+  min-width:0!important;
+}
+
+.thumb-wrap{
+  grid-column:1!important;
+  grid-row:1 / span 6!important;
+  align-self:start!important;
+  flex:none!important;
+}
+
+.item-card > :not(.thumb-wrap):not(.item-card-accent):not(.bulk-check-wrap){
+  grid-column:2!important;
+  min-width:0!important;
+}
+
+.item-title-row,
+.price-row,
+.core-info-row{
+  width:100%!important;
+  min-width:0!important;
+}
+
+.item-title-row{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+}
+
+.item-name{
+  min-width:0!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+}
+
+.price-row{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:4px 10px!important;
+}
+
+.core-info-row{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:3px 6px!important;
+}
+
+/* Prevent long values from running behind the photo */
+.item-card .asking,
+.item-card .cost,
+.item-card .profit,
+.item-card .core-info-row{
+  max-width:100%!important;
+}
+
+/* Filters: one balanced row on tablet/desktop */
+.core-filter-row{
+  display:grid!important;
+  grid-template-columns:minmax(190px,1fr) auto auto auto!important;
+  gap:8px!important;
+  align-items:center!important;
+}
+
+#statusFilter{
+  width:100%!important;
+  min-width:0!important;
+}
+
+#scanBtn,
+#bulkSelectBtn,
+#moreFiltersBtn{
+  width:auto!important;
+  min-width:90px!important;
+  white-space:nowrap!important;
+}
+
+/* Medium widths: keep controls clean without weird gaps */
+@media(max-width:900px){
+  .core-filter-row{
+    grid-template-columns:minmax(0,1fr) auto auto auto!important;
+  }
+
+  #scanBtn,
+  #bulkSelectBtn,
+  #moreFiltersBtn{
+    min-width:82px!important;
+  }
+}
+
+/* Phone layout */
+@media(max-width:620px){
+  .core-filter-row{
+    grid-template-columns:minmax(0,1fr) auto auto auto!important;
+    gap:6px!important;
+  }
+
+  #scanBtn,
+  #bulkSelectBtn,
+  #moreFiltersBtn{
+    min-width:0!important;
+    padding-left:9px!important;
+    padding-right:9px!important;
+    font-size:.72rem!important;
+  }
+
+  .item-card{
+    grid-template-columns:74px minmax(0,1fr)!important;
+    column-gap:11px!important;
+    padding:10px!important;
+  }
+
+  .thumb-wrap{
+    width:74px!important;
+    height:74px!important;
+  }
+
+  .item-name{
+    font-size:.9rem!important;
+  }
+
+  .asking{
+    font-size:.88rem!important;
+  }
+
+  .cost{
+    font-size:.72rem!important;
+  }
+}
+
+/* Very narrow phones */
+@media(max-width:390px){
+  .core-filter-row{
+    grid-template-columns:minmax(0,1fr) auto auto auto!important;
+    gap:4px!important;
+  }
+
+  #scanBtn,
+  #bulkSelectBtn,
+  #moreFiltersBtn{
+    padding-left:7px!important;
+    padding-right:7px!important;
+    font-size:.68rem!important;
+  }
+
+  .item-card{
+    grid-template-columns:66px minmax(0,1fr)!important;
+    column-gap:9px!important;
+  }
+
+  .thumb-wrap{
+    width:66px!important;
+    height:66px!important;
+  }
+}
